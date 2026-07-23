@@ -1,0 +1,19 @@
+//
+// Copyright (C) 2026 The KleeUI Project
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+kernel_headers {
+    name: "qti_kernel_headers",
+    vendor: true,
+    recovery_available: true,
+}
+
+cc_library_headers {
+    name: "libubwcp_headers",
+    vendor: true,
+    recovery_available: true,
+    header_libs: ["qti_ubwcp_kernel_headers"],
+    export_header_lib_headers: ["qti_ubwcp_kernel_headers"],
+}
