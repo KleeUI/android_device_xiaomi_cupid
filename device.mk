@@ -23,6 +23,12 @@ ENABLE_VIRTUAL_AB := true
 BUILD_DISPLAY_TECHPACK_SOURCE := true
 BUILD_DISPLAY_TECHPACK_SOURCE_VARIANT := true
 
+# Qualcomm product fragments name their DLKM packages using this path while
+# product configuration is evaluated, before BoardConfig values are visible.
+KERNEL_MODULES_INSTALL := dlkm
+KERNEL_MODULES_OUT := \
+    out/target/product/$(TARGET_PRODUCT)/$(KERNEL_MODULES_INSTALL)/lib/modules
+
 # Import the pinned CodeLinaro platform definitions without inheriting its
 # vendor-only taro product or legacy global board assignments.
 _cupid_qcom_system_defs := $(sort \

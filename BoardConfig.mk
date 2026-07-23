@@ -11,6 +11,11 @@ TARGET_BOOTLOADER_BOARD_NAME := taro
 TARGET_SCREEN_DENSITY := 440
 TARGET_VENDOR_PROP := $(DEVICE_PATH)/configs/vendor.prop
 
+# Register Waipio/Taro with the shared Qualcomm build helpers. Without this,
+# legacy SDK-only tasks treat cupid as a non-Qualcomm target and re-enter AOSP
+# configuration after product variables have become read-only.
+QCOM_BOARD_PLATFORMS += taro
+
 TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-a-branchprot
 TARGET_CPU_ABI := arm64-v8a
@@ -40,7 +45,6 @@ BOARD_MKBOOTIMG_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_KERNEL_PAGESIZE := 4096
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
-BOARD_KERNEL_SEPARATED_DTBO := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
 
 BOARD_KERNEL_CMDLINE := \
@@ -121,6 +125,19 @@ TARGET_USES_NEW_ION_API := true
 USE_SENSOR_MULTI_HAL := true
 TARGET_USES_QCOM_BSP := true
 TARGET_ENABLE_QC_AV_ENHANCEMENTS := true
+
+# Waipio provides these facilities from the pinned kernel platform. Prevent
+# newer Qualcomm shared repositories from also building their external DLKM
+# implementations for cupid.
+TARGET_QCOM_MSM_EXT_DISPLAY_DLKM := false
+TARGET_QCOM_SYNC_FENCE_DLKM := false
+TARGET_QCOM_HW_FENCE_DLKM := false
+TARGET_QCOM_SYNX_DLKM := false
+
+TARGET_KERNEL_VERSION := 5.10
+
+TARGET_USES_QCOM_LEGACY_QMI_LOCATION := false
+TARGET_BUILD_QCOM_SIGMA_DUT := false
 
 # AOSP 17 names these prebuilt policy inputs explicitly. Keep the upstream
 # CodeLinaro policy content while avoiding its obsolete BoardConfig aliases.
