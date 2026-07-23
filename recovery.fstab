@@ -1,0 +1,11 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+system          /system          ext4    defaults    slotselect,avb=vbmeta_system,logical,first_stage_mount
+system_ext      /system_ext      ext4    defaults    slotselect,avb=vbmeta_system,logical,first_stage_mount
+product         /product         ext4    defaults    slotselect,avb=vbmeta_system,logical,first_stage_mount
+vendor          /vendor          ext4    defaults    slotselect,avb,logical,first_stage_mount
+vendor_dlkm     /vendor_dlkm     ext4    defaults    slotselect,avb,logical,first_stage_mount
+odm             /odm             ext4    defaults    slotselect,avb,logical,first_stage_mount
+/dev/block/by-name/metadata /metadata ext4 defaults  wait,check,formattable
+/dev/block/by-name/userdata /data f2fs defaults      wait,check,formattable

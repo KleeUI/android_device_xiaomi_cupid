@@ -1,0 +1,16 @@
+# Xiaomi 12 (cupid) proprietary component inventory
+#
+# This file is intentionally populated from a user-owned Xiaomi firmware image.
+# Device integration must not silently depend on files from another ROM tree.
+
+# Camera
+-vendor/bin/hw/vendor.qti.camera.provider@2.7-service_64
+
+# Fingerprint
+-vendor/bin/hw/android.hardware.biometrics.fingerprint-service.xiaomi
+
+# Sensors
+-vendor/bin/hw/android.hardware.sensors-service.xiaomi-multihal
+
+# Xiaomi hardware services
+-vendor/bin/hw/vendor.xiaomi.hardware.quickcamera@1.0-service

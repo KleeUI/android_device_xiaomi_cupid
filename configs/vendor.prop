@@ -1,0 +1,9 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+ro.hardware.camera=xiaomi
+ro.hardware.egl=adreno
+ro.hardware.vulkan=adreno
+ro.hardware.fp.udfps=true
+ro.vendor.qti.va_aosp.support=1
+ro.vendor.qti.va_odm.support=1
