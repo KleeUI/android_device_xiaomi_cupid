@@ -35,3 +35,18 @@ source build/envsetup.sh
 lunch cupid_userdebug
 klee_build -jXX
 ```
+
+## Stock DTB and DTBO
+
+The public CodeLinaro Waipio 5.10 release does not include the board
+device-tree source used by retail Xiaomi 12 firmware. Before building a
+flashable image, extract the concatenated DTB from `vendor_boot` and the DTBO
+from the active slot of a matching `cupid` device, then place them at:
+
+```text
+vendor/xiaomi/cupid/proprietary/dtb/cupid-stock.dtb
+vendor/xiaomi/cupid/proprietary/dtbo.img
+```
+
+These hardware-specific images are local proprietary inputs and must not be
+committed to the public device repository.

@@ -173,6 +173,20 @@ TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
 TARGET_NEEDS_DTBOIMAGE := true
 KLEE_KERNEL_DTBO_TARGET := dtbo.img
 
+# CodeLinaro's public Waipio 5.10 release omits the retail board device-tree
+# repository. Use DTB and DTBO inputs extracted from matching stock firmware
+# when they are available locally; these proprietary inputs are deliberately
+# not source-hosted.
+CUPID_STOCK_DTB_DIR := vendor/xiaomi/cupid/proprietary/dtb
+CUPID_STOCK_DTBO := vendor/xiaomi/cupid/proprietary/dtbo.img
+ifneq ($(wildcard $(CUPID_STOCK_DTB_DIR)/*.dtb),)
+BOARD_PREBUILT_DTBIMAGE_DIR := $(CUPID_STOCK_DTB_DIR)
+endif
+ifneq ($(wildcard $(CUPID_STOCK_DTBO)),)
+BOARD_PREBUILT_DTBOIMAGE := $(CUPID_STOCK_DTBO)
+KLEE_KERNEL_SKIP_PLATFORM_DTBO := true
+endif
+
 # Qualcomm board fragments describe the modules that must be packaged into
 # vendor_dlkm and vendor_boot. Give those fragments a stable Klee output root;
 # leaving it empty turns every module into an invalid absolute path.
