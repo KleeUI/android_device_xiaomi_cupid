@@ -126,13 +126,14 @@ USE_SENSOR_MULTI_HAL := true
 TARGET_USES_QCOM_BSP := true
 TARGET_ENABLE_QC_AV_ENHANCEMENTS := true
 
-# Waipio provides these facilities from the pinned kernel platform. Prevent
-# newer Qualcomm shared repositories from also building their external DLKM
-# implementations for cupid.
-TARGET_QCOM_MSM_EXT_DISPLAY_DLKM := false
-TARGET_QCOM_SYNC_FENCE_DLKM := false
-TARGET_QCOM_HW_FENCE_DLKM := false
+# Build the fence and external-display providers consumed by the source-built
+# display DLKM. The public Waipio kernel kit exports their ABI but does not
+# contain their implementations.
+TARGET_QCOM_MSM_EXT_DISPLAY_DLKM := true
+TARGET_QCOM_SYNC_FENCE_DLKM := true
+TARGET_QCOM_HW_FENCE_DLKM := true
 TARGET_QCOM_SYNX_DLKM := false
+CONFIG_MSM_MMRM := y
 
 TARGET_KERNEL_VERSION := 5.10
 
