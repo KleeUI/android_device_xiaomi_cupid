@@ -2,6 +2,7 @@
 #
 # This file is intentionally populated from a user-owned Xiaomi firmware image.
 # Device integration must not silently depend on files from another ROM tree.
+# All unpinned blobs below are extracted from cupid OS3.0.4.0.VLCMIXM
 
 # Camera
 -vendor/bin/hw/vendor.qti.camera.provider@2.7-service_64
