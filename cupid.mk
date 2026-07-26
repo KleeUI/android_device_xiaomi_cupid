@@ -7,6 +7,15 @@
 $(call inherit-product, device/xiaomi/cupid/device.mk)
 $(call inherit-product, vendor/klee/build/product/common.mk)
 
+# Use the Qualcomm Taro VINTF fragments required by the SM8450 vendor HALs.
+# Keeping these declarations in the device product makes the Cupid target
+# self-contained instead of inheriting the unrelated generic Taro product.
+DEVICE_FRAMEWORK_MANIFEST_FILE := device/qcom/taro/framework_manifest.xml
+TARGET_USES_QCV := true
+DEVICE_MANIFEST_SKUS := taro
+DEVICE_MANIFEST_TARO_FILES := device/qcom/taro/manifest_taro.xml
+DEVICE_MATRIX_FILE := device/qcom/common/compatibility_matrix.xml
+
 PRODUCT_NAME := cupid
 PRODUCT_DEVICE := cupid
 PRODUCT_BRAND := Xiaomi
