@@ -66,6 +66,7 @@ PRODUCT_COPY_FILES += \
 
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
+    cupid_framework_compatibility_matrix.6.xml \
     fastbootd \
     update_engine \
     update_verifier

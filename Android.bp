@@ -3,3 +3,20 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 //
+
+// Cupid launched with Android S FCM level 6 and its stock 5.10.81 kernel.
+// Android 17 no longer installs the legacy level-6 framework matrix globally,
+// so keep the device-specific compatibility fragment here.  The module adds
+// the level-6 kernel requirements generated from the AOSP S 5.10 config and
+// declares the legacy Bluetooth audio HAL exposed by the Qualcomm vendor
+// manifest.
+vintf_compatibility_matrix {
+    name: "cupid_framework_compatibility_matrix.6.xml",
+    stem: "compatibility_matrix.6.xml",
+    srcs: [
+        "compatibility_matrix.6.xml",
+    ],
+    kernel_configs: [
+        "kernel_config_s_5.10",
+    ],
+}

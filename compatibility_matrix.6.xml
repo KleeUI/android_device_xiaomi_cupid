@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ Copyright (C) 2026 The KleeUI Project
+
+ SPDX-License-Identifier: Apache-2.0
+-->
+<compatibility-matrix version="1.0" type="framework" level="6">
+    <hal format="hidl">
+        <name>android.hardware.bluetooth.audio</name>
+        <version>2.0-1</version>
+        <interface>
+            <name>IBluetoothAudioProvidersFactory</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+</compatibility-matrix>
