@@ -9,11 +9,3 @@ kernel_headers {
     vendor: true,
     recovery_available: true,
 }
-
-cc_library_headers {
-    name: "libubwcp_headers",
-    vendor: true,
-    recovery_available: true,
-    header_libs: ["qti_ubwcp_kernel_headers"],
-    export_header_lib_headers: ["qti_ubwcp_kernel_headers"],
-}
