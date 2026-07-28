@@ -25,6 +25,20 @@ from pinned CodeLinaro projects and retains its upstream history and licenses.
 Xiaomi and Qualcomm proprietary components belong in `vendor/xiaomi/cupid` and
 are not committed here.
 
+## Proprietary metadata fixes
+
+After populating `vendor/xiaomi`, apply the device-maintained metadata fixes
+before building:
+
+```bash
+patch -p1 < \
+    device/xiaomi/cupid/patches/0001-sm8450-common-install-PowerOffAlarm-on-vendor.patch
+```
+
+The patch installs Qualcomm's PowerOffAlarm app on the vendor partition where
+its `vendor_poweroffalarm_app` SELinux domain is valid. It changes only the
+generated Soong metadata and does not include proprietary APK contents.
+
 ## Build
 
 Initialize Klee with the Waipio manifest, provide the kernel and proprietary
