@@ -18,6 +18,7 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 TARGET_BOARD_PLATFORM := taro
 TARGET_USES_QMAA := false
 TARGET_USES_QCOM_BSP := true
+$(call soong_config_set,klee_rmnetctl,legacy_driver,true)
 ENABLE_AB := true
 ENABLE_VIRTUAL_AB := true
 BUILD_DISPLAY_TECHPACK_SOURCE := true
