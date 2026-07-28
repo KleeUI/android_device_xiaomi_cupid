@@ -1,0 +1,5 @@
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -16863 +16863 @@
+-    system_ext_specific: true,
++    vendor: true,
