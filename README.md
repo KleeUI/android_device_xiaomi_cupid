@@ -33,11 +33,18 @@ before building:
 ```bash
 patch -p1 < \
     device/xiaomi/cupid/patches/0001-sm8450-common-install-PowerOffAlarm-on-vendor.patch
+patch -p1 < \
+    device/xiaomi/cupid/patches/0002-sm8450-common-keep-WfdCommon-off-bootclasspath.patch
 ```
 
 The patch installs Qualcomm's PowerOffAlarm app on the vendor partition where
 its `vendor_poweroffalarm_app` SELinux domain is valid. It changes only the
 generated Soong metadata and does not include proprietary APK contents.
+
+The second patch keeps `WfdCommon.jar` installed as a framework package while
+removing it from the Android runtime boot class path. This preserves the WFD
+package and avoids exposing Qualcomm-private Java packages as platform boot
+APIs, which Android 17 rejects during the boot-jar package check.
 
 ## Build
 
