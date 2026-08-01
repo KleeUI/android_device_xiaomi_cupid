@@ -84,3 +84,10 @@ PRODUCT_VENDOR_PROPERTIES += \
 $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/klee-compat/klee-compat.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
+
+# The Qualcomm product fragments above expose CodeLinaro-built DLKM modules as
+# Android packages. Cupid assembles the verified SM8450 module manifests from
+# BoardConfig instead, so never invoke the obsolete kernel_platform builders.
+PRODUCT_PACKAGES := $(filter-out %.ko,$(PRODUCT_PACKAGES))
+PRODUCT_PACKAGES_DEBUG := $(filter-out %.ko,$(PRODUCT_PACKAGES_DEBUG))
+PRODUCT_PACKAGES_ENG := $(filter-out %.ko,$(PRODUCT_PACKAGES_ENG))

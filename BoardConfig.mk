@@ -48,6 +48,8 @@ BOARD_KERNEL_PAGESIZE := 4096
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
+BOARD_VENDOR_RAMDISK_FRAGMENTS += dlkm
+BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
 
 BOARD_KERNEL_CMDLINE := \
     disable_dma32=on \
@@ -176,41 +178,110 @@ BOARD_VENDOR_SEPOLICY_DIRS += $(wildcard \
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 TARGET_KERNEL_ARCH := arm64
 BOARD_KERNEL_IMAGE_NAME := Image
-TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
-TARGET_KERNEL_PLATFORM_PATH := kernel_platform
-TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
+TARGET_KERNEL_SOURCE := kernel/xiaomi/sm8450
+TARGET_KERNEL_CONFIG := \
+    gki_defconfig \
+    vendor/waipio_GKI.config \
+    vendor/xiaomi_GKI.config \
+    vendor/cupid_GKI.config \
+    vendor/debugfs.config
+TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
+TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
+TARGET_KERNEL_EXT_MODULES := \
+    qcom/opensource/mmrm-driver \
+    qcom/opensource/audio-kernel \
+    qcom/opensource/camera-kernel \
+    qcom/opensource/cvp-kernel \
+    qcom/opensource/dataipa/drivers/platform/msm \
+    qcom/opensource/datarmnet/core \
+    qcom/opensource/datarmnet-ext/aps \
+    qcom/opensource/datarmnet-ext/offload \
+    qcom/opensource/datarmnet-ext/shs \
+    qcom/opensource/datarmnet-ext/perf \
+    qcom/opensource/datarmnet-ext/perf_tether \
+    qcom/opensource/datarmnet-ext/sch \
+    qcom/opensource/datarmnet-ext/wlan \
+    qcom/opensource/display-drivers/msm \
+    qcom/opensource/eva-kernel \
+    qcom/opensource/video-driver \
+    qcom/opensource/wlan/qcacld-3.0/.qca6490 \
+    qcom/opensource/wlan/qcacld-3.0/.qca6750
 TARGET_NEEDS_DTBOIMAGE := true
-KLEE_KERNEL_DTBO_TARGET := dtbo.img
 
 # The Waipio GKI keeps storage, clocks, regulators, interrupt routing and
 # IOMMU support modular. These modules must be available before first-stage
-# init can discover UFS and mount the dynamic partitions. The kernel platform
-# build publishes them at the root of KLEE_KERNEL_DIST.
+# init can discover UFS and mount the dynamic partitions. Android 17's
+# filesystem generator consumes source files while it creates its graph, so
+# the matching module kit is retained in the device's private vendor input.
+CUPID_KERNEL_PREBUILT_DIR := vendor/xiaomi/cupid/proprietary/kernel
+CUPID_KERNEL_MODULE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/modules
+
+# Qualcomm Android.mk files are scanned even though Cupid packages the Klee
+# source build directly.  Point their parse-time KERNEL_KIT probe at the same
+# ABI-verified two-stage kit so unrequested legacy DLKM rules remain dormant.
+KERNEL_PREBUILT_DIR := $(CUPID_KERNEL_PREBUILT_DIR)
 CUPID_FIRST_STAGE_MODULES_FILE := \
     $(TARGET_KERNEL_SOURCE)/modules.list.msm.waipio
-CUPID_FIRST_STAGE_MODULES := \
-    $(filter-out \
-        deferred-free-helper.ko, \
-        $(strip $(shell cat $(CUPID_FIRST_STAGE_MODULES_FILE))))
-CUPID_FIRST_STAGE_MODULE_PATHS := \
-    $(addprefix $(PRODUCT_OUT)/obj/KLEE_KERNEL_DIST/,$(CUPID_FIRST_STAGE_MODULES))
-KLEE_KERNEL_MODULES += $(CUPID_FIRST_STAGE_MODULES)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES += $(CUPID_FIRST_STAGE_MODULE_PATHS)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD += $(CUPID_FIRST_STAGE_MODULE_PATHS)
-BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD += $(CUPID_FIRST_STAGE_MODULE_PATHS)
-
-# CodeLinaro's public Waipio 5.10 release omits the retail board device-tree
-# repository. Use DTB and DTBO inputs extracted from matching stock firmware
-# when they are available locally; these proprietary inputs are deliberately
-# not source-hosted.
-CUPID_STOCK_DTB_DIR := vendor/xiaomi/cupid/proprietary/dtb
-CUPID_STOCK_DTBO := vendor/xiaomi/cupid/proprietary/dtbo.img
-ifneq ($(wildcard $(CUPID_STOCK_DTB_DIR)/*.dtb),)
-BOARD_PREBUILT_DTBIMAGE_DIR := $(CUPID_STOCK_DTB_DIR)
+ifeq ($(wildcard $(CUPID_FIRST_STAGE_MODULES_FILE)),)
+$(error Missing first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
 endif
+# Preserve Qualcomm's dependency order while removing repeated entries.  The
+# public Waipio list names both watchdog modules twice; loading an already
+# loaded first-stage module is unnecessary and can make early-init diagnostics
+# look like a real module failure.
+CUPID_FIRST_STAGE_LOAD_MODULES := \
+    $(strip $(shell awk \
+        'NF && $$1 !~ /^\#/ && $$1 != "deferred-free-helper.ko" && \
+        !seen[$$1]++ { print $$1 }' \
+        "$(CUPID_FIRST_STAGE_MODULES_FILE)"))
+CUPID_SECOND_STAGE_LOAD_MODULES := \
+    $(strip $(shell cat $(DEVICE_PATH)/configs/modules.list.second_stage))
+CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES := \
+    $(strip $(shell cat $(DEVICE_PATH)/configs/modules.list.vendor_dlkm))
+CUPID_FIRST_STAGE_MODULES := $(sort $(CUPID_FIRST_STAGE_LOAD_MODULES))
+CUPID_VENDOR_DLKM_MODULES := \
+    $(sort \
+        $(CUPID_SECOND_STAGE_LOAD_MODULES) \
+        $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
+CUPID_VENDOR_DLKM_LOAD_MODULES := \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES) \
+    $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
+CUPID_ALL_KERNEL_MODULES := \
+    $(sort $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES))
+CUPID_FIRST_STAGE_MODULE_PATHS := \
+    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_FIRST_STAGE_MODULES))
+CUPID_VENDOR_DLKM_MODULE_PATHS := \
+    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_VENDOR_DLKM_MODULES))
+
+# Keep the Klee kernel target honest: every module named by the Cupid module
+# manifests must be emitted by the source build, even though image assembly
+# consumes the matching private vendor kit above.
+KLEE_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
+
+# Module load lists are ordered basenames, never filesystem paths. Only the
+# first-stage UFS and mount dependencies belong in vendor_boot; the remaining
+# ordered device set is installed in and loaded from vendor_dlkm.
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES += $(CUPID_FIRST_STAGE_MODULE_PATHS)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD += $(CUPID_FIRST_STAGE_LOAD_MODULES)
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD += \
+    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+BOARD_VENDOR_KERNEL_MODULES += $(CUPID_VENDOR_DLKM_MODULE_PATHS)
+BOARD_VENDOR_KERNEL_MODULES_LOAD += $(CUPID_VENDOR_DLKM_LOAD_MODULES)
+BOOT_KERNEL_MODULES += \
+    $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES)
+BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
+    $(TARGET_KERNEL_SOURCE)/modules.vendor_blocklist.msm.waipio
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
+    $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
+
+# Keep source-built Waipio base DTBs separate from the ABI-matched stock DTBO.
+# Cupid overlays must never be merged into these DTBs while the stock DTBO
+# image is used, otherwise the boot loader applies each overlay twice.
+BOARD_PREBUILT_DTBIMAGE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/dtb
+
+CUPID_STOCK_DTBO := vendor/xiaomi/cupid/proprietary/dtbo.img
 ifneq ($(wildcard $(CUPID_STOCK_DTBO)),)
 BOARD_PREBUILT_DTBOIMAGE := $(CUPID_STOCK_DTBO)
-KLEE_KERNEL_SKIP_PLATFORM_DTBO := true
 endif
 
 # Qualcomm board fragments describe the modules that must be packaged into
@@ -221,3 +292,19 @@ KERNEL_MODULES_OUT := out/target/product/$(PRODUCT_NAME)/$(KERNEL_MODULES_INSTAL
 
 -include $(sort $(wildcard vendor/qcom/defs/board-defs/system/*.mk))
 -include $(sort $(wildcard vendor/qcom/defs/board-defs/vendor/*.mk))
+
+# Imported Qualcomm fragments describe CodeLinaro-kernel build outputs.  Do
+# not let those stale paths or load lists enter a Xiaomi SM8450 image.
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(CUPID_FIRST_STAGE_MODULE_PATHS)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := \
+    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := \
+    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+BOARD_VENDOR_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULE_PATHS)
+BOARD_VENDOR_KERNEL_MODULES_LOAD := $(CUPID_VENDOR_DLKM_LOAD_MODULES)
+BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
+    $(TARGET_KERNEL_SOURCE)/modules.vendor_blocklist.msm.waipio
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
+    $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
+BOOT_KERNEL_MODULES := \
+    $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES)
