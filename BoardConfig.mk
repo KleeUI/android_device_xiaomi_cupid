@@ -227,8 +227,18 @@ CUPID_KERNEL_MODULE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/modules
 KERNEL_PREBUILT_DIR := $(CUPID_KERNEL_PREBUILT_DIR)
 CUPID_FIRST_STAGE_MODULES_FILE := \
     $(TARGET_KERNEL_SOURCE)/modules.list.msm.waipio
+CUPID_SECOND_STAGE_MODULES_FILE := \
+    $(DEVICE_PATH)/configs/modules.list.second_stage
+CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE := \
+    $(DEVICE_PATH)/configs/modules.list.vendor_dlkm
 ifeq ($(wildcard $(CUPID_FIRST_STAGE_MODULES_FILE)),)
 $(error Missing first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
+endif
+ifeq ($(wildcard $(CUPID_SECOND_STAGE_MODULES_FILE)),)
+$(error Missing second-stage kernel module list: $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
+ifeq ($(wildcard $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE)),)
+$(error Missing vendor_dlkm kernel module list: $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE))
 endif
 # Preserve Qualcomm's dependency order while removing repeated entries.  The
 # public Waipio list names both watchdog modules twice; loading an already
@@ -240,9 +250,22 @@ CUPID_FIRST_STAGE_LOAD_MODULES := \
         !seen[$$1]++ { print $$1 }' \
         "$(CUPID_FIRST_STAGE_MODULES_FILE)"))
 CUPID_SECOND_STAGE_LOAD_MODULES := \
-    $(strip $(shell cat $(DEVICE_PATH)/configs/modules.list.second_stage))
+    $(strip $(shell awk \
+        'NF && $$1 !~ /^\#/ && !seen[$$1]++ { print $$1 }' \
+        "$(CUPID_SECOND_STAGE_MODULES_FILE)"))
 CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES := \
-    $(strip $(shell cat $(DEVICE_PATH)/configs/modules.list.vendor_dlkm))
+    $(strip $(shell awk \
+        'NF && $$1 !~ /^\#/ && !seen[$$1]++ { print $$1 }' \
+        "$(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE)"))
+ifeq ($(strip $(CUPID_FIRST_STAGE_LOAD_MODULES)),)
+$(error Empty first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
+endif
+ifeq ($(strip $(CUPID_SECOND_STAGE_LOAD_MODULES)),)
+$(error Empty second-stage kernel module list: $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
+ifeq ($(strip $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)),)
+$(error Empty vendor_dlkm kernel module list: $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE))
+endif
 CUPID_FIRST_STAGE_MODULES := $(sort $(CUPID_FIRST_STAGE_LOAD_MODULES))
 CUPID_SECOND_STAGE_MODULES := $(sort $(CUPID_SECOND_STAGE_LOAD_MODULES))
 CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES := \
@@ -323,3 +346,11 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
 BOOT_KERNEL_MODULES := $(CUPID_ALL_KERNEL_MODULES)
+
+# Android's kernel-module archive path clears the individual module variables
+# later in core/config.mk.  Cupid intentionally packages its ABI-verified
+# module kit file by file, so fail here instead of silently producing an empty
+# or first-stage-only vendor ramdisk.
+ifneq ($(strip $(BOARD_KERNEL_MODULES_ZIP)),)
+$(error BOARD_KERNEL_MODULES_ZIP must be empty for the Cupid module layout)
+endif
