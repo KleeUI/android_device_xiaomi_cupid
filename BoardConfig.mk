@@ -45,6 +45,11 @@ AB_OTA_UPDATER := true
 BOARD_BOOT_HEADER_VERSION := 4
 BOARD_MKBOOTIMG_ARGS := --header_version $(BOARD_BOOT_HEADER_VERSION)
 BOARD_KERNEL_PAGESIZE := 4096
+# Xiaomi's SM8450 ABL loads the v4 boot components from the zero-based
+# addresses encoded by the stock Cupid images.  The Android default base of
+# 0x10000000 shifts the kernel, ramdisk, tags, and DTB addresses out of the
+# layout expected by this boot chain.
+BOARD_KERNEL_BASE := 0x00000000
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
@@ -239,17 +244,22 @@ CUPID_SECOND_STAGE_LOAD_MODULES := \
 CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES := \
     $(strip $(shell cat $(DEVICE_PATH)/configs/modules.list.vendor_dlkm))
 CUPID_FIRST_STAGE_MODULES := $(sort $(CUPID_FIRST_STAGE_LOAD_MODULES))
+CUPID_SECOND_STAGE_MODULES := $(sort $(CUPID_SECOND_STAGE_LOAD_MODULES))
+CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES := \
+    $(sort $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
+CUPID_VENDOR_RAMDISK_MODULES := \
+    $(sort $(CUPID_FIRST_STAGE_MODULES) $(CUPID_SECOND_STAGE_MODULES))
 CUPID_VENDOR_DLKM_MODULES := \
     $(sort \
-        $(CUPID_SECOND_STAGE_LOAD_MODULES) \
-        $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
+        $(CUPID_FIRST_STAGE_MODULES) \
+        $(CUPID_SECOND_STAGE_MODULES) \
+        $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES))
 CUPID_VENDOR_DLKM_LOAD_MODULES := \
     $(CUPID_SECOND_STAGE_LOAD_MODULES) \
     $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
-CUPID_ALL_KERNEL_MODULES := \
-    $(sort $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES))
-CUPID_FIRST_STAGE_MODULE_PATHS := \
-    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_FIRST_STAGE_MODULES))
+CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
+CUPID_VENDOR_RAMDISK_MODULE_PATHS := \
+    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_VENDOR_RAMDISK_MODULES))
 CUPID_VENDOR_DLKM_MODULE_PATHS := \
     $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_VENDOR_DLKM_MODULES))
 
@@ -258,25 +268,29 @@ CUPID_VENDOR_DLKM_MODULE_PATHS := \
 # consumes the matching private vendor kit above.
 KLEE_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
 
-# Module load lists are ordered basenames, never filesystem paths. Only the
-# first-stage UFS and mount dependencies belong in vendor_boot; the remaining
-# ordered device set is installed in and loaded from vendor_dlkm.
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES += $(CUPID_FIRST_STAGE_MODULE_PATHS)
+# Module load lists are ordered basenames, never filesystem paths.  Keep both
+# boot stages in vendor_boot so recovery can initialize USB and device
+# hardware without mounting vendor_dlkm.  A normal boot loads only first-stage
+# storage dependencies there, then loads the remaining ordered set after
+# vendor_dlkm is mounted.  vendor_dlkm retains the complete module collection
+# for OTA and recovery consistency; duplication across the images is expected.
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES += \
+    $(CUPID_VENDOR_RAMDISK_MODULE_PATHS)
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD += $(CUPID_FIRST_STAGE_LOAD_MODULES)
 BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD += \
-    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+    $(CUPID_FIRST_STAGE_LOAD_MODULES) \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES)
 BOARD_VENDOR_KERNEL_MODULES += $(CUPID_VENDOR_DLKM_MODULE_PATHS)
 BOARD_VENDOR_KERNEL_MODULES_LOAD += $(CUPID_VENDOR_DLKM_LOAD_MODULES)
-BOOT_KERNEL_MODULES += \
-    $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES)
+BOOT_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
 BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(TARGET_KERNEL_SOURCE)/modules.vendor_blocklist.msm.waipio
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
 
-# Keep source-built Waipio base DTBs separate from the ABI-matched stock DTBO.
-# Cupid overlays must never be merged into these DTBs while the stock DTBO
-# image is used, otherwise the boot loader applies each overlay twice.
+# Keep the stock base-DTB table separate from its matching stock DTBO.  The
+# Cupid overlays are applied by the boot loader and must not be merged into the
+# base payload a second time during image construction.
 BOARD_PREBUILT_DTBIMAGE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/dtb
 
 CUPID_STOCK_DTBO := vendor/xiaomi/cupid/proprietary/dtbo.img
@@ -295,16 +309,17 @@ KERNEL_MODULES_OUT := out/target/product/$(PRODUCT_NAME)/$(KERNEL_MODULES_INSTAL
 
 # Imported Qualcomm fragments describe CodeLinaro-kernel build outputs.  Do
 # not let those stale paths or load lists enter a Xiaomi SM8450 image.
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(CUPID_FIRST_STAGE_MODULE_PATHS)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES := \
+    $(CUPID_VENDOR_RAMDISK_MODULE_PATHS)
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := \
     $(CUPID_FIRST_STAGE_LOAD_MODULES)
 BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := \
-    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+    $(CUPID_FIRST_STAGE_LOAD_MODULES) \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES)
 BOARD_VENDOR_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULE_PATHS)
 BOARD_VENDOR_KERNEL_MODULES_LOAD := $(CUPID_VENDOR_DLKM_LOAD_MODULES)
 BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(TARGET_KERNEL_SOURCE)/modules.vendor_blocklist.msm.waipio
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
-BOOT_KERNEL_MODULES := \
-    $(CUPID_FIRST_STAGE_MODULES) $(CUPID_VENDOR_DLKM_MODULES)
+BOOT_KERNEL_MODULES := $(CUPID_ALL_KERNEL_MODULES)
