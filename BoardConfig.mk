@@ -293,14 +293,17 @@ CUPID_VENDOR_DLKM_MODULE_PATHS := \
 KLEE_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
 
 # Module load lists are ordered basenames, never filesystem paths.  Keep both
-# boot stages in vendor_boot so recovery can initialize USB and device
-# hardware without mounting vendor_dlkm.  A normal boot loads only first-stage
-# storage dependencies there, then loads the remaining ordered set after
-# vendor_dlkm is mounted.  vendor_dlkm retains the complete module collection
-# for OTA and recovery consistency; duplication across the images is expected.
+# boot stages in vendor_boot so recovery and normal boot can initialize the
+# complete device stack without depending on the vendor_dlkm handoff.  Keep the
+# same ordered list for both paths: this avoids losing required providers while
+# first-stage init mounts the dynamic partitions.  vendor_dlkm retains the
+# complete module collection for OTA consistency; duplication across the images
+# is expected.
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES += \
     $(CUPID_VENDOR_RAMDISK_MODULE_PATHS)
-BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD += $(CUPID_FIRST_STAGE_LOAD_MODULES)
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD += \
+    $(CUPID_FIRST_STAGE_LOAD_MODULES) \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES)
 BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD += \
     $(CUPID_FIRST_STAGE_LOAD_MODULES) \
     $(CUPID_SECOND_STAGE_LOAD_MODULES)
@@ -336,7 +339,8 @@ KERNEL_MODULES_OUT := out/target/product/$(PRODUCT_NAME)/$(KERNEL_MODULES_INSTAL
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES := \
     $(CUPID_VENDOR_RAMDISK_MODULE_PATHS)
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_LOAD := \
-    $(CUPID_FIRST_STAGE_LOAD_MODULES)
+    $(CUPID_FIRST_STAGE_LOAD_MODULES) \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES)
 BOARD_VENDOR_RAMDISK_RECOVERY_KERNEL_MODULES_LOAD := \
     $(CUPID_FIRST_STAGE_LOAD_MODULES) \
     $(CUPID_SECOND_STAGE_LOAD_MODULES)
