@@ -61,13 +61,30 @@ klee_build -jXX
 
 The public CodeLinaro Waipio 5.10 release does not include the board
 device-tree source used by retail Xiaomi 12 firmware. Before building a
-flashable image, extract the concatenated DTB from `vendor_boot` and the DTBO
-from the active slot of a matching `cupid` device, then place them at:
+flashable image, extract the complete, ordered base-DTB table from
+`vendor_boot` and the DTBO from the active slot of a matching `cupid` device.
+Do not filter the base table down to generic Waipio DTBs: the retail Cupid
+overlays reference Xiaomi downstream display, camera, and audio nodes that are
+absent from those public base trees.
+
+Populate and verify the local DTB directory with:
+
+```bash
+python3 device/xiaomi/cupid/tools/extract_vendor_boot_dtbs.py \
+    vendor_boot.img \
+    vendor/xiaomi/cupid/proprietary/kernel/dtb
+
+cd vendor/xiaomi/cupid/proprietary/kernel/dtb
+sha256sum -c \
+    ../../../../../../device/xiaomi/cupid/configs/vendor_boot_dtbs_os3.0.3.0.sha256
+```
+
+Place the matching DTBO at:
 
 ```text
-vendor/xiaomi/cupid/proprietary/dtb/cupid-stock.dtb
 vendor/xiaomi/cupid/proprietary/dtbo.img
 ```
 
-These hardware-specific images are local proprietary inputs and must not be
-committed to the public device repository.
+The checked hash manifest describes Cupid OS 3.0.3.0.VLCCNXM. These
+hardware-specific images remain local proprietary inputs and are not committed
+to the public device repository.
