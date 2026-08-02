@@ -156,6 +156,12 @@ TARGET_KERNEL_VERSION := 5.10
 TARGET_USES_QCOM_LEGACY_QMI_LOCATION := false
 TARGET_BUILD_QCOM_SIGMA_DUT := false
 
+# Use the modern UFS BSG UAPI exposed by the GKI headers. Without this,
+# Qualcomm's recovery extension falls back to removed legacy UFS ioctls.
+SOONG_CONFIG_NAMESPACES += ufsbsg
+SOONG_CONFIG_ufsbsg += ufsframework
+SOONG_CONFIG_ufsbsg_ufsframework := bsg
+
 # AOSP 17 names these prebuilt policy inputs explicitly. Keep the upstream
 # CodeLinaro policy content while avoiding its obsolete BoardConfig aliases.
 BOARD_SYSTEM_EXT_SEPOLICY_PREBUILT_DIRS += \
