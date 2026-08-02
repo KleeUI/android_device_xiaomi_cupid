@@ -66,6 +66,7 @@ BOARD_BOOTCONFIG := \
     androidboot.usbcontroller=a600000.dwc3
 
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
+TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 
 # Partition geometry measured from a retail Xiaomi 12.
 BOARD_BOOTIMAGE_PARTITION_SIZE := 201326592
