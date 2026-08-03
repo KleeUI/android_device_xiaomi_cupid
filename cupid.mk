@@ -13,7 +13,9 @@ $(call inherit-product, vendor/klee/build/product/common.mk)
 DEVICE_FRAMEWORK_MANIFEST_FILE := device/qcom/taro/framework_manifest.xml
 TARGET_USES_QCV := true
 DEVICE_MANIFEST_SKUS := taro
-DEVICE_MANIFEST_TARO_FILES := device/qcom/taro/manifest_taro.xml
+DEVICE_MANIFEST_TARO_FILES := \
+    device/qcom/taro/manifest_taro.xml \
+    device/xiaomi/cupid/manifest_keymaster.xml
 DEVICE_MATRIX_FILE := device/qcom/common/compatibility_matrix.xml
 
 PRODUCT_NAME := cupid
