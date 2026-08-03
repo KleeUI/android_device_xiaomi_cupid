@@ -76,6 +76,7 @@ PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
+    android.hardware.security.rkp-V3-ndk.vendor \
     cupid_framework_compatibility_matrix.6.xml \
     fastbootd \
     update_engine \
