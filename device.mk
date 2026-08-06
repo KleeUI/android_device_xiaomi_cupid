@@ -35,12 +35,37 @@ KERNEL_MODULES_OUT := \
 # vendor-only taro product or legacy global board assignments.
 _cupid_qcom_system_defs := $(sort \
     $(wildcard vendor/qcom/defs/product-defs/system/*.mk))
-_cupid_qcom_vendor_defs := $(sort \
-    $(wildcard vendor/qcom/defs/product-defs/vendor/*.mk))
+# The Xiaomi kernel build already owns every module in these manifests.  Do
+# not inherit CodeLinaro's parallel DLKM packages: inherited product variables
+# are resolved after this file is parsed, so filtering PRODUCT_PACKAGES at the
+# end is too late to prevent their kernel_platform rules from entering droid.
+_cupid_qcom_kernel_product_defs := \
+    vendor/qcom/defs/product-defs/vendor/audio_kernel_product_board.mk \
+    vendor/qcom/defs/product-defs/vendor/bt_kernel_product_board.mk \
+    vendor/qcom/defs/product-defs/vendor/camera-kernel_product.mk \
+    vendor/qcom/defs/product-defs/vendor/data_dlkm_vendor_product.mk \
+    vendor/qcom/defs/product-defs/vendor/dataipa_dlkm_vendor_product.mk \
+    vendor/qcom/defs/product-defs/vendor/datarmnet_dlkm_vendor_product.mk \
+    vendor/qcom/defs/product-defs/vendor/datarmnet_ext_dlkm_vendor_product.mk \
+    vendor/qcom/defs/product-defs/vendor/display_driver_product.mk \
+    vendor/qcom/defs/product-defs/vendor/dsp_kernel_product.mk \
+    vendor/qcom/defs/product-defs/vendor/mm_driver_product.mk \
+    vendor/qcom/defs/product-defs/vendor/mmrm_kernel_product.mk \
+    vendor/qcom/defs/product-defs/vendor/securemsm_kernel_product_board.mk \
+    vendor/qcom/defs/product-defs/vendor/spu_driver_product.mk \
+    vendor/qcom/defs/product-defs/vendor/synx_kernel_product.mk \
+    vendor/qcom/defs/product-defs/vendor/touch_driver_product.mk \
+    vendor/qcom/defs/product-defs/vendor/video_kernel_product.mk
+_cupid_qcom_vendor_defs := $(filter-out \
+    $(_cupid_qcom_kernel_product_defs), \
+    $(sort $(wildcard vendor/qcom/defs/product-defs/vendor/*.mk)))
 $(foreach definition,$(_cupid_qcom_system_defs), \
     $(call inherit-product,$(definition)))
 $(foreach definition,$(_cupid_qcom_vendor_defs), \
     $(call inherit-product,$(definition)))
+_cupid_qcom_system_defs :=
+_cupid_qcom_vendor_defs :=
+_cupid_qcom_kernel_product_defs :=
 
 include device/qcom/wlan/taro/wlan.mk
 
