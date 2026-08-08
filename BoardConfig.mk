@@ -283,9 +283,25 @@ ifneq ($(strip $(filter-out \
     $(CUPID_EARLY_SECURITY_LOAD_MODULES))),)
 $(error Early QSEE modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
 endif
+
+# Display, GPU and FastRPC services are started by the boot trigger.  Loading
+# their drivers from a non-blocking vendor service lets those services race the
+# creation of /dev/dri, /dev/kgsl-3d0 and /dev/fastrpc-*.  Keep the small set of
+# entry-point modules in the synchronous first-stage list; modules.dep pulls in
+# their provider dependencies in the kernel-defined order.
+CUPID_BOOT_CRITICAL_LOAD_MODULES := \
+    frpc-adsprpc.ko \
+    msm_kgsl.ko \
+    msm_drm.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES), \
+    $(CUPID_BOOT_CRITICAL_LOAD_MODULES))),)
+$(error Boot-critical modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
 CUPID_NORMAL_FIRST_STAGE_LOAD_MODULES := \
     $(CUPID_FIRST_STAGE_LOAD_MODULES) \
-    $(CUPID_EARLY_SECURITY_LOAD_MODULES)
+    $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
+    $(CUPID_BOOT_CRITICAL_LOAD_MODULES)
 
 ifeq ($(strip $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)),)
 $(error Empty vendor_dlkm kernel module list: $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE))
@@ -302,7 +318,9 @@ CUPID_VENDOR_DLKM_MODULES := \
         $(CUPID_SECOND_STAGE_MODULES) \
         $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES))
 CUPID_VENDOR_DLKM_LOAD_MODULES := \
-    $(filter-out $(CUPID_EARLY_SECURITY_LOAD_MODULES), \
+    $(filter-out \
+        $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
+        $(CUPID_BOOT_CRITICAL_LOAD_MODULES), \
         $(CUPID_SECOND_STAGE_LOAD_MODULES)) \
     $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
