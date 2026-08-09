@@ -57,7 +57,13 @@ BOARD_VENDOR_RAMDISK_FRAGMENTS += dlkm
 BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
 
 BOARD_KERNEL_CMDLINE := \
-    disable_dma32=on
+    disable_dma32=on \
+    log_buf_len=2M \
+    mtdoops.dump_oops=0 \
+    mtdoops.fingerprint=Klee-1.0 \
+    mtdoops.mtddev=0 \
+    mtdoops.record_size=2097152 \
+    printk.always_kmsg_dump=1
 
 BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
@@ -302,7 +308,10 @@ endif
 CUPID_NORMAL_FIRST_STAGE_LOAD_MODULES := \
     $(CUPID_FIRST_STAGE_LOAD_MODULES) \
     $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
-    $(CUPID_BOOT_CRITICAL_LOAD_MODULES)
+    $(CUPID_BOOT_CRITICAL_LOAD_MODULES) \
+    mtd.ko \
+    block2mtd.ko \
+    mtdoops.ko
 
 ifeq ($(strip $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)),)
 $(error Empty vendor_dlkm kernel module list: $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE))
