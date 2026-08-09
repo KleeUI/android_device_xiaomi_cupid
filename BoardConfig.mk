@@ -337,14 +337,28 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
         $(CUPID_SECOND_STAGE_LOAD_MODULES)) \
     $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
+CUPID_SOURCE_KERNEL_MODULES := \
+    qcom_dma_heaps.ko
+CUPID_SOURCE_KERNEL_MODULE_DIR := \
+    $(PRODUCT_OUT)/obj/KLEE_KERNEL_DIST/modules
 CUPID_VENDOR_RAMDISK_MODULE_PATHS := \
-    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_VENDOR_RAMDISK_MODULES))
+    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/, \
+        $(filter-out $(CUPID_SOURCE_KERNEL_MODULES), \
+            $(CUPID_VENDOR_RAMDISK_MODULES))) \
+    $(addprefix $(CUPID_SOURCE_KERNEL_MODULE_DIR)/, \
+        $(filter $(CUPID_SOURCE_KERNEL_MODULES), \
+            $(CUPID_VENDOR_RAMDISK_MODULES)))
 CUPID_VENDOR_DLKM_MODULE_PATHS := \
-    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/,$(CUPID_VENDOR_DLKM_MODULES))
+    $(addprefix $(CUPID_KERNEL_MODULE_DIR)/, \
+        $(filter-out $(CUPID_SOURCE_KERNEL_MODULES), \
+            $(CUPID_VENDOR_DLKM_MODULES))) \
+    $(addprefix $(CUPID_SOURCE_KERNEL_MODULE_DIR)/, \
+        $(filter $(CUPID_SOURCE_KERNEL_MODULES), \
+            $(CUPID_VENDOR_DLKM_MODULES)))
 
 # Keep the Klee kernel target honest: every module named by the Cupid module
-# manifests must be emitted by the source build, even though image assembly
-# consumes the matching private vendor kit above.
+# manifests must be emitted by the source build. Modules whose configuration
+# differs from the retained ABI kit are packaged directly from that output.
 KLEE_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
 
 # Module load lists are ordered basenames, never filesystem paths.  Keep the
