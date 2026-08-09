@@ -186,6 +186,7 @@ PRODUCT_PRIVATE_SEPOLICY_DIRS += \
     device/qcom/sepolicy/generic/product/private
 
 BOARD_VENDOR_SEPOLICY_DIRS += $(wildcard \
+    $(DEVICE_PATH)/sepolicy/vendor \
     device/qcom/sepolicy_vndr \
     device/qcom/sepolicy_vndr/generic/vendor/common \
     device/qcom/sepolicy_vndr/generic/vendor/common/attribute \
