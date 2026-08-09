@@ -204,6 +204,8 @@ TARGET_KERNEL_CONFIG := \
     vendor/xiaomi_GKI.config \
     vendor/cupid_GKI.config \
     vendor/debugfs.config
+TARGET_KERNEL_CONFIG_EXT += \
+    $(DEVICE_PATH)/configs/klee_GKI.config
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
 TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
 TARGET_KERNEL_EXT_MODULES := \
