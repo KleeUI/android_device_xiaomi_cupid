@@ -63,6 +63,7 @@ BOARD_BOOTCONFIG := \
     androidboot.hardware=qcom \
     androidboot.product.vendor.sku=taro \
     androidboot.memcg=1 \
+    androidboot.klee_firststage_diag=true \
     androidboot.usbcontroller=a600000.dwc3
 
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/recovery.fstab
