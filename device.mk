@@ -109,7 +109,8 @@ PRODUCT_PACKAGES += \
 
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=QTI \
-    ro.soc.model=SM8450
+    ro.soc.model=SM8450 \
+    vendor.display.disable_sdm_plugins=1
 
 # Proprietary Xiaomi/QTI components are intentionally isolated from the device
 # integration and can be populated from a user-owned stock installation.
