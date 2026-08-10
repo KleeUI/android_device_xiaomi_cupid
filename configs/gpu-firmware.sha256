@@ -1,0 +1,5 @@
+# Expected SHA-256 values for the locally supplied cupid GPU firmware.
+01cacafc48ae96f061caa325a294a91024e626403b97fa556a9bcc42e4de6768  vendor/firmware/a660_sqe.fw
+f22cdc97b79dafe2a8495dc112df3fb09bbbc82337044d5b13ba21fec0df5840  vendor/firmware/a662_gmu.bin
+e67d1829f57fc8326d806234b932dc3b78e28a9940df34c70752f17d5f38b7aa  vendor/firmware/a730_sqe.fw
+b2d3f0e2a98fd6259ab9ffef16df63265542e6cc9a970d53d476e823d432042a  vendor/firmware/gmu_gen70000.bin
