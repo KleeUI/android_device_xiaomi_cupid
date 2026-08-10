@@ -21,24 +21,6 @@ vintf_compatibility_matrix {
     ],
 }
 
-// Load the deferred vendor_dlkm module manifest before vendor HALs start.
-// Qualcomm's policy already provides the constrained vendor_modprobe domain;
-// Cupid supplies its own small loader because the imported platform sources
-// do not include the proprietary vendor_modprobe.sh implementation.
-sh_binary {
-    name: "vendor_modprobe.sh",
-    src: "rootdir/bin/vendor_modprobe.sh",
-    filename: "vendor_modprobe.sh",
-    vendor: true,
-}
-
-prebuilt_etc {
-    name: "init.cupid.modules.rc",
-    src: "rootdir/etc/init/init.cupid.modules.rc",
-    sub_dir: "init",
-    vendor: true,
-}
-
 // The stock vendor image contains several proprietary HIDL implementations
 // whose source .hal files are not published.  Register their interface names
 // with the build-time init verifier while continuing to use the ABI-matched

@@ -105,10 +105,8 @@ PRODUCT_PACKAGES += \
     android.hardware.security.rkp-V3-ndk.vendor \
     cupid_framework_compatibility_matrix.6.xml \
     fastbootd \
-    init.cupid.modules.rc \
     update_engine \
-    update_verifier \
-    vendor_modprobe.sh
+    update_verifier
 
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=QTI \
