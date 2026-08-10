@@ -1,0 +1,11 @@
+#
+# Copyright (C) 2026 The KleeUI Project
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# vendor_dlkm is mounted by first-stage init.  Load its generated manifest
+# synchronously at the start of second-stage init so hardware services cannot
+# race the creation of their kernel devices.
+on early-init
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/vendor_modprobe.sh
