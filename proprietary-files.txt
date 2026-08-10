@@ -13,5 +13,11 @@
 # Sensors
 -vendor/bin/hw/android.hardware.sensors-service.xiaomi-multihal
 
+# GPU firmware
+vendor/firmware/a660_sqe.fw
+vendor/firmware/a662_gmu.bin
+vendor/firmware/a730_sqe.fw
+vendor/firmware/gmu_gen70000.bin
+
 # Xiaomi hardware services
 -vendor/bin/hw/vendor.xiaomi.hardware.quickcamera@1.0-service
