@@ -295,6 +295,29 @@ ifneq ($(strip $(filter-out \
 $(error Early QSEE modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
 endif
 
+# msm_drm has a link dependency on the DWC3 wrapper, so loading the display
+# stack early also pulls in dwc3-msm.  The USB PHY and Type-C providers do not
+# appear in modules.dep, however, and deferring them to vendor_dlkm leaves the
+# wrapper permanently bound without its a600000.dwc3 child.  Load the complete
+# device-probe dependency chain before msm_drm so normal boot follows the same
+# ordering that makes the UDC available in recovery.
+CUPID_EARLY_USB_LOAD_MODULES := \
+    phy-qcom-emu.ko \
+    phy-msm-ssusb-qmp.ko \
+    phy-msm-snps-hs.ko \
+    repeater.ko \
+    repeater-i2c-eusb2.ko \
+    phy-msm-snps-eusb2.ko \
+    redriver.ko \
+    nb7vpq904m.ko \
+    dwc3-msm.ko \
+    ucsi_glink.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES), \
+    $(CUPID_EARLY_USB_LOAD_MODULES))),)
+$(error Early USB modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
+
 # Display, GPU and FastRPC services are started by the boot trigger.  Loading
 # their drivers from a non-blocking vendor service lets those services race the
 # creation of /dev/dri, /dev/kgsl-3d0 and /dev/fastrpc-*.  Keep the small set of
@@ -314,6 +337,7 @@ endif
 CUPID_NORMAL_FIRST_STAGE_LOAD_MODULES := \
     $(CUPID_FIRST_STAGE_LOAD_MODULES) \
     $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
+    $(CUPID_EARLY_USB_LOAD_MODULES) \
     $(CUPID_BOOT_CRITICAL_LOAD_MODULES) \
     mtd.ko \
     block2mtd.ko \
