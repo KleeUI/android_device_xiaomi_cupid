@@ -7,3 +7,9 @@ ro.hardware.vulkan=adreno
 ro.hardware.fp.udfps=true
 ro.vendor.qti.va_aosp.support=1
 ro.vendor.qti.va_odm.support=1
+
+# Use the DMA-BUF heap allocator required by SnapAlloc/KGSL on SM8450.
+# Keeping both properties enabled prevents the legacy ION and SnapAlloc
+# backends from producing incompatible buffer handles.
+vendor.gralloc.use_dma_buf_heaps=1
+vendor.gralloc.enable_snapalloc=1
