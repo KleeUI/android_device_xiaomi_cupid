@@ -8,8 +8,8 @@ ro.hardware.fp.udfps=true
 ro.vendor.qti.va_aosp.support=1
 ro.vendor.qti.va_odm.support=1
 
-# Use the DMA-BUF heap allocator required by SnapAlloc/KGSL on SM8450.
-# Keeping both properties enabled prevents the legacy ION and SnapAlloc
-# backends from producing incompatible buffer handles.
+# Cupid's 5.10 Adreno userspace consumes the legacy QTI private-handle ABI.
+# Keep DMA-BUF heaps, but do not mix that userspace with the mapper5/SnapAlloc
+# handle format used by newer Qualcomm kernel and graphics stacks.
 vendor.gralloc.use_dma_buf_heaps=1
-vendor.gralloc.enable_snapalloc=1
+vendor.gralloc.enable_snapalloc=0

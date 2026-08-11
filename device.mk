@@ -8,6 +8,11 @@ DEVICE_PATH := device/xiaomi/cupid
 
 BOARD_AVB_ENABLE := true
 
+# The stock SM8450 GPU userspace is paired with Qualcomm's gralloc4 private
+# handle ABI.  Define this before any inherited Qualcomm product fragment so
+# the AIDL allocator and mapper5 packages are never added to this product.
+TARGET_QTI_GRALLOC4_COMPAT := true
+
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
