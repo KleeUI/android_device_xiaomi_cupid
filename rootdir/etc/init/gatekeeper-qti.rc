@@ -1,0 +1,10 @@
+# Copyright (C) 2026 The KleeUI Project
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# The stock QTI Gatekeeper service is assigned to early_hal, a class that is
+# not started by the AOSP init sequence.  Start it explicitly alongside the
+# QTI KeyMint and Keymaster services so gatekeeperd is available before
+# BiometricService is constructed.
+on init
+    start gatekeeper-1-0
