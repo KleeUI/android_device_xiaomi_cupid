@@ -1,0 +1,9 @@
+# Copyright (C) 2026 The KleeUI Project
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Camera userspace requires the Qualcomm Camera Request Manager before the
+# provider starts. The module lives in vendor_dlkm, so load it synchronously
+# after first-stage mount setup and let modprobe resolve its dependencies.
+on early-init
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -d /vendor/lib/modules camera
