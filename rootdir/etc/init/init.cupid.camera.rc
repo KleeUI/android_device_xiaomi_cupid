@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Camera userspace requires the Qualcomm Camera Request Manager before the
-# provider starts. The module lives in vendor_dlkm, so load it synchronously
-# after first-stage mount setup and let modprobe resolve its dependencies.
+# The kernel module manifest lives in vendor_dlkm. Android first-stage init
+# only consumes the vendor-ramdisk manifest, so explicitly load the mounted
+# vendor_dlkm set before HAL classes start. This includes the audio route,
+# ADSP and codec drivers required by PAL to register an ALSA sound card.
 on early-init
-    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -d /vendor/lib/modules camera
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load
