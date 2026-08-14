@@ -100,7 +100,11 @@ BOARD_KLEE_DYNAMIC_PARTITIONS_PARTITION_LIST := \
 BOARD_SYSTEMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_SYSTEM_EXTIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := ext4
+# The source-built GKI has compressed EROFS support built in. Compress the
+# read-only vendor image so its complete hardware stack fits the retail slot
+# without pruning device firmware or proprietary HAL dependencies.
+BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
+BOARD_VENDORIMAGE_EROFS_COMPRESSOR := lz4hc,9
 BOARD_ODMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
