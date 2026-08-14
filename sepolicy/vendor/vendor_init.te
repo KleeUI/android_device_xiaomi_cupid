@@ -1,0 +1,12 @@
+# Copyright (C) 2026 The KleeUI Project
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Cupid starts its remote processors directly from the device init fragment.
+# Keep this permission scoped to the four boot controls used by that action.
+allow vendor_init {
+    vendor_sysfs_boot_adsp
+    vendor_sysfs_boot_cdsp
+    vendor_sysfs_boot_cvp
+    vendor_sysfs_slpi
+}:file w_file_perms;

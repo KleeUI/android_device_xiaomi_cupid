@@ -102,7 +102,8 @@ PRODUCT_COPY_FILES += \
     vendor/xiaomi/cupid/proprietary/vendor/firmware/stm_fts_production_limits.csv:$(TARGET_COPY_OUT_RECOVERY)/root/lib/firmware/stm_fts_production_limits.csv \
     $(DEVICE_PATH)/rootdir/etc/init/gatekeeper-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/gatekeeper-qti.rc \
     $(DEVICE_PATH)/rootdir/etc/init/android.hardware.security.keymint-service-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.security.keymint-service-qti.rc \
-    $(DEVICE_PATH)/rootdir/etc/init/init.cupid.camera.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/init.cupid.camera.rc \
+    $(DEVICE_PATH)/rootdir/etc/init/init.qti.kernel.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.qti.kernel.rc \
+    $(DEVICE_PATH)/rootdir/etc/modules.load.cupid:$(TARGET_COPY_OUT_VENDOR)/etc/modules.load.cupid \
     $(DEVICE_PATH)/rootdir/etc/init/qseecomd.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/qseecomd.rc \
     device/qcom/taro/init.target.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.target.rc \
     device/qcom/taro/ueventd-odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc

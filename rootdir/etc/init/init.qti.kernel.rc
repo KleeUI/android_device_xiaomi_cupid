@@ -1,0 +1,18 @@
+# Copyright (C) 2026 The KleeUI Project
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# Load only the hardware entry points used by Cupid. Their dependency records
+# pull in the matching Waipio providers without probing modules for unrelated
+# Qualcomm platforms.
+on early-init
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/etc/modules.load.cupid
+
+# The firmware partitions are mounted by early-fs and the loader modules above
+# create these controls synchronously. Start each remote processor before its
+# userspace HAL reaches the hardware.
+on early-boot
+    write /sys/kernel/boot_adsp/boot 1
+    write /sys/kernel/boot_cdsp/boot 1
+    write /sys/devices/virtual/cvp/cvp/boot 1
+    write /sys/kernel/boot_slpi/boot 1
