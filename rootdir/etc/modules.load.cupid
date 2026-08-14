@@ -1,4 +1,10 @@
+block2mtd.ko
+mtdoops.ko
 qcom_q6v5_pas.ko
+pm8941-pwrkey.ko
+qti_battery_charger_main.ko
+dwc3-msm.ko
+msm_drm.ko
 cdsprm.ko
 cdsp-loader.ko
 sensors_ssc.ko
