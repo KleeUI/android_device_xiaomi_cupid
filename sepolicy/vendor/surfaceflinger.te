@@ -1,8 +1,0 @@
-# Copyright (C) 2026 The KleeUI Project
-#
-# SPDX-License-Identifier: Apache-2.0
-
-# KGSL may request its firmware while handling SurfaceFlinger's first GPU open.
-# Permit only the read access needed by the kernel firmware loader.
-r_dir_file(surfaceflinger, vendor_firmware_file)
-

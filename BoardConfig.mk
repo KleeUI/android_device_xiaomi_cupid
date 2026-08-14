@@ -58,7 +58,6 @@ BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
 
 BOARD_KERNEL_CMDLINE := \
     disable_dma32=on \
-    firmware_class.path=/vendor/firmware \
     log_buf_len=2M \
     mtdoops.dump_oops=0 \
     mtdoops.fingerprint=Klee-1.0 \
