@@ -78,6 +78,10 @@ TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 # Partition geometry measured from a retail Xiaomi 12.
 BOARD_BOOTIMAGE_PARTITION_SIZE := 201326592
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
+# cupid's vendor_a slot is 469307 4096-byte blocks. Declare the exact capacity
+# before mkfs/AVB generation so build_image computes a fitting tree and FEC
+# layout instead of producing an image that must be resized after the fact.
+BOARD_VENDORIMAGE_PARTITION_SIZE := 1922281472
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
 BOARD_FLASH_BLOCK_SIZE := 131072
