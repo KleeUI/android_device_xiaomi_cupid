@@ -115,6 +115,9 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti.recovery \
     android.hardware.security.rkp-V3-ndk.vendor \
     cupid_framework_compatibility_matrix.6.xml \
+    cupid_qca6490_amss20_firmware \
+    cupid_qca6490_bdwlan_firmware \
+    cupid_qca6490_wifi_config \
     fastbootd \
     update_engine \
     update_verifier
