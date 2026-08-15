@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Load only the hardware entry points used by Cupid. Their dependency records
-# pull in the matching Waipio providers without probing modules for unrelated
-# Qualcomm platforms.
+# Load only the hardware entry points used by Cupid. Keep this list beside the
+# generated dependency metadata so Android modprobe resolves every entry from
+# the same vendor_dlkm configuration directory.
 on early-init
-    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/etc/modules.load.cupid
+    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load.cupid
 
 # The firmware partitions are mounted by early-fs and the loader modules above
 # create these controls synchronously. Start each remote processor before its
