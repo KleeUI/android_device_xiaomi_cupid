@@ -48,3 +48,28 @@ prebuilt_hidl_interfaces {
         "vendor.xiaomi.hardware.quickcamera@1.0::IQuickCameraService",
     ],
 }
+
+// The stock firmware partition keeps the QCA6490 payloads at its image root,
+// while the upstream WLAN driver requests them through a chip-specific path.
+// Keep the immutable firmware in place and expose only compatibility links in
+// vendor so firmware_class can resolve both layouts.
+install_symlink {
+    name: "cupid_qca6490_amss20_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/amss20.bin",
+    symlink_target: "/vendor/firmware_mnt/image/amss20.bin",
+}
+
+install_symlink {
+    name: "cupid_qca6490_bdwlan_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/bdwlan.elf",
+    symlink_target: "/vendor/firmware_mnt/image/bdwlan.elf",
+}
+
+install_symlink {
+    name: "cupid_qca6490_wifi_config",
+    vendor: true,
+    installed_location: "firmware/wlan/qca_cld/qca6490/WCNSS_qcom_cfg.ini",
+    symlink_target: "/vendor/etc/wifi/qca6490/WCNSS_qcom_cfg.ini",
+}
