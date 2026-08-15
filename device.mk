@@ -100,6 +100,7 @@ PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/recovery.posix.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/fstab \
     vendor/xiaomi/cupid/proprietary/vendor/firmware/st_fts_l3.ftb:$(TARGET_COPY_OUT_RECOVERY)/root/lib/firmware/st_fts_l3.ftb \
     vendor/xiaomi/cupid/proprietary/vendor/firmware/stm_fts_production_limits.csv:$(TARGET_COPY_OUT_RECOVERY)/root/lib/firmware/stm_fts_production_limits.csv \
+    $(DEVICE_PATH)/rootdir/bin/klee-wait-write.sh:$(TARGET_COPY_OUT_VENDOR)/bin/klee-wait-write.sh \
     $(DEVICE_PATH)/rootdir/etc/init/gatekeeper-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/gatekeeper-qti.rc \
     $(DEVICE_PATH)/rootdir/etc/init/android.hardware.security.keymint-service-qti.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/android.hardware.security.keymint-service-qti.rc \
     $(DEVICE_PATH)/rootdir/etc/init/init.qti.kernel.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.qti.kernel.rc \
