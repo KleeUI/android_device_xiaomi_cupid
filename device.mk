@@ -118,6 +118,7 @@ PRODUCT_PACKAGES += \
     cupid_qca6490_amss20_firmware \
     cupid_qca6490_bdwlan_firmware \
     cupid_qca6490_wifi_config \
+    cupid_qca6490_wlan_mac \
     fastbootd \
     update_engine \
     update_verifier
