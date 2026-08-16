@@ -3,11 +3,23 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Bring up only the hardware providers needed by early Android services in the
-# synchronous path. Load the generated device manifest in parallel so an
-# optional camera, media, input, IPA or WLAN probe cannot stall PID 1.
+# synchronous path.
 on early-init
     exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load.cupid
+
+# The modem and Bluetooth firmware partitions are mounted by the fs trigger.
+# Load the complete device manifest afterwards so optional camera, media, IPA
+# or WLAN probes cannot race their firmware or stall PID 1.
+on post-fs
     exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load
+
+# Do not arm watchdog and hang-detection providers while Android is still
+# establishing its core services. Once boot completes, load them independently
+# so one optional probe cannot block the others or the init action queue.
+on property:sys.boot_completed=1
+    exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s core_hang_detect
+    exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s qcom_soc_wdt
+    exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s hung_task_enh
 
 # Device probes may publish their remoteproc controls after modprobe returns.
 # Wait for each control in an independent bounded worker so early-boot remains

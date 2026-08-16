@@ -304,6 +304,19 @@ ifneq ($(strip $(filter-out \
 $(error Early QSEE modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
 endif
 
+# Keep active watchdog and hang-detection probes out of the diagnostic boot
+# path. Their support modules remain available, but the providers themselves
+# are started only after Android has completed boot and can service them.
+CUPID_POST_BOOT_LOAD_MODULES := \
+    core_hang_detect.ko \
+    qcom_soc_wdt.ko \
+    hung_task_enh.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES), \
+    $(CUPID_POST_BOOT_LOAD_MODULES))),)
+$(error Post-boot watchdog modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
+
 # msm_drm has a link dependency on the DWC3 wrapper, so loading the display
 # stack early also pulls in dwc3-msm.  The USB PHY and Type-C providers do not
 # appear in modules.dep, however, and deferring them to vendor_dlkm leaves the
@@ -369,7 +382,8 @@ CUPID_VENDOR_DLKM_MODULES := \
 CUPID_VENDOR_DLKM_LOAD_MODULES := \
     $(filter-out \
         $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
-        $(CUPID_BOOT_CRITICAL_LOAD_MODULES), \
+        $(CUPID_BOOT_CRITICAL_LOAD_MODULES) \
+        $(CUPID_POST_BOOT_LOAD_MODULES), \
         $(CUPID_SECOND_STAGE_LOAD_MODULES)) \
     $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
