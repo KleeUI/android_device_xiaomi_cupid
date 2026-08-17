@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (C) 2026 The Klee Project
+SPDX-License-Identifier: Apache-2.0
+-->
+<libraries>
+    <!-- Register the AudioReach graph manager before the core audio HAL. -->
+    <library name="agmservice"
+            libraryName="libagmipcservice.so"
+            method="registerService"
+            mandatory="true" />
+    <library name="audio-core"
+            libraryName="libaudiocorehal.qti.so"
+            method="registerServices"
+            mandatory="false" />
+    <library name="audio-core-default"
+            libraryName="libaudiocorehal.default.so"
+            method="registerServices"
+            mandatory="true" />
+    <library name="audio-effects"
+            libraryName="libaudioeffecthal.qti.so"
+            method="registerService"
+            mandatory="false" />
+    <library name="sthal"
+            libraryName="libsoundtriggerhal.qti.so"
+            method="createISoundTriggerFactory"
+            mandatory="false" />
+</libraries>

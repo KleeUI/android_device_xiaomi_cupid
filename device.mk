@@ -6,6 +6,13 @@
 
 DEVICE_PATH := device/xiaomi/cupid
 
+# Put Cupid's AudioReach interface list before inherited Qualcomm product
+# fragments.  PRODUCT_COPY_FILES keeps the first entry for a destination and
+# records later duplicates as overrides, so this device-owned list wins over
+# the generic Taro copy rule without modifying the shared platform tree.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/configs/audio/vendor_audio_interfaces.xml:vendor/etc/vendor_audio_interfaces.xml
+
 BOARD_AVB_ENABLE := true
 
 # The stock SM8450 GPU userspace is paired with Qualcomm's gralloc4 private
@@ -114,6 +121,7 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
     android.hardware.security.rkp-V3-ndk.vendor \
+    libagmipcservice \
     cupid_bt_firmware_mountpoint \
     cupid_dsp_mountpoint \
     cupid_firmware_mnt_mountpoint \
