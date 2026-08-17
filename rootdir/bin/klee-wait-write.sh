@@ -5,15 +5,18 @@
 target="$1"
 value="$2"
 remaining="${3:-60}"
+prerequisite="$4"
 
 if [ -z "$target" ] || [ -z "$value" ]; then
     exit 2
 fi
 
 while [ "$remaining" -gt 0 ]; do
-    if [ -e "$target" ]; then
-        printf '%s' "$value" > "$target"
-        exit $?
+    if [ -z "$prerequisite" ] || [ -r "$prerequisite" ]; then
+        if [ -w "$target" ]; then
+            printf '%s' "$value" > "$target"
+            exit $?
+        fi
     fi
 
     sleep 1

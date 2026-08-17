@@ -49,6 +49,37 @@ prebuilt_hidl_interfaces {
     ],
 }
 
+// fs_mgr can only mount a partition onto a directory that already exists in
+// the immutable vendor image.  These hidden sentinels make Soong create the
+// four mount points; the mounted filesystems cover them during normal boot.
+install_symlink {
+    name: "cupid_firmware_mnt_mountpoint",
+    vendor: true,
+    installed_location: "firmware_mnt/.klee_mountpoint",
+    symlink_target: "/dev/null",
+}
+
+install_symlink {
+    name: "cupid_dsp_mountpoint",
+    vendor: true,
+    installed_location: "dsp/.klee_mountpoint",
+    symlink_target: "/dev/null",
+}
+
+install_symlink {
+    name: "cupid_bt_firmware_mountpoint",
+    vendor: true,
+    installed_location: "bt_firmware/.klee_mountpoint",
+    symlink_target: "/dev/null",
+}
+
+install_symlink {
+    name: "cupid_vm_system_mountpoint",
+    vendor: true,
+    installed_location: "vm-system/.klee_mountpoint",
+    symlink_target: "/dev/null",
+}
+
 // The stock firmware partition keeps the QCA6490 payloads at its image root,
 // while the upstream WLAN driver requests them through a chip-specific path.
 // Keep the immutable firmware in place and expose only compatibility links in

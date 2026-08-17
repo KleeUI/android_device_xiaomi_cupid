@@ -7,10 +7,11 @@
 on early-init
     exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load.cupid
 
-# The modem and Bluetooth firmware partitions are mounted by the fs trigger.
-# Load the complete device manifest afterwards so optional camera, media, IPA
-# or WLAN probes cannot race their firmware or stall PID 1.
-on post-fs
+# The modem, DSP, Bluetooth and VM firmware partitions are handled by the
+# platform fs actions. Load the complete device manifest only after Android
+# announces that firmware mounts are complete, so optional probes cannot race
+# their payloads.
+on firmware_mounts_complete
     exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load
 
 # Do not arm watchdog and hang-detection providers while Android is still
@@ -22,12 +23,13 @@ on property:sys.boot_completed=1
     exec_background u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s hung_task_enh
 
 # Device probes may publish their remoteproc controls after modprobe returns.
-# Wait for each control in an independent bounded worker so early-boot remains
-# non-blocking while the firmware partitions finish mounting.
-on early-boot
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_adsp/boot 1 60
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_cdsp/boot 1 60
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_slpi/boot 1 60
+# Wait for each control in an independent bounded worker.  Requiring its MDT
+# payload prevents a remote processor from being started against an absent or
+# not-yet-mounted firmware partition.
+on firmware_mounts_complete
+    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_adsp/boot 1 60 /vendor/firmware_mnt/image/adsp.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_cdsp/boot 1 60 /vendor/firmware_mnt/image/cdsp.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_slpi/boot 1 60 /vendor/firmware_mnt/image/slpi.mdt
 
 # CVP is an optional media provider from the background module stage. Do not
 # make its probe or firmware availability part of the early-boot dependency.

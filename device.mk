@@ -114,11 +114,15 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
     android.hardware.security.rkp-V3-ndk.vendor \
+    cupid_bt_firmware_mountpoint \
+    cupid_dsp_mountpoint \
+    cupid_firmware_mnt_mountpoint \
     cupid_framework_compatibility_matrix.6.xml \
     cupid_qca6490_amss20_firmware \
     cupid_qca6490_bdwlan_firmware \
     cupid_qca6490_wifi_config \
     cupid_qca6490_wlan_mac \
+    cupid_vm_system_mountpoint \
     fastbootd \
     update_engine \
     update_verifier

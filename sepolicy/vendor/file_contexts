@@ -1,1 +1,2 @@
 /vendor/bin/hw/android\.hardware\.gatekeeper@1\.0-service-qti  u:object_r:vendor_hal_gatekeeper_qti_exec:s0
+/vendor/bin/klee-wait-write\.sh                              u:object_r:vendor_qti_init_shell_bg_exec:s0

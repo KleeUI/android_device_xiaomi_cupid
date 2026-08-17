@@ -119,6 +119,14 @@ TARGET_COPY_OUT_PRODUCT := product
 TARGET_COPY_OUT_SYSTEM_EXT := system_ext
 BOARD_USES_VENDOR_DLKMIMAGE := true
 
+# Qualcomm userspace still resolves firmware through these root-level legacy
+# paths.  Build the links into the root filesystem because second-stage init
+# cannot modify it after the read-only system root has been mounted.
+BOARD_ROOT_EXTRA_SYMLINKS += \
+    /vendor/firmware_mnt:/firmware \
+    /vendor/dsp:/dsp \
+    /vendor/bt_firmware:/bt_firmware
+
 BOARD_AVB_ENABLE := true
 BOARD_AVB_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
@@ -379,13 +387,27 @@ CUPID_VENDOR_DLKM_MODULES := \
         $(CUPID_FIRST_STAGE_MODULES) \
         $(CUPID_SECOND_STAGE_MODULES) \
         $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES))
+# Cupid uses the PCIe QCA6490 path.  Retain the IPCC/QCA6750 modules in the
+# multi-platform image for other products, but never probe them automatically
+# on this device: both drivers claim overlapping WLAN platform resources.
+CUPID_DEVICE_INACTIVE_LOAD_MODULES := \
+    icnss2.ko \
+    qca_cld3_qca6750.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_VENDOR_DLKM_MODULES), \
+    $(CUPID_DEVICE_INACTIVE_LOAD_MODULES))),)
+$(error Inactive Cupid modules are missing from the packaged module set)
+endif
 CUPID_VENDOR_DLKM_LOAD_MODULES := \
     $(filter-out \
         $(CUPID_EARLY_SECURITY_LOAD_MODULES) \
         $(CUPID_BOOT_CRITICAL_LOAD_MODULES) \
-        $(CUPID_POST_BOOT_LOAD_MODULES), \
+        $(CUPID_POST_BOOT_LOAD_MODULES) \
+        $(CUPID_DEVICE_INACTIVE_LOAD_MODULES), \
         $(CUPID_SECOND_STAGE_LOAD_MODULES)) \
-    $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES)
+    $(filter-out \
+        $(CUPID_DEVICE_INACTIVE_LOAD_MODULES), \
+        $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
 CUPID_SOURCE_KERNEL_MODULES := \
     msm_kgsl.ko \

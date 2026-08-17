@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# The bounded remoteproc workers only inspect the read-only modem firmware
+# mount before writing the matching sysfs boot control.
+r_dir_file(vendor_qti_init_shell_bg, firmware_file)
