@@ -25,11 +25,13 @@ on property:sys.boot_completed=1
 # Device probes may publish their remoteproc controls after modprobe returns.
 # Wait for each control in an independent bounded worker.  Requiring its MDT
 # payload prevents a remote processor from being started against an absent or
-# not-yet-mounted firmware partition.
+# not-yet-mounted firmware partition.  The modem filesystem is mounted as
+# system:system with 0550 directories and 0440 files, so retain uid root for
+# the sysfs write while using the system group for the read-only MDT probe.
 on firmware_mounts_complete
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_adsp/boot 1 60 /vendor/firmware_mnt/image/adsp.mdt
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_cdsp/boot 1 60 /vendor/firmware_mnt/image/cdsp.mdt
-    exec_background u:r:vendor_qti_init_shell_bg:s0 -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_slpi/boot 1 60 /vendor/firmware_mnt/image/slpi.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_adsp/boot 1 60 /vendor/firmware_mnt/image/adsp.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_cdsp/boot 1 60 /vendor/firmware_mnt/image/cdsp.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_slpi/boot 1 60 /vendor/firmware_mnt/image/slpi.mdt
 
 # CVP is an optional media provider from the background module stage. Do not
 # make its probe or firmware availability part of the early-boot dependency.
