@@ -121,7 +121,6 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
     android.hardware.security.rkp-V3-ndk.vendor \
-    libagmipcservice \
     cupid_bt_firmware_mountpoint \
     cupid_dsp_mountpoint \
     cupid_firmware_mnt_mountpoint \
@@ -145,6 +144,40 @@ PRODUCT_VENDOR_PROPERTIES += \
 $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/klee-compat/klee-compat.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
+
+# Cupid uses the stock, ABI-matched AudioReach HIDL runtime.  The generic
+# Qualcomm product fragments also describe the legacy AIDL bridge; remove those
+# entries and explicitly install the matching HIDL service and libraries.
+PRODUCT_PACKAGES := $(filter-out libagmservice libagmipcservice libpalipcservice,$(PRODUCT_PACKAGES))
+PRODUCT_PACKAGES += \
+    libar-acdb \
+    libar-gpr \
+    libar-gsl \
+    libar-pal \
+    libagm \
+    libagmclient \
+    libagm_compress_plugin \
+    libagm_mixer_plugin \
+    libagm_pcm_plugin \
+    libagmmixer \
+    libaudioroute_ext \
+    libxlog \
+    libaudio_log_utils \
+    libats \
+    libdiag \
+    libmisight \
+    libpdmapper \
+    libpdnotifier \
+    liblx-ar_util \
+    liblx-osal \
+    libpalclient \
+    vendor.qti.hardware.AGMIPC@1.0 \
+    vendor.qti.hardware.AGMIPC@1.0-impl \
+    vendor.qti.hardware.AGMIPC@1.0-service \
+    vendor.qti.hardware.AGMIPC@1.0-service.rc \
+    vendor.qti.hardware.pal@1.0 \
+    vendor.qti.hardware.pal@1.0-impl
+
 
 # The Qualcomm product fragments above expose CodeLinaro-built DLKM modules as
 # Android packages. Cupid assembles the verified SM8450 module manifests from

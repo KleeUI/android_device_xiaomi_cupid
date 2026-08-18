@@ -4,11 +4,6 @@ Copyright (C) 2026 The Klee Project
 SPDX-License-Identifier: Apache-2.0
 -->
 <libraries>
-    <!-- Register the AudioReach graph manager before the core audio HAL. -->
-    <library name="agmservice"
-            libraryName="libagmipcservice.so"
-            method="registerService"
-            mandatory="true" />
     <library name="audio-core"
             libraryName="libaudiocorehal.qti.so"
             method="registerServices"
