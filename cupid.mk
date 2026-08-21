@@ -10,7 +10,11 @@ $(call inherit-product, vendor/klee/build/product/common.mk)
 # The generic Taro fragments name the legacy in-process AGM bridge. Cupid uses
 # the stock HIDL service declared in device.mk, so keep the legacy bridge out of
 # the final package set even when a later inherited fragment re-adds it.
-PRODUCT_PACKAGES := $(filter-out libagmservice libagmipcservice libpalipcservice,$(PRODUCT_PACKAGES))
+PRODUCT_PACKAGES := $(filter-out \
+    libagmservice libagmservice:% \
+    libagmipcservice libagmipcservice:% \
+    libpalipcservice libpalipcservice:%, \
+    $(PRODUCT_PACKAGES))
 
 # Use the Qualcomm Taro VINTF fragments required by the SM8450 vendor HALs.
 # Keeping these declarations in the device product makes the Cupid target

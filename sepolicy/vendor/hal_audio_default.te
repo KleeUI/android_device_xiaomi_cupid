@@ -1,0 +1,7 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# Cupid's AudioReach HIDL server and the QTI AIDL audio core intentionally
+# share hal_audio_default. Permit the client half of that process to call the
+# AGM service half over hwbinder.
+binder_call(hal_audio_default, hal_audio_default)

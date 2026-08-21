@@ -148,7 +148,11 @@ $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
 # Cupid uses the stock, ABI-matched AudioReach HIDL runtime.  The generic
 # Qualcomm product fragments also describe the legacy AIDL bridge; remove those
 # entries and explicitly install the matching HIDL service and libraries.
-PRODUCT_PACKAGES := $(filter-out libagmservice libagmipcservice libpalipcservice,$(PRODUCT_PACKAGES))
+PRODUCT_PACKAGES := $(filter-out \
+    libagmservice libagmservice:% \
+    libagmipcservice libagmipcservice:% \
+    libpalipcservice libpalipcservice:%, \
+    $(PRODUCT_PACKAGES))
 PRODUCT_PACKAGES += \
     libar-acdb \
     libar-gpr \
@@ -160,14 +164,15 @@ PRODUCT_PACKAGES += \
     libagm_mixer_plugin \
     libagm_pcm_plugin \
     libagmmixer \
+    libaudio_log_utils \
     libaudioroute_ext \
     libxlog \
-    libaudio_log_utils \
     libats \
     libdiag \
     libmisight \
     libpdmapper \
     libpdnotifier \
+    libsndcardparser \
     liblx-ar_util \
     liblx-osal \
     libpalclient \
