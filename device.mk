@@ -20,6 +20,10 @@ BOARD_AVB_ENABLE := true
 # the AIDL allocator and mapper5 packages are never added to this product.
 TARGET_QTI_GRALLOC4_COMPAT := true
 
+# Cupid uses the dedicated, non-slot FRP partition rather than Qualcomm's
+# legacy vendor-common fallback to the config partition.
+BOARD_FRP_PARTITION_NAME := frp
+
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/emulated_storage.mk)
