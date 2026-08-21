@@ -6,12 +6,14 @@
 
 DEVICE_PATH := device/xiaomi/cupid
 
-# Put Cupid's AudioReach interface list before inherited Qualcomm product
-# fragments.  PRODUCT_COPY_FILES keeps the first entry for a destination and
-# records later duplicates as overrides, so this device-owned list wins over
-# the generic Taro copy rule without modifying the shared platform tree.
+# Put Cupid's AudioReach configuration before inherited Qualcomm product
+# fragments. PRODUCT_COPY_FILES keeps the first entry for a destination, so
+# these device-owned files win over generic Taro rules without changing the
+# shared platform configuration used by other Qualcomm devices.
 PRODUCT_COPY_FILES += \
-    $(DEVICE_PATH)/configs/audio/vendor_audio_interfaces.xml:vendor/etc/vendor_audio_interfaces.xml
+    $(DEVICE_PATH)/configs/audio/vendor_audio_interfaces.xml:vendor/etc/vendor_audio_interfaces.xml \
+    $(DEVICE_PATH)/configs/audio/usecaseKvManager.xml:vendor/etc/usecaseKvManager.xml \
+    $(DEVICE_PATH)/configs/audio/sku_taro/resourcemanager_waipio_mtp.xml:vendor/etc/audio/sku_taro/resourcemanager_waipio_mtp.xml
 
 BOARD_AVB_ENABLE := true
 
