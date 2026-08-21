@@ -141,6 +141,16 @@ PRODUCT_PACKAGES += \
     update_engine \
     update_verifier
 
+# Qualcomm's common product already selects the system_ext HIDL wrapper and
+# telephony utilities plus the product IMS extension from the upstream tree.
+# Add the remaining system_ext API and product wrapper required by Xiaomi's
+# radio applications.
+PRODUCT_PACKAGES += \
+    extphonelib \
+    extphonelib.xml \
+    qti-telephony-hidl-wrapper-prd \
+    qti_telephony_hidl_wrapper_prd.xml
+
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=QTI \
     ro.soc.model=SM8450 \
