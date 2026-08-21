@@ -226,12 +226,12 @@ TARGET_KERNEL_CONFIG_EXT += \
     $(DEVICE_PATH)/configs/klee_GKI.config
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
 TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
-# Keep Klee's maintained audio tree canonical while retaining the Xiaomi
-# module kit as the root for the remaining device-specific drivers.
+# Keep Klee's maintained audio and camera trees canonical while retaining the
+# Xiaomi module kit as the root for the remaining device-specific drivers.
 TARGET_KERNEL_EXT_MODULES := \
     qcom/opensource/mmrm-driver \
     ../../../vendor/qcom/opensource/audio-kernel \
-    qcom/opensource/camera-kernel \
+    ../../../vendor/qcom/opensource/camera-kernel \
     qcom/opensource/cvp-kernel \
     qcom/opensource/dataipa/drivers/platform/msm \
     qcom/opensource/datarmnet/core \
@@ -411,6 +411,7 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
         $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
 CUPID_SOURCE_KERNEL_MODULES := \
+    camera.ko \
     msm_kgsl.ko \
     qcom_dma_heaps.ko \
     spf_core_dlkm.ko
