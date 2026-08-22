@@ -1,0 +1,4 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+vendor.xiaomi.hardware.quickcamera::IQuickCameraService u:object_r:vendor_hal_quickcamera_hwservice:s0

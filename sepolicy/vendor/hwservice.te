@@ -1,0 +1,5 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+type vendor_hal_quickcamera_hwservice,
+    hwservice_manager_type, protected_hwservice;

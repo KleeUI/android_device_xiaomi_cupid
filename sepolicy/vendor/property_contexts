@@ -1,0 +1,4 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+vendor.camera.sensor.logsystem u:object_r:vendor_camera_prop:s0 exact string

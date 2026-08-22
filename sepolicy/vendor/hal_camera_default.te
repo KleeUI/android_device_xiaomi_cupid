@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# Xiaomi's CamX provider publishes the QuickCamera extension from the
+# standard camera HAL process.
+add_hwservice(hal_camera_default, vendor_hal_quickcamera_hwservice)
