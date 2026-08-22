@@ -139,6 +139,7 @@ PRODUCT_PACKAGES += \
     cupid_vm_system_mountpoint \
     fastbootd \
     update_engine \
+    update_engine_sideload \
     update_verifier
 
 # Qualcomm's common product already selects the system_ext HIDL wrapper and
