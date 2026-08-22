@@ -17,10 +17,11 @@ PRODUCT_COPY_FILES += \
 
 BOARD_AVB_ENABLE := true
 
-# The stock SM8450 GPU userspace is paired with Qualcomm's gralloc4 private
-# handle ABI.  Define this before any inherited Qualcomm product fragment so
-# the AIDL allocator and mapper5 packages are never added to this product.
-TARGET_QTI_GRALLOC4_COMPAT := true
+# The AOSP 17 Qualcomm composer is built against the QtiMapper5 ABI. Keep the
+# SnapAlloc mapper and AIDL allocator selected so SurfaceFlinger can import
+# buffers on the physical panel; the legacy gralloc4-only stack is incompatible
+# with this composer and leaves the display stuck in the bootloader splash.
+TARGET_QTI_GRALLOC4_COMPAT := false
 
 # Cupid uses the dedicated, non-slot FRP partition rather than Qualcomm's
 # legacy vendor-common fallback to the config partition.
