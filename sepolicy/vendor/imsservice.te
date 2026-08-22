@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# The stock IMS daemon publishes the call-info extension declared by the
+# Taro device manifest.
+add_hwservice(vendor_ims_service, vendor_hal_ims_callinfo_hwservice)

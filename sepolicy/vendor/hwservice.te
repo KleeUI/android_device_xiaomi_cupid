@@ -3,3 +3,6 @@
 
 type vendor_hal_quickcamera_hwservice,
     hwservice_manager_type, protected_hwservice;
+
+type vendor_hal_ims_callinfo_hwservice,
+    hwservice_manager_type, protected_hwservice;
