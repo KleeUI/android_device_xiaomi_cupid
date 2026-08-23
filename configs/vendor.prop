@@ -8,8 +8,7 @@ ro.hardware.fp.udfps=true
 ro.vendor.qti.va_aosp.support=1
 ro.vendor.qti.va_odm.support=1
 
-# Cupid's 5.10 Adreno userspace consumes the legacy QTI private-handle ABI.
-# Keep DMA-BUF heaps, but do not mix that userspace with the mapper5/SnapAlloc
-# handle format used by newer Qualcomm kernel and graphics stacks.
+# Cupid's AIDL display stack uses QtiMapper5 and the SnapAlloc private-handle
+# metadata path.  Keep DMA-BUF heaps enabled and use the matching handle format.
 vendor.gralloc.use_dma_buf_heaps=1
-vendor.gralloc.enable_snapalloc=0
+vendor.gralloc.enable_snapalloc=1
