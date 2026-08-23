@@ -1,0 +1,7 @@
+# Cupid's API 32 QMS daemon registers this stable AIDL endpoint through
+# vndservicemanager. Keep it separate from vendor_qms_service: that existing
+# type also labels ordinary Binder services which core domains may find, and
+# combining both service-manager namespaces violates the Treble boundary.
+type vendor_qms_vndservice, vndservice_manager_type;
+
+allow vendor_qms vendor_qms_vndservice:service_manager { add find };

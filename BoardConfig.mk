@@ -211,6 +211,11 @@ BOARD_VENDOR_SEPOLICY_DIRS += $(wildcard \
     device/qcom/sepolicy_vndr/qva/vendor/common \
     device/qcom/sepolicy_vndr/qva/vendor/taro)
 
+# Parse device-specific compatibility attributes after the shared Qualcomm
+# service types they extend have been declared.
+BOARD_VENDOR_SEPOLICY_DIRS += \
+    $(DEVICE_PATH)/sepolicy/vendor_compat
+
 # Klee inline GKI.
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 TARGET_KERNEL_ARCH := arm64
