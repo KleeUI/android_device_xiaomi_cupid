@@ -18,9 +18,9 @@ PRODUCT_COPY_FILES += \
 BOARD_AVB_ENABLE := true
 
 # Cupid's proprietary CamX and Adreno userspace consume Qualcomm's gralloc4
-# private-handle ABI. Select the matching HIDL allocator and mapper4 stack as a
-# unit. The SDM strategy fallback now supports this path without depending on
-# the optional strategy plugin.
+# private-handle ABI, so keep the matching HIDL allocator and mapper4 services.
+# AOSP 17 clients use the AIDL allocator frontend as well; both frontends use
+# the same legacy private-handle backend and must be packaged together.
 TARGET_QTI_GRALLOC4_COMPAT := true
 
 # Cupid uses the dedicated, non-slot FRP partition rather than Qualcomm's
@@ -144,6 +144,7 @@ PRODUCT_PACKAGES += \
     cupid_vm_system_mountpoint \
     fastbootd \
     mapper.qti \
+    vendor.qti.hardware.display.allocator-service \
     update_engine \
     update_engine_sideload \
     update_verifier
