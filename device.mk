@@ -123,6 +123,10 @@ PRODUCT_COPY_FILES += \
     device/qcom/taro/init.target.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.target.rc \
     device/qcom/taro/ueventd-odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc
 
+# The proprietary graphics stack keeps the legacy allocator/gralloc4 ABI, but
+# AOSP 17 clients load the stable Mapper5 entry point. Package Klee's Mapper5
+# compatibility bridge explicitly; Qualcomm's generic display fragment omits
+# it whenever TARGET_QTI_GRALLOC4_COMPAT is enabled.
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
     android.hardware.audio.parameter_parser.example_service \
@@ -139,6 +143,7 @@ PRODUCT_PACKAGES += \
     cupid_qca6490_wlan_mac \
     cupid_vm_system_mountpoint \
     fastbootd \
+    mapper.qti \
     update_engine \
     update_engine_sideload \
     update_verifier
