@@ -17,11 +17,11 @@ PRODUCT_COPY_FILES += \
 
 BOARD_AVB_ENABLE := true
 
-# The AOSP 17 Qualcomm composer is built against the QtiMapper5 ABI. Keep the
-# SnapAlloc mapper and AIDL allocator selected so SurfaceFlinger can import
-# buffers on the physical panel; the legacy gralloc4-only stack is incompatible
-# with this composer and leaves the display stuck in the bootloader splash.
-TARGET_QTI_GRALLOC4_COMPAT := false
+# Cupid's proprietary CamX and Adreno userspace consume Qualcomm's gralloc4
+# private-handle ABI. Select the matching HIDL allocator and mapper4 stack as a
+# unit. The SDM strategy fallback now supports this path without depending on
+# the optional strategy plugin.
+TARGET_QTI_GRALLOC4_COMPAT := true
 
 # Cupid uses the dedicated, non-slot FRP partition rather than Qualcomm's
 # legacy vendor-common fallback to the config partition.

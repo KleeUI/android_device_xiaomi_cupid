@@ -8,7 +8,8 @@ ro.hardware.fp.udfps=true
 ro.vendor.qti.va_aosp.support=1
 ro.vendor.qti.va_odm.support=1
 
-# Cupid's AIDL display stack uses QtiMapper5 and the SnapAlloc private-handle
-# metadata path.  Keep DMA-BUF heaps enabled and use the matching handle format.
+# Keep DMA-BUF heaps while using the gralloc4 private-handle ABI expected by
+# Cupid's proprietary camera and GPU userspace. TARGET_QTI_GRALLOC4_COMPAT
+# selects the matching legacy allocator and excludes mapper5/SnapAlloc.
 vendor.gralloc.use_dma_buf_heaps=1
-vendor.gralloc.enable_snapalloc=1
+vendor.gralloc.enable_snapalloc=0
