@@ -354,13 +354,14 @@ ifneq ($(strip $(filter-out \
 $(error Early USB modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
 endif
 
-# Display, GPU and FastRPC services are started by the boot trigger.  Loading
+# Display, GPU, FastRPC and camera services are started by the boot trigger. Loading
 # their drivers from a non-blocking vendor service lets those services race the
 # creation of /dev/dri, /dev/kgsl-3d0 and /dev/fastrpc-*.  Keep the small set of
 # entry-point modules in the synchronous first-stage list.  The Waipio GPU
 # clock controller is a device-tree probe dependency rather than a module-link
 # dependency, so modules.dep does not pull it in for msm_kgsl automatically.
 CUPID_BOOT_CRITICAL_LOAD_MODULES := \
+    camera.ko \
     frpc-adsprpc.ko \
     gpucc-waipio.ko \
     msm_kgsl.ko \
