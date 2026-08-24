@@ -43,6 +43,7 @@ prebuilt_hidl_interfaces {
         "vendor.qti.hardware.pal@1.0::IPAL",
         "vendor.qti.hardware.dsp@1.0::IDspService",
         "vendor.qti.hardware.qconfig@1.0::IQConfig",
+        "vendor.qti.hardware.qccsyshal@1.2::IQccsyshal",
         "vendor.qti.hardware.vpp@2.0::IHidlVppService",
         "vendor.xiaomi.hardware.bgservice@1.0::IBGService",
         "vendor.xiaomi.hardware.campostproc@1.0::IMiPostProcService",
