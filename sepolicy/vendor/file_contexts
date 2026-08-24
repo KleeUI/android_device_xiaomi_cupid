@@ -4,6 +4,10 @@
 # Stock AudioReach AGM HIDL service runs in the existing audio HAL domain.
 /(vendor|system/vendor)/bin/hw/vendor\.qti\.hardware\.AGMIPC@1\.0-service        u:object_r:hal_audio_default_exec:s0
 
+# qspmhal is linked into framework and application render processes as a
+# same-process HAL; label both ABIs accordingly instead of generic vendor_file.
+/(vendor|system/vendor)/lib(64)?/vendor\.qti\.qspmhal@1\.0\.so                   u:object_r:same_process_hal_file:s0
+
 # Qualcomm ships the eSE PowerManager beside the Secure Element HAL and both
 # implementations share the existing, narrowly scoped secure-element domain.
 /(vendor|system/vendor)/bin/hw/vendor\.qti\.esepowermanager@1\.1-service        u:object_r:hal_secure_element_default_exec:s0

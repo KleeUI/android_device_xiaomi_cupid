@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# The stock DSP HIDL server registers a device-private service that is absent
+# from the generic Qualcomm hwservice map.
+allow vendor_dspservice vendor_hal_dspservice_hwservice:hwservice_manager { add find };

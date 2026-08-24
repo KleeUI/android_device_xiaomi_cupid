@@ -5,4 +5,5 @@ vendor.xiaomi.hardware.quickcamera::IQuickCameraService u:object_r:vendor_hal_qu
 vendor.xiaomi.hardware.bgservice::IBGService            u:object_r:vendor_hal_xiaomi_camera_extension_hwservice:s0
 vendor.xiaomi.hardware.campostproc::IMiPostProcService  u:object_r:vendor_hal_xiaomi_camera_extension_hwservice:s0
 vendor.qti.ims.callinfo::IService                       u:object_r:vendor_hal_ims_callinfo_hwservice:s0
+vendor.qti.hardware.dsp::IDspService                    u:object_r:vendor_hal_dspservice_hwservice:s0
 vendor.qti.esepowermanager::IEsePowerManager            u:object_r:vendor_hal_esepowermanager_hwservice:s0

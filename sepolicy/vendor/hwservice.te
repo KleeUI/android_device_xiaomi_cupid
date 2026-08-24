@@ -10,5 +10,8 @@ type vendor_hal_xiaomi_camera_extension_hwservice,
 type vendor_hal_ims_callinfo_hwservice,
     hwservice_manager_type, protected_hwservice;
 
+type vendor_hal_dspservice_hwservice,
+    hwservice_manager_type, protected_hwservice;
+
 type vendor_hal_esepowermanager_hwservice,
     hwservice_manager_type, protected_hwservice;
