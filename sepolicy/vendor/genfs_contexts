@@ -1,4 +1,4 @@
 # Copyright (C) 2026 The KleeUI Project
 # SPDX-License-Identifier: Apache-2.0
 
-genfscon sysfs /kernel/cnss/fs_ready u:object_r:vendor_sysfs_cnss:s0
+genfscon sysfs /devices/platform/soc/b0000000.qcom,cnss-qca6490/fs_ready u:object_r:vendor_sysfs_cnss:s0
