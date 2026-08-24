@@ -6,6 +6,12 @@
 
 DEVICE_PATH := device/xiaomi/cupid
 
+# Cupid's proprietary Codec2 service is described by the Taro registry. Put
+# the complete device registry first so Qualcomm's QMAA fallback cannot claim
+# the active media_codecs.xml destination with its legacy OMX-only table.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/configs/media/media_codecs.xml:$(TARGET_COPY_OUT_VENDOR)/etc/media_codecs.xml
+
 # Put Cupid's AudioReach configuration before inherited Qualcomm product
 # fragments. PRODUCT_COPY_FILES keeps the first entry for a destination, so
 # these device-owned files win over generic Taro rules without changing the
