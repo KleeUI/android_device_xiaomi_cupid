@@ -123,6 +123,15 @@ PRODUCT_COPY_FILES += \
     device/qcom/taro/init.target.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.target.rc \
     device/qcom/taro/ueventd-odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc
 
+# Publish only capabilities backed by Cupid's physical hardware and packaged
+# HALs.  These are upstream AOSP declarations; the device tree owns only their
+# placement in the vendor image.
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.telephony.cdma.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.cdma.xml \
+    frameworks/native/data/etc/android.hardware.telephony.gsm.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.gsm.xml \
+    frameworks/native/data/etc/android.hardware.telephony.ims.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.ims.xml \
+    frameworks/native/data/etc/android.software.sip.voip.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.software.sip.voip.xml
+
 # The proprietary graphics stack keeps the legacy allocator/gralloc4 ABI, but
 # AOSP 17 clients load the stable Mapper5 entry point. Package Klee's Mapper5
 # compatibility bridge explicitly; Qualcomm's generic display fragment omits
@@ -144,6 +153,7 @@ PRODUCT_PACKAGES += \
     cupid_vm_system_mountpoint \
     fastbootd \
     mapper.qti \
+    qcrilNrDb_vendor \
     vendor.qti.hardware.display.allocator-service \
     update_engine \
     update_engine_sideload \
