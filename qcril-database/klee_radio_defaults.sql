@@ -14,3 +14,7 @@ WHERE property = 'persist.vendor.radio.redir_party_num';
 UPDATE qcril_properties_table
 SET def_val = '0'
 WHERE property = 'persist.vendor.radio.poweron_opt';
+
+UPDATE qcril_properties_table
+SET def_val = '/data/vendor/modem_config/'
+WHERE property = 'persist.vendor.radio.mbn_path';

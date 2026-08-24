@@ -20,6 +20,8 @@ PRODUCT_PACKAGES += \
     libprotobuf-cpp-full-21.7 \
     libtinyxml2-v34 \
     com.dsi.ant@1.0 \
+    QtiTelephonyBroadcastCompat \
+    QtiTelephonyCompat \
     vendor.qti.hardware.btconfigstore@1.0 \
     vendor.qti.hardware.btconfigstore@2.0 \
     vendor.qti.hardware.capabilityconfigstore@1.0 \
@@ -31,3 +33,8 @@ PRODUCT_PACKAGES += \
     vendor.xiaomi.hardware.mlipay@1.0 \
     vendor.xiaomi.hardware.mlipay@1.1 \
     vendor.xiaomi.hardware.mtdservice@1.0
+
+# Xiaomi's Qualcomm telephony applications resolve this framework-facing API
+# from the boot class path rather than through an APK class loader.
+PRODUCT_BOOT_JARS_EXTRA += \
+    system_ext:QtiTelephonyCompat
