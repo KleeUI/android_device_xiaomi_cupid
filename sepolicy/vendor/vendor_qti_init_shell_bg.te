@@ -1,6 +1,11 @@
 # Copyright (C) 2026 The KleeUI Project
 # SPDX-License-Identifier: Apache-2.0
 
-# The bounded remoteproc workers only inspect the read-only modem firmware
-# mount before writing the matching sysfs boot control.
+# The WLAN firmware-ready control has no platform-specific label upstream.
+# Keep its write permission isolated from the rest of sysfs.
+type vendor_sysfs_cnss, fs_type, sysfs_type;
+
+# The bounded remoteproc workers inspect the immutable modem firmware mount
+# before writing only their labelled boot controls.
 r_dir_file(vendor_qti_init_shell_bg, firmware_file)
+allow vendor_qti_init_shell_bg vendor_sysfs_cnss:file w_file_perms;

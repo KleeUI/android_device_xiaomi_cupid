@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# WifiNative reads wifi.interface while constructing the vendor HAL.  The
+# property is exported by Qualcomm's public vendor policy.
+get_prop(system_server, wifi_hal_prop)

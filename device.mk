@@ -127,6 +127,7 @@ PRODUCT_COPY_FILES += \
 # HALs.  These are upstream AOSP declarations; the device tree owns only their
 # placement in the vendor image.
 PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.bluetooth_le.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.bluetooth_le.xml \
     frameworks/native/data/etc/android.hardware.telephony.cdma.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.cdma.xml \
     frameworks/native/data/etc/android.hardware.telephony.gsm.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.gsm.xml \
     frameworks/native/data/etc/android.hardware.telephony.ims.xml:$(TARGET_COPY_OUT_VENDOR)/etc/permissions/android.hardware.telephony.ims.xml \
@@ -142,19 +143,25 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
     android.hardware.security.rkp-V3-ndk.vendor \
+    android.hardware.wifi-service \
     cupid_bt_firmware_mountpoint \
     cupid_dsp_mountpoint \
     cupid_firmware_mnt_mountpoint \
     cupid_framework_compatibility_matrix.6.xml \
     cupid_qca6490_amss20_firmware \
     cupid_qca6490_bdwlan_firmware \
+    cupid_qca6490_board_firmware \
+    cupid_qca6490_regdb_firmware \
     cupid_qca6490_wifi_config \
     cupid_qca6490_wlan_mac \
     cupid_vm_system_mountpoint \
     fastbootd \
+    hostapd \
+    hostapd_cli \
     mapper.qti \
     qcrilNrDb_vendor \
     vendor.qti.hardware.display.allocator-service \
+    wpa_supplicant \
     update_engine \
     update_engine_sideload \
     update_verifier

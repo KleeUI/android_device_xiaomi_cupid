@@ -101,6 +101,20 @@ install_symlink {
 }
 
 install_symlink {
+    name: "cupid_qca6490_regdb_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/regdb_xiaomi.bin",
+    symlink_target: "/vendor/firmware_mnt/image/regdb_xiaomi.bin",
+}
+
+install_symlink {
+    name: "cupid_qca6490_board_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/bd_l3gf.elf",
+    symlink_target: "/vendor/firmware_mnt/image/bd_l3gf.elf",
+}
+
+install_symlink {
     name: "cupid_qca6490_wifi_config",
     vendor: true,
     installed_location: "firmware/wlan/qca_cld/qca6490/WCNSS_qcom_cfg.ini",

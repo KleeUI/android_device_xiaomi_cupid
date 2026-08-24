@@ -178,6 +178,25 @@ TARGET_KERNEL_VERSION := 5.10
 TARGET_USES_QCOM_LEGACY_QMI_LOCATION := false
 TARGET_BUILD_QCOM_SIGMA_DUT := false
 
+# Qualcomm's qcwcn userspace controls the source-built qca_cld3 driver through
+# /dev/wlan.  Describe the chipset contract explicitly so the AOSP Wi-Fi and
+# hostapd services build against the matching private command library.
+BOARD_WLAN_DEVICE := qcwcn
+BOARD_WLAN_CHIP := waipio
+BOARD_HOSTAPD_DRIVER := NL80211
+BOARD_HOSTAPD_PRIVATE_LIB := //hardware/qcom/wlan/qcwcn/wpa_supplicant_8_lib:lib_driver_cmd_$(BOARD_WLAN_DEVICE)
+BOARD_WPA_SUPPLICANT_DRIVER := NL80211
+BOARD_WPA_SUPPLICANT_PRIVATE_LIB := //hardware/qcom/wlan/qcwcn/wpa_supplicant_8_lib:lib_driver_cmd_$(BOARD_WLAN_DEVICE)
+WIFI_HAL_INTERFACE_COMBINATIONS := {{{STA}, 1}, {{AP}, 1}}, {{{STA}, 1}, {{P2P, NAN}, 1}}, {{{AP}, 2}}, {{{STA}, 2}}
+WIFI_DRIVER_BUILT := qca_cld3
+WIFI_DRIVER_DEFAULT := qca_cld3
+WIFI_DRIVER_STATE_CTRL_PARAM := "/dev/wlan"
+WIFI_DRIVER_STATE_OFF := "OFF"
+WIFI_DRIVER_STATE_ON := "ON"
+WIFI_FEATURE_HOSTAPD_11AX := true
+WIFI_HIDL_UNIFIED_SUPPLICANT_SERVICE_RC_ENTRY := true
+WPA_SUPPLICANT_VERSION := VER_0_8_X
+
 # Use the modern UFS BSG UAPI exposed by the GKI headers. Without this,
 # Qualcomm's recovery extension falls back to removed legacy UFS ioctls.
 SOONG_CONFIG_NAMESPACES += ufsbsg

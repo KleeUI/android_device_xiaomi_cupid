@@ -32,6 +32,7 @@ on firmware_mounts_complete
     exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_adsp/boot 1 60 /vendor/firmware_mnt/image/adsp.mdt
     exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_cdsp/boot 1 60 /vendor/firmware_mnt/image/cdsp.mdt
     exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/boot_slpi/boot 1 60 /vendor/firmware_mnt/image/slpi.mdt
+    exec_background u:r:vendor_qti_init_shell_bg:s0 root system -- /vendor/bin/klee-wait-write.sh /sys/kernel/cnss/fs_ready 1 60 /vendor/firmware_mnt/image/amss20.bin
 
 # CVP is an optional media provider from the background module stage. Do not
 # make its probe or firmware availability part of the early-boot dependency.
