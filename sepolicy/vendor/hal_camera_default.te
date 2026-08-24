@@ -4,3 +4,12 @@
 # Xiaomi's CamX provider publishes the QuickCamera extension from the
 # standard camera HAL process.
 add_hwservice(hal_camera_default, vendor_hal_quickcamera_hwservice)
+
+# CamX constructs and registers both Xiaomi post-processing extensions in the
+# camera provider process. Keep their registration surface separate from the
+# unrelated QTI postproc and AON services.
+add_hwservice(hal_camera_default, vendor_hal_xiaomi_camera_extension_hwservice)
+
+# Xiaomi's camera provider publishes physical sensor identifiers for its
+# post-processing clients after the individual camera modules are detected.
+set_prop(hal_camera_default, vendor_camera_prop)
