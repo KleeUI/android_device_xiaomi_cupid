@@ -1,0 +1,7 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# The stock eSE PowerManager service and its Secure Element client share this
+# process domain. Restrict registration and lookup to their dedicated HIDL
+# interface instead of exposing the default hwservice type.
+add_hwservice(hal_secure_element_default, vendor_hal_esepowermanager_hwservice)
