@@ -1,0 +1,542 @@
+diff --git a/vendor/xiaomi/sm8450-common/Android.bp b/vendor/xiaomi/sm8450-common/Android.bp
+index 07ee8ec..6d3943e 100644
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -1,20 +1,10 @@
+ //
+ // Automatically generated file. DO NOT MODIFY
+ //
+ 
+-soong_namespace {
+-    imports: [
+-        "device/xiaomi/sm8450-common",
+-        "hardware/qcom-caf/sm8450",
+-        "hardware/qcom-caf/wlan",
+-        "hardware/xiaomi",
+-        "vendor/qcom/opensource/commonsys/display",
+-        "vendor/qcom/opensource/commonsys-intf/display",
+-        "vendor/qcom/opensource/dataservices",
+-    ],
+-}
++soong_namespace {}
+ 
+ cc_prebuilt_library_shared {
+     name: "vendor.qti.diaghal-V1-ndk",
+     owner: "xiaomi",
+     strip: {
+@@ -830,49 +820,10 @@ cc_prebuilt_library_shared {
+     compile_multilib: "both",
+     prefer: true,
+     soc_specific: true,
+ }
+ 
+-cc_prebuilt_library_shared {
+-    name: "libvmmem",
+-    owner: "xiaomi",
+-    strip: {
+-        none: true,
+-    },
+-    target: {
+-        android_arm: {
+-            srcs: [
+-                "proprietary/vendor/lib/libvmmem.so",
+-            ],
+-            shared_libs: [
+-                "liblog",
+-                "libbase",
+-                "libc++",
+-                "libc",
+-                "libm",
+-                "libdl",
+-            ],
+-        },
+-        android_arm64: {
+-            srcs: [
+-                "proprietary/vendor/lib64/libvmmem.so",
+-            ],
+-            shared_libs: [
+-                "liblog",
+-                "libbase",
+-                "libc++",
+-                "libc",
+-                "libm",
+-                "libdl",
+-            ],
+-        },
+-    },
+-    compile_multilib: "both",
+-    prefer: true,
+-    soc_specific: true,
+-}
+-
+ cc_prebuilt_library_shared {
+     name: "vendor.qti.qspmhal@1.0",
+     owner: "xiaomi",
+     strip: {
+         none: true,
+@@ -2793,38 +2744,10 @@ cc_prebuilt_library_shared {
+     compile_multilib: "64",
+     prefer: true,
+     soc_specific: true,
+ }
+ 
+-cc_prebuilt_library_shared {
+-    name: "libaudio_log_utils",
+-    owner: "xiaomi",
+-    strip: {
+-        none: true,
+-    },
+-    target: {
+-        android_arm64: {
+-            srcs: [
+-                "proprietary/vendor/lib64/libaudio_log_utils.so",
+-            ],
+-            shared_libs: [
+-                "libutils",
+-                "libcutils",
+-                "libexpat",
+-                "liblog",
+-                "libc++",
+-                "libc",
+-                "libm",
+-                "libdl",
+-            ],
+-        },
+-    },
+-    compile_multilib: "64",
+-    prefer: true,
+-    soc_specific: true,
+-}
+-
+ cc_prebuilt_library_shared {
+     name: "libbacklight-calib",
+     owner: "xiaomi",
+     strip: {
+         none: true,
+@@ -8210,10 +8133,11 @@ cc_prebuilt_library_shared {
+ }
+ 
+ cc_prebuilt_library_shared {
+     name: "libqtikeymint",
+     owner: "xiaomi",
++    check_elf_files: false,
+     strip: {
+         none: true,
+     },
+     target: {
+         android_arm64: {
+@@ -16046,10 +15970,11 @@ cc_prebuilt_library_shared {
+                 "libinput",
+                 "libwfdmminterface",
+                 "libwfddisplayconfig",
+                 "libmedia_helper",
+                 "libaudioclient",
++                "libaudiobase",
+                 "libwfdavenhancements",
+                 "libhidlbase",
+                 "libgralloctypes",
+                 "android.hardware.graphics.mapper@4.0",
+                 "libvndksupport",
+@@ -16140,10 +16065,11 @@ cc_prebuilt_library_shared {
+ }
+ 
+ cc_prebuilt_library_shared {
+     name: "libwfdservice",
+     owner: "xiaomi",
++    check_elf_files: false,
+     strip: {
+         none: true,
+     },
+     target: {
+         android_arm64: {
+@@ -16164,11 +16090,10 @@ cc_prebuilt_library_shared {
+                 "libwfdmminterface",
+                 "libmedia_helper",
+                 "libaudioclient",
+                 "libaudiofoundation",
+                 "audioclient-types-aidl-cpp",
+-                "android.media.audio.common.types-V4-cpp",
+                 "libwfdmmsrc_system",
+                 "libwfdavenhancements",
+                 "libhidlbase",
+                 "vendor.qti.hardware.wifidisplaysession@1.0",
+                 "vendor.qti.hardware.wifidisplaysession_aidl-V1-ndk",
+@@ -16933,11 +16858,11 @@ android_app_import {
+     apk: "proprietary/system_ext/app/PowerOffAlarm/PowerOffAlarm.apk",
+     certificate: "platform",
+     dex_preopt: {
+         enabled: false,
+     },
+-    system_ext_specific: true,
++    vendor: true,
+ }
+ 
+ android_app_import {
+     name: "QCC",
+     owner: "xiaomi",
+@@ -17024,18 +16949,10 @@ android_app_import {
+     },
+     privileged: true,
+     system_ext_specific: true,
+ }
+ 
+-dex_import {
+-    name: "WfdCommon",
+-    owner: "xiaomi",
+-    jars: [
+-        "proprietary/system/framework/WfdCommon.jar",
+-    ],
+-}
+-
+ dex_import {
+     name: "uimgbalibrary",
+     owner: "xiaomi",
+     jars: [
+         "proprietary/product/framework/uimgbalibrary.jar",
+@@ -17857,10 +17774,11 @@ cc_prebuilt_binary {
+ }
+ 
+ cc_prebuilt_binary {
+     name: "android.hardware.security.keymint-service-qti",
+     owner: "xiaomi",
++    check_elf_files: false,
+     target: {
+         android_arm64: {
+             srcs: [
+                 "proprietary/vendor/bin/hw/android.hardware.security.keymint-service-qti",
+             ],
+@@ -20158,39 +20076,303 @@ install_symlink {
+     soc_specific: true,
+     installed_location: "lib64/libq3dtools_adreno.so",
+     symlink_target: "/vendor/lib64/egl/libq3dtools_adreno.so",
+ }
+ 
+-filegroup {
+-    name: "proprietary_rildb_config_sql_files",
+-    srcs: [
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/10.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/11.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/12.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/13.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/14.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/16.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/6.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/7.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/8.0_config.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/config/9.0_config.sql",
+-    ],
++// Klee compatibility modules for stock Xiaomi binaries whose generated HIDL
++// or pre-stable AIDL libraries are not part of the AOSP 17 platform.
++license {
++    name: "xiaomi_sm8450_compat_proprietary_license",
++    visibility: ["//visibility:public"],
++    license_kinds: ["legacy_proprietary"],
++    license_text: ["proprietary/NOTICE"],
+ }
+ 
+-filegroup {
+-    name: "proprietary_rildb_other_sql_files",
+-    srcs: [
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/0_initial_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/10_version_update_ecc_table.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/11_version_update_ecc_table.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/12_version_update_ecc_table.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/1_version_intro_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/2_version_add_wps_config_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/3_version_update_wps_config_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/4_version_update_ecc_table_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/5_version_update_ecc_table_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/6_version_change_property_table_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/7_version_update_ecc_table_qcrilnr.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/8_version_update_ecc_table.sql",
+-        "proprietary/vendor/etc/qcril_database/upgrade/other/9_version_update_ecc_table.sql",
+-    ],
++cc_defaults {
++    name: "klee_xiaomi_sm8450_compat_defaults",
++    check_elf_files: false,
++    compile_multilib: "64",
++    licenses: ["xiaomi_sm8450_compat_proprietary_license"],
++    soc_specific: true,
++    strip: {
++        none: true,
++    },
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.xiaomi.hardware.fx.tunnel@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.xiaomi.hardware.fx.tunnel@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.xiaomi.hardware.mlipay@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.xiaomi.hardware.mlipay@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.xiaomi.hardware.mlipay@1.1",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.xiaomi.hardware.mlipay@1.1.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.xiaomi.hardware.mtdservice@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.xiaomi.hardware.mtdservice@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "cupid_libkeymint_ndk_platform",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/android.hardware.security.keymint-V1-ndk_platform.so"],
++    stem: "android.hardware.security.keymint-V1-ndk_platform",
++}
++
++cc_prebuilt_library_shared {
++    name: "cupid_libsecureclock_ndk_platform",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/android.hardware.security.secureclock-V1-ndk_platform.so"],
++    stem: "android.hardware.security.secureclock-V1-ndk_platform",
++}
++
++cc_prebuilt_library_shared {
++    name: "cupid_libsharedsecret_ndk_platform",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/android.hardware.security.sharedsecret-V1-ndk_platform.so"],
++    stem: "android.hardware.security.sharedsecret-V1-ndk_platform",
++}
++
++cc_prebuilt_library_shared {
++    name: "libprotobuf-cpp-full-21.7",
++    check_elf_files: false,
++    compile_multilib: "64",
++    licenses: ["xiaomi_sm8450_compat_proprietary_license"],
++    srcs: ["proprietary/system_ext/lib64/libprotobuf-cpp-full-21.7.so"],
++    system_ext_specific: true,
++    strip: {
++        none: true,
++    },
++}
++
++cc_prebuilt_library_shared {
++    name: "libar-pal",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libar-pal.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libagm",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagm.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libar-acdb",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libar-acdb.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libats",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libats.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "liblx-osal",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/liblx-osal.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libjson",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libjson.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.capabilityconfigstore@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.capabilityconfigstore@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.perf@2.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.perf@2.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.perf@2.1",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.perf@2.1.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.perf@2.2",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.perf@2.2.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.perf@2.3",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.perf@2.3.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libtinyxml2-v34",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libtinyxml2-v34.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "com.dsi.ant@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/com.dsi.ant@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.btconfigstore@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.btconfigstore@1.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.btconfigstore@2.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.btconfigstore@2.0.so"],
++}
++
++cc_prebuilt_library_shared {
++    name: "libhidlbase_shim",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libhidlbase_shim.so"],
++}
++
++// AudioReach is consumed as one ABI-locked vendor stack on Cupid. These
++// prebuilts come from the matching stock vendor image; mixing the open-source
++// graph manager with stock ACDB/OSAL libraries is ABI-incompatible.
++cc_prebuilt_library_shared {
++    name: "libar-gpr",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libar-gpr.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libar-gsl",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libar-gsl.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "liblx-ar_util",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/liblx-ar_util.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libagmclient",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagmclient.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libpalclient",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libpalclient.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libaudioroute_ext",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libaudioroute_ext.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libxlog",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libxlog.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libagm_compress_plugin",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagm_compress_plugin.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libagm_mixer_plugin",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagm_mixer_plugin.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libagm_pcm_plugin",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagm_pcm_plugin.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "libagmmixer",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/libagmmixer.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.AGMIPC@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.AGMIPC@1.0.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.AGMIPC@1.0-impl",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.AGMIPC@1.0-impl.so"],
++    prefer: true,
++}
++
++cc_prebuilt_binary {
++    name: "vendor.qti.hardware.AGMIPC@1.0-service",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/bin/hw/vendor.qti.hardware.AGMIPC@1.0-service"],
++    relative_install_path: "hw",
++    prefer: true,
++}
++
++prebuilt_etc {
++    name: "vendor.qti.hardware.AGMIPC@1.0-service.rc",
++    owner: "xiaomi",
++    licenses: ["xiaomi_sm8450_compat_proprietary_license"],
++    src: "proprietary/vendor/etc/init/vendor.qti.hardware.AGMIPC@1.0-service.rc",
++    sub_dir: "init",
++    filename: "vendor.qti.hardware.AGMIPC@1.0-service.rc",
++    soc_specific: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.pal@1.0",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.pal@1.0.so"],
++    prefer: true,
++}
++
++cc_prebuilt_library_shared {
++    name: "vendor.qti.hardware.pal@1.0-impl",
++    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
++    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.pal@1.0-impl.so"],
++    prefer: true,
+ }

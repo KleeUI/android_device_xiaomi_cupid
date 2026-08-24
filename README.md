@@ -19,32 +19,51 @@ CodeLinaro platform projects through Klee's `qcom/waipio.xml` manifest.
 
 ## Source boundaries
 
-The device-specific Make, Soong, partition, product, and overlay configuration
-in this repository is authored for Klee. Common Qualcomm implementation comes
-from pinned CodeLinaro projects and retains its upstream history and licenses.
-Xiaomi and Qualcomm proprietary components belong in `vendor/xiaomi/cupid` and
-are not committed here.
+The device-specific Make, Soong, partition, product, overlay, and vendor
+normalization code in this repository is authored for Klee. Common Qualcomm
+implementation comes from pinned CodeLinaro projects and retains its upstream
+history and licenses. Xiaomi and Qualcomm proprietary binaries belong below
+`vendor/xiaomi` and are not committed here.
 
-## Proprietary metadata fixes
+The scripts in this repository do not contain or import LineageOS extraction
+code. They copy Klee's small device-delta inventory from a user-owned stock
+image and apply reviewable metadata patches to an already populated vendor
+tree. The current `proprietary-files.txt` is not a complete inventory for the
+two large vendor repositories; a clean-room regeneration of those repositories
+also requires their complete, independently audited stock inventories.
 
-After populating `vendor/xiaomi`, apply the device-maintained metadata fixes
-before building:
+## Proprietary input workflow
+
+First populate `vendor/xiaomi/cupid` and `vendor/xiaomi/sm8450-common` from an
+authorized source. To copy Klee's Cupid delta from mounted stock partitions and
+normalize the generated metadata in one command, run:
 
 ```bash
-patch -p1 < \
-    device/xiaomi/cupid/patches/0001-sm8450-common-install-PowerOffAlarm-on-vendor.patch
-patch -p1 < \
-    device/xiaomi/cupid/patches/0002-sm8450-common-keep-WfdCommon-off-bootclasspath.patch
+python3 device/xiaomi/cupid/extract-files.py \
+    --source /path/to/mounted-stock
 ```
 
-The patch installs Qualcomm's PowerOffAlarm app on the vendor partition where
-its `vendor_poweroffalarm_app` SELinux domain is valid. It changes only the
-generated Soong metadata and does not include proprietary APK contents.
+The source directory must contain partition-relative paths such as
+`vendor/etc/acdbdata/...`. A rooted, matching Cupid can be used instead:
 
-The second patch keeps `WfdCommon.jar` installed as a framework package while
-removing it from the Android runtime boot class path. This preserves the WFD
-package and avoids exposing Qualcomm-private Java packages as platform boot
-APIs, which Android 17 rejects during the boot-jar package check.
+```bash
+python3 device/xiaomi/cupid/extract-files.py --adb
+```
+
+Metadata normalization can be run independently and is idempotent:
+
+```bash
+python3 device/xiaomi/cupid/setup-makefiles.py
+python3 device/xiaomi/cupid/setup-makefiles.py --check
+```
+
+Each patch is accepted in exactly one of two states: cleanly applicable or
+already applied. A partially applied patch or a changed generated baseline is
+reported as an error and is never guessed through.
+
+`klee-compat.mk` is versioned in this device repository. The generated vendor
+tree supplies the proprietary module definitions, while the device repository
+owns the Klee product-package selection.
 
 ## Build
 

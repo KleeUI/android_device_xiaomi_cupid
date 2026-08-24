@@ -1,6 +1,11 @@
+diff --git a/vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk b/vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk
+index ca3f691..e12b436 100644
 --- a/vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk
 +++ b/vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk
-@@ -926,5 +926,2 @@ PRODUCT_PACKAGES += \
+@@ -923,8 +923,5 @@ PRODUCT_PACKAGES += \
+     vendor_lib_libGLESv2_adreno_so \
+     vendor_lib_libq3dtools_adreno_so \
+     vendor_lib64_libEGL_adreno_so \
      vendor_lib64_libGLESv2_adreno_so \
      vendor_lib64_libq3dtools_adreno_so
 -

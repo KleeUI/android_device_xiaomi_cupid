@@ -189,7 +189,7 @@ PRODUCT_VENDOR_PROPERTIES += \
 # Proprietary Xiaomi/QTI components are intentionally isolated from the device
 # integration and can be populated from a user-owned stock installation.
 $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk)
-$(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/klee-compat/klee-compat.mk)
+$(call inherit-product, device/xiaomi/cupid/klee-compat.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
 
 # Cupid uses the stock, ABI-matched AudioReach HIDL runtime.  The generic

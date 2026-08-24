@@ -1,0 +1,43 @@
+diff --git a/vendor/xiaomi/cupid/cupid-vendor.mk b/vendor/xiaomi/cupid/cupid-vendor.mk
+index 2600847..e8a6580 100644
+--- a/vendor/xiaomi/cupid/cupid-vendor.mk
++++ b/vendor/xiaomi/cupid/cupid-vendor.mk
+@@ -12,10 +12,12 @@ PRODUCT_COPY_FILES += \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/nn_ns_models/fai__2.7.20_0.0__3.0.0_0.0__eai_1.36_enpu2.pmd:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/nn_ns_models/fai__2.7.20_0.0__3.0.0_0.0__eai_1.36_enpu2.pmd \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/nn_ns_models/fai__2.7.2_0.0__3.0.0_0.0__eai_1.36_enpu2.pmd:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/nn_ns_models/fai__2.7.2_0.0__3.0.0_0.0__eai_1.36_enpu2.pmd \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/nn_vad_models/fai__3.0.0_0.0__eai_1.36_enpu2.pmd:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/nn_vad_models/fai__3.0.0_0.0__eai_1.36_enpu2.pmd \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/waipio_mtp/Forte_elus_acdb_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/waipio_mtp/Forte_elus_acdb_cal.acdb \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/waipio_mtp/Forte_elus_workspaceFileXml.qwsp:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/waipio_mtp/Forte_elus_workspaceFileXml.qwsp \
++    vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/Forte/Forte_acdb_cal.acdb:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Forte/Forte_acdb_cal.acdb \
++    vendor/xiaomi/cupid/proprietary/vendor/etc/acdbdata/Forte/Forte_workspaceFileXml.qwsp:$(TARGET_COPY_OUT_VENDOR)/etc/acdbdata/Forte/Forte_workspaceFileXml.qwsp \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/camera/102_SummerDay.png:$(TARGET_COPY_OUT_VENDOR)/etc/camera/102_SummerDay.png \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/camera/103_Fantasy.png:$(TARGET_COPY_OUT_VENDOR)/etc/camera/103_Fantasy.png \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/camera/104_Meet.png:$(TARGET_COPY_OUT_VENDOR)/etc/camera/104_Meet.png \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/camera/105_WindSing.png:$(TARGET_COPY_OUT_VENDOR)/etc/camera/105_WindSing.png \
+     vendor/xiaomi/cupid/proprietary/vendor/etc/camera/106_Lost.png:$(TARGET_COPY_OUT_VENDOR)/etc/camera/106_Lost.png \
+@@ -497,10 +499,13 @@ PRODUCT_COPY_FILES += \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/T-cs35l41-dsp1-spk-cali.bin:$(TARGET_COPY_OUT_VENDOR)/firmware/T-cs35l41-dsp1-spk-cali.bin \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/T-cs35l41-dsp1-spk-prot.bin:$(TARGET_COPY_OUT_VENDOR)/firmware/T-cs35l41-dsp1-spk-prot.bin \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/T-handfree.txt:$(TARGET_COPY_OUT_VENDOR)/firmware/T-handfree.txt \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/T-handset.txt:$(TARGET_COPY_OUT_VENDOR)/firmware/T-handset.txt \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/T-music.txt:$(TARGET_COPY_OUT_VENDOR)/firmware/T-music.txt \
++    vendor/xiaomi/cupid/proprietary/vendor/firmware/a660_sqe.fw:$(TARGET_COPY_OUT_VENDOR)/firmware/a660_sqe.fw \
++    vendor/xiaomi/cupid/proprietary/vendor/firmware/a662_gmu.bin:$(TARGET_COPY_OUT_VENDOR)/firmware/a662_gmu.bin \
++    vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_sqe.fw:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_sqe.fw \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_zap.b00:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_zap.b00 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_zap.b01:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_zap.b01 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_zap.b02:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_zap.b02 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_zap.elf:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_zap.elf \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/a730_zap.mbn:$(TARGET_COPY_OUT_VENDOR)/firmware/a730_zap.mbn \
+@@ -565,10 +570,11 @@ PRODUCT_COPY_FILES += \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/evautil64.b04:$(TARGET_COPY_OUT_VENDOR)/firmware/evautil64.b04 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/evautil64.b05:$(TARGET_COPY_OUT_VENDOR)/firmware/evautil64.b05 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/evautil64.b06:$(TARGET_COPY_OUT_VENDOR)/firmware/evautil64.b06 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/evautil64.b07:$(TARGET_COPY_OUT_VENDOR)/firmware/evautil64.b07 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/evautil64.mdt:$(TARGET_COPY_OUT_VENDOR)/firmware/evautil64.mdt \
++    vendor/xiaomi/cupid/proprietary/vendor/firmware/gmu_gen70000.bin:$(TARGET_COPY_OUT_VENDOR)/firmware/gmu_gen70000.bin \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/st_fts_l3.ftb:$(TARGET_COPY_OUT_VENDOR)/firmware/st_fts_l3.ftb \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/st_fts_l3_thp.ftb:$(TARGET_COPY_OUT_VENDOR)/firmware/st_fts_l3_thp.ftb \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/stm_fts_production_limits.csv:$(TARGET_COPY_OUT_VENDOR)/firmware/stm_fts_production_limits.csv \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/vpu20_4v.b00:$(TARGET_COPY_OUT_VENDOR)/firmware/vpu20_4v.b00 \
+     vendor/xiaomi/cupid/proprietary/vendor/firmware/vpu20_4v.b01:$(TARGET_COPY_OUT_VENDOR)/firmware/vpu20_4v.b01 \

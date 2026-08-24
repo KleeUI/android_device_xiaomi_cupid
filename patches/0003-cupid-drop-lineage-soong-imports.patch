@@ -1,0 +1,19 @@
+diff --git a/vendor/xiaomi/cupid/Android.bp b/vendor/xiaomi/cupid/Android.bp
+index 2ac0ad5..33de073 100644
+--- a/vendor/xiaomi/cupid/Android.bp
++++ b/vendor/xiaomi/cupid/Android.bp
+@@ -2,14 +2,10 @@
+ // Automatically generated file. DO NOT MODIFY
+ //
+ 
+ soong_namespace {
+     imports: [
+-        "device/xiaomi/sm8450-common",
+-        "hardware/qcom-caf/sm8450",
+-        "hardware/xiaomi",
+-        "vendor/qcom/opensource/commonsys-intf/display",
+         "vendor/xiaomi/sm8450-common",
+     ],
+ }
+ 
+ cc_prebuilt_library_shared {
