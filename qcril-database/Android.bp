@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
-// Build the immutable qcril seed from the stock migration filegroups exported
-// by vendor/xiaomi. The SQL remains device-owned proprietary input; Klee owns
-// only the deterministic builder and its compatibility defaults.
+// Build the immutable qcril seed from the separately versioned stock migration
+// package. The SQL remains device-owned proprietary input; Klee owns only the
+// deterministic builder and its compatibility defaults.
 sh_binary_host {
     name: "klee_build_qcril_db",
     src: "build_qcril_db.sh",
@@ -19,8 +19,8 @@ genrule {
         "sqlite3",
     ],
     srcs: [
-        "//vendor/xiaomi/sm8450-common:proprietary_rildb_other_sql_files",
-        "//vendor/xiaomi/sm8450-common:proprietary_rildb_config_sql_files",
+        "//vendor/xiaomi/sm8450-qcril:proprietary_rildb_other_sql_files",
+        "//vendor/xiaomi/sm8450-qcril:proprietary_rildb_config_sql_files",
         "klee_radio_defaults.sql",
     ],
     out: ["qcrilNr.db"],
