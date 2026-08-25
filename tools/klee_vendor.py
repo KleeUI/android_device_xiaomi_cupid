@@ -27,6 +27,7 @@ PATCH_NAMES = (
     "0002-sm8450-common-keep-WfdCommon-off-bootclasspath.patch",
     "0003-cupid-drop-lineage-soong-imports.patch",
     "0004-cupid-install-klee-stock-delta-files.patch",
+    "0005-sm8450-common-prefer-open-location-libraries.patch",
 )
 
 REQUIRED_VENDOR_FILES = (
