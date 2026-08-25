@@ -252,6 +252,7 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
     android.hardware.audio.parameter_parser.example_service \
+    android.hardware.bluetooth.audio-impl \
     android.hardware.boot-service.qti \
     android.hardware.boot-service.qti.recovery \
     android.hardware.sensors-service.multihal \
