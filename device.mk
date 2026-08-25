@@ -129,6 +129,88 @@ PRODUCT_COPY_FILES += \
     device/qcom/taro/init.target.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/hw/init.target.rc \
     device/qcom/taro/ueventd-odm.rc:$(TARGET_COPY_OUT_ODM)/etc/ueventd.rc
 
+# Keep the stock RFS completion marker as an empty, device-owned file. The
+# topology itself is generated below from source install_symlink modules.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/configs/rfs/rfs_symlinks:$(TARGET_COPY_OUT_VENDOR)/rfs/rfs_symlinks
+
+# Expose remote-processor state through the exact Cupid RFS topology. These
+# modules install only symbolic links; calibration and firmware payloads stay
+# on persist, data, and their dedicated firmware partitions.
+PRODUCT_PACKAGES += \
+    cupid_rfs_msm_adsp_hlos \
+    cupid_rfs_msm_adsp_ramdumps \
+    cupid_rfs_msm_adsp_readonly_firmware \
+    cupid_rfs_msm_adsp_readonly_vendor_firmware \
+    cupid_rfs_msm_adsp_readwrite \
+    cupid_rfs_msm_adsp_shared \
+    cupid_rfs_msm_cdsp_hlos \
+    cupid_rfs_msm_cdsp_ramdumps \
+    cupid_rfs_msm_cdsp_readonly_firmware \
+    cupid_rfs_msm_cdsp_readonly_vendor_firmware \
+    cupid_rfs_msm_cdsp_readwrite \
+    cupid_rfs_msm_cdsp_shared \
+    cupid_rfs_msm_mpss_hlos \
+    cupid_rfs_msm_mpss_ramdumps \
+    cupid_rfs_msm_mpss_readonly_firmware \
+    cupid_rfs_msm_mpss_readonly_vendor_firmware \
+    cupid_rfs_msm_mpss_readwrite \
+    cupid_rfs_msm_mpss_shared \
+    cupid_rfs_msm_slpi_hlos \
+    cupid_rfs_msm_slpi_ramdumps \
+    cupid_rfs_msm_slpi_readonly_firmware \
+    cupid_rfs_msm_slpi_readonly_vendor_firmware \
+    cupid_rfs_msm_slpi_readwrite \
+    cupid_rfs_msm_slpi_shared \
+    cupid_rfs_msm_wpss_hlos \
+    cupid_rfs_msm_wpss_ramdumps \
+    cupid_rfs_msm_wpss_readonly_firmware \
+    cupid_rfs_msm_wpss_readonly_vendor_firmware \
+    cupid_rfs_msm_wpss_readwrite \
+    cupid_rfs_msm_wpss_shared \
+    cupid_rfs_mdm_adsp_hlos \
+    cupid_rfs_mdm_adsp_ramdumps \
+    cupid_rfs_mdm_adsp_readonly_firmware \
+    cupid_rfs_mdm_adsp_readonly_vendor_firmware \
+    cupid_rfs_mdm_adsp_readwrite \
+    cupid_rfs_mdm_adsp_shared \
+    cupid_rfs_mdm_cdsp_hlos \
+    cupid_rfs_mdm_cdsp_ramdumps \
+    cupid_rfs_mdm_cdsp_readonly_firmware \
+    cupid_rfs_mdm_cdsp_readonly_vendor_firmware \
+    cupid_rfs_mdm_cdsp_readwrite \
+    cupid_rfs_mdm_cdsp_shared \
+    cupid_rfs_mdm_mpss_hlos \
+    cupid_rfs_mdm_mpss_ramdumps \
+    cupid_rfs_mdm_mpss_readonly_firmware \
+    cupid_rfs_mdm_mpss_readonly_vendor_firmware \
+    cupid_rfs_mdm_mpss_readwrite \
+    cupid_rfs_mdm_mpss_shared \
+    cupid_rfs_mdm_slpi_hlos \
+    cupid_rfs_mdm_slpi_ramdumps \
+    cupid_rfs_mdm_slpi_readonly_firmware \
+    cupid_rfs_mdm_slpi_readonly_vendor_firmware \
+    cupid_rfs_mdm_slpi_readwrite \
+    cupid_rfs_mdm_slpi_shared \
+    cupid_rfs_mdm_tn_hlos \
+    cupid_rfs_mdm_tn_ramdumps \
+    cupid_rfs_mdm_tn_readonly_firmware \
+    cupid_rfs_mdm_tn_readonly_vendor_firmware \
+    cupid_rfs_mdm_tn_readwrite \
+    cupid_rfs_mdm_tn_shared \
+    cupid_rfs_mdm_wpss_hlos \
+    cupid_rfs_mdm_wpss_ramdumps \
+    cupid_rfs_mdm_wpss_readonly_firmware \
+    cupid_rfs_mdm_wpss_readonly_vendor_firmware \
+    cupid_rfs_mdm_wpss_readwrite \
+    cupid_rfs_mdm_wpss_shared \
+    cupid_rfs_apq_gnss_hlos \
+    cupid_rfs_apq_gnss_ramdumps \
+    cupid_rfs_apq_gnss_readonly_firmware \
+    cupid_rfs_apq_gnss_readonly_vendor_firmware \
+    cupid_rfs_apq_gnss_readwrite \
+    cupid_rfs_apq_gnss_shared
+
 # Publish only capabilities backed by Cupid's physical hardware and packaged
 # HALs.  These are upstream AOSP declarations; the device tree owns only their
 # placement in the vendor image.
