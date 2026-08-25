@@ -3,4 +3,4 @@
 
 # The stock DSP HIDL server registers a device-private service that is absent
 # from the generic Qualcomm hwservice map.
-allow vendor_dspservice vendor_hal_dspservice_hwservice:hwservice_manager { add find };
+add_hwservice(vendor_dspservice, vendor_hal_dspservice_hwservice)
