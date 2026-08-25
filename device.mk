@@ -257,6 +257,7 @@ PRODUCT_PACKAGES += \
     android.hardware.boot-service.qti.recovery \
     android.hardware.sensors-service.multihal \
     android.hardware.security.rkp-V3-ndk.vendor \
+    android.hardware.thermal-service.qti \
     android.hardware.wifi-service \
     cupid_bt_firmware_mountpoint \
     cupid_dsp_mountpoint \
