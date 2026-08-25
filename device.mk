@@ -162,6 +162,7 @@ PRODUCT_PACKAGES += \
     cupid_qca6490_amss20_firmware \
     cupid_qca6490_bdwlan_firmware \
     cupid_qca6490_board_firmware \
+    cupid_qca6490_m3_firmware \
     cupid_qca6490_regdb_firmware \
     cupid_qca6490_wifi_config \
     cupid_qca6490_wlan_mac \
