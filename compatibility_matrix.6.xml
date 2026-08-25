@@ -5,14 +5,6 @@
  SPDX-License-Identifier: Apache-2.0
 -->
 <compatibility-matrix version="1.0" type="framework" level="6">
-    <hal format="hidl">
-        <name>android.hardware.bluetooth.audio</name>
-        <version>2.0-1</version>
-        <interface>
-            <name>IBluetoothAudioProvidersFactory</name>
-            <instance>default</instance>
-        </interface>
-    </hal>
     <hal format="hidl" optional="true">
         <name>vendor.xiaomi.hardware.mlipay</name>
         <version>1.1</version>
