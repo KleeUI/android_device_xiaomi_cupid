@@ -95,6 +95,13 @@ install_symlink {
 }
 
 install_symlink {
+    name: "cupid_qca6490_m3_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/m3.bin",
+    symlink_target: "/vendor/firmware_mnt/image/m3.bin",
+}
+
+install_symlink {
     name: "cupid_qca6490_bdwlan_firmware",
     vendor: true,
     installed_location: "firmware/qca6490/bdwlan.elf",
