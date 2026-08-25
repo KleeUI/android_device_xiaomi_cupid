@@ -44,6 +44,8 @@ TARGET_BOARD_PLATFORM := taro
 TARGET_USES_QMAA := false
 TARGET_USES_QCOM_BSP := true
 TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES := true
+$(call soong_config_set,qtilocation,feature_nhz,false)
+$(call soong_config_set,qtilocation,feature_locauto,false)
 $(call soong_config_set,klee_rmnetctl,legacy_driver,true)
 ENABLE_AB := true
 ENABLE_VIRTUAL_AB := true
@@ -210,6 +212,24 @@ PRODUCT_PACKAGES += \
     cupid_rfs_apq_gnss_readonly_vendor_firmware \
     cupid_rfs_apq_gnss_readwrite \
     cupid_rfs_apq_gnss_shared
+
+# Build the public IGnss binder service and its platform glue from Qualcomm's
+# open location tree. The service intentionally loads the stock
+# vendor.qti.gnss-service.so plugin for Cupid's private QTI extension, so that
+# plugin remains part of the proprietary boundary.
+PRODUCT_PACKAGES += \
+    android.hardware.gnss-aidl-service-qti \
+    gnss_antenna_info.conf \
+    gnss@2.0-base.policy \
+    gnss@2.0-edgnss-daemon.policy \
+    gnss@2.0-qsap-location.policy \
+    gnss@2.0-xtra-daemon.policy \
+    gnss@2.0-xtwifi-client.policy \
+    gps.conf \
+    libgnss \
+    libgps.utils \
+    libloc_core \
+    liblocation_api
 
 # Publish only capabilities backed by Cupid's physical hardware and packaged
 # HALs.  These are upstream AOSP declarations; the device tree owns only their
