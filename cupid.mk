@@ -23,7 +23,7 @@ DEVICE_FRAMEWORK_MANIFEST_FILE := device/qcom/taro/framework_manifest.xml
 TARGET_USES_QCV := true
 DEVICE_MANIFEST_SKUS := taro
 DEVICE_MANIFEST_TARO_FILES := \
-    device/qcom/taro/manifest_taro.xml \
+    device/xiaomi/cupid/manifest_cupid_taro.xml \
     device/xiaomi/cupid/manifest_camera_extensions.xml \
     device/xiaomi/cupid/manifest_keymaster.xml \
     device/xiaomi/cupid/manifest_agm.xml
