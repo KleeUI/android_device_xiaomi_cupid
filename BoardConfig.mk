@@ -435,47 +435,12 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
         $(CUPID_DEVICE_INACTIVE_LOAD_MODULES), \
         $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
-# The tracked Waipio/MiCode kernel build emits every module in Cupid's image.
-# Package those source outputs by default.  Keep only the AudioReach/codec
-# group whose source artifacts still differ from the ABI kit consumed by the
-# retained stock audio userspace; these modules move as one compatibility
-# boundary after their kernel/user ABI has been validated end to end.
-CUPID_RETAINED_PREBUILT_KERNEL_MODULES := \
-    adsp_loader_dlkm.ko \
-    audio_pkt_dlkm.ko \
-    audio_prm_dlkm.ko \
-    audpkt_ion_dlkm.ko \
-    aw882xx_dlkm.ko \
-    cs35l41_dlkm.ko \
-    cs35l43_dlkm.ko \
-    gpr_dlkm.ko \
-    hdmi_dlkm.ko \
-    lpass_cdc_dlkm.ko \
-    lpass_cdc_rx_macro_dlkm.ko \
-    lpass_cdc_tx_macro_dlkm.ko \
-    lpass_cdc_va_macro_dlkm.ko \
-    lpass_cdc_wsa2_macro_dlkm.ko \
-    lpass_cdc_wsa_macro_dlkm.ko \
-    machine_dlkm.ko \
-    mbhc_dlkm.ko \
-    pinctrl_lpi_dlkm.ko \
-    q6_dlkm.ko \
-    q6_notifier_dlkm.ko \
-    q6_pdr_dlkm.ko \
-    snd_event_dlkm.ko \
-    stub_dlkm.ko \
-    swr_ctrl_dlkm.ko \
-    swr_dlkm.ko \
-    swr_dmic_dlkm.ko \
-    swr_haptics_dlkm.ko \
-    wcd937x_dlkm.ko \
-    wcd937x_slave_dlkm.ko \
-    wcd938x_dlkm.ko \
-    wcd938x_slave_dlkm.ko \
-    wcd9xxx_dlkm.ko \
-    wcd_core_dlkm.ko \
-    wsa881x_dlkm.ko \
-    wsa883x_dlkm.ko
+# The tracked Waipio/MiCode kernel build is the single source of truth for
+# every Cupid kernel module, including the AudioReach/codec-facing group.
+# Keeping this list empty is intentional: a prebuilt module may remain in the
+# vendor inventory for recovery, but it must never silently win the normal
+# source-built image.
+CUPID_RETAINED_PREBUILT_KERNEL_MODULES :=
 ifneq ($(strip $(filter-out \
     $(CUPID_ALL_KERNEL_MODULES), \
     $(CUPID_RETAINED_PREBUILT_KERNEL_MODULES))),)
