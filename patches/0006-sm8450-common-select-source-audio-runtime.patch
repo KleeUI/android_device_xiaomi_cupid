@@ -1,0 +1,120 @@
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -20156,18 +20156,6 @@
+ }
+ 
+ cc_prebuilt_library_shared {
+-    name: "libar-pal",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libar-pal.so"],
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libagm",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagm.so"],
+-}
+-
+-cc_prebuilt_library_shared {
+     name: "libar-acdb",
+     defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+     srcs: ["proprietary/vendor/lib64/libar-acdb.so"],
+@@ -20276,20 +20264,6 @@
+ }
+ 
+ cc_prebuilt_library_shared {
+-    name: "libagmclient",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagmclient.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libpalclient",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libpalclient.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+     name: "libaudioroute_ext",
+     defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+     srcs: ["proprietary/vendor/lib64/libaudioroute_ext.so"],
+@@ -20302,77 +20276,3 @@
+     srcs: ["proprietary/vendor/lib64/libxlog.so"],
+     prefer: true,
+ }
+-
+-cc_prebuilt_library_shared {
+-    name: "libagm_compress_plugin",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagm_compress_plugin.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libagm_mixer_plugin",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagm_mixer_plugin.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libagm_pcm_plugin",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagm_pcm_plugin.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libagmmixer",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libagmmixer.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "vendor.qti.hardware.AGMIPC@1.0",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.AGMIPC@1.0.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "vendor.qti.hardware.AGMIPC@1.0-impl",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.AGMIPC@1.0-impl.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_binary {
+-    name: "vendor.qti.hardware.AGMIPC@1.0-service",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/bin/hw/vendor.qti.hardware.AGMIPC@1.0-service"],
+-    relative_install_path: "hw",
+-    prefer: true,
+-}
+-
+-prebuilt_etc {
+-    name: "vendor.qti.hardware.AGMIPC@1.0-service.rc",
+-    owner: "xiaomi",
+-    licenses: ["xiaomi_sm8450_compat_proprietary_license"],
+-    src: "proprietary/vendor/etc/init/vendor.qti.hardware.AGMIPC@1.0-service.rc",
+-    sub_dir: "init",
+-    filename: "vendor.qti.hardware.AGMIPC@1.0-service.rc",
+-    soc_specific: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "vendor.qti.hardware.pal@1.0",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.pal@1.0.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "vendor.qti.hardware.pal@1.0-impl",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/vendor.qti.hardware.pal@1.0-impl.so"],
+-    prefer: true,
+-}

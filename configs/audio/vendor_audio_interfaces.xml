@@ -4,6 +4,15 @@ Copyright (C) 2026 The Klee Project
 SPDX-License-Identifier: Apache-2.0
 -->
 <libraries>
+    <!-- Source AudioReach IPC registrars must be loaded before the core HAL. -->
+    <library name="agmservice"
+            libraryName="libagmipcservice.so"
+            method="registerService"
+            mandatory="true" />
+    <library name="palservice"
+            libraryName="libpalipcservice.so"
+            method="registerService"
+            mandatory="true" />
     <library name="audio-core"
             libraryName="libaudiocorehal.qti.so"
             method="registerServices"

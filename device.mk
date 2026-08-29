@@ -6,6 +6,13 @@
 
 DEVICE_PATH := device/xiaomi/cupid
 
+# The source AudioReach namespaces provide the canonical AGM/PAL libraries.
+# Keep them visible to Soong's product package resolver while lower ABI-locked
+# Qualcomm libraries remain in the common vendor namespace.
+PRODUCT_SOONG_NAMESPACES += \
+    vendor/qcom/opensource/agm \
+    vendor/qcom/opensource/pal
+
 # Cupid's proprietary Codec2 service is described by the Taro registry. Put
 # the complete device registry first so Qualcomm's QMAA fallback cannot claim
 # the active media_codecs.xml destination with its legacy OMX-only table.
@@ -43,6 +50,10 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 TARGET_BOARD_PLATFORM := taro
 TARGET_USES_QMAA := false
 TARGET_USES_QCOM_BSP := true
+# Build the AGM/PAL IPC and runtime libraries from the pinned Qualcomm source
+# projects.  The lower AudioReach graph, ACDB and OSAL ABI remains on the
+# matching proprietary kit until those source projects are independently
+# validated against Cupid's DSP firmware.
 TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES := true
 $(call soong_config_set,qtilocation,feature_nhz,false)
 $(call soong_config_set,qtilocation,feature_locauto,false)
@@ -303,13 +314,17 @@ $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/sm8450-common-vend
 $(call inherit-product, device/xiaomi/cupid/klee-compat.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
 
-# Cupid uses the stock, ABI-matched AudioReach HIDL runtime.  The generic
-# Qualcomm product fragments also describe the legacy AIDL bridge; remove those
-# entries and explicitly install the matching HIDL service and libraries.
+# Cupid uses the source AGM/PAL AIDL runtime while retaining only the lower
+# graph/ACDB/OSAL ABI-locked libraries as proprietary inputs.  Remove the
+# legacy HIDL package names inherited by the generic Taro fragment.
 PRODUCT_PACKAGES := $(filter-out \
     libagmservice libagmservice:% \
     libagmipcservice libagmipcservice:% \
-    libpalipcservice libpalipcservice:%, \
+    libpalipcservice libpalipcservice:% \
+    vendor.qti.hardware.AGMIPC@1.0-impl \
+    vendor.qti.hardware.AGMIPC@1.0-service \
+    vendor.qti.hardware.AGMIPC@1.0-service.rc \
+    vendor.qti.hardware.pal@1.0-impl, \
     $(PRODUCT_PACKAGES))
 PRODUCT_PACKAGES += \
     libar-acdb \
@@ -318,10 +333,14 @@ PRODUCT_PACKAGES += \
     libar-pal \
     libagm \
     libagmclient \
+    libagmipcservice \
     libagm_compress_plugin \
     libagm_mixer_plugin \
     libagm_pcm_plugin \
     libagmmixer \
+    lib_bt_bundle \
+    lib_bt_aptx \
+    lib_bt_ble \
     libaudio_log_utils \
     libaudioroute_ext \
     libxlog \
@@ -334,12 +353,7 @@ PRODUCT_PACKAGES += \
     liblx-ar_util \
     liblx-osal \
     libpalclient \
-    vendor.qti.hardware.AGMIPC@1.0 \
-    vendor.qti.hardware.AGMIPC@1.0-impl \
-    vendor.qti.hardware.AGMIPC@1.0-service \
-    vendor.qti.hardware.AGMIPC@1.0-service.rc \
-    vendor.qti.hardware.pal@1.0 \
-    vendor.qti.hardware.pal@1.0-impl
+    libpalipcservice
 
 
 # The Qualcomm product fragments above expose CodeLinaro-built DLKM modules as
