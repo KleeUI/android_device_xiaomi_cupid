@@ -50,11 +50,11 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 TARGET_BOARD_PLATFORM := taro
 TARGET_USES_QMAA := false
 TARGET_USES_QCOM_BSP := true
-# Build the AGM/PAL IPC and runtime libraries from the pinned Qualcomm source
-# projects.  The lower AudioReach graph, ACDB and OSAL ABI remains on the
-# matching proprietary kit until those source projects are independently
-# validated against Cupid's DSP firmware.
-TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES := true
+# Build the complete userspace AudioReach stack from the pinned Qualcomm
+# sources so AGM/PAL and GSL/GPR/OSAL/ACDB share one ABI.  DSP firmware and
+# calibration data remain the device-specific proprietary inputs.
+TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES := false
+TARGET_USES_SOONG_AUDIOREACH_GRAPH_SERVICES := true
 $(call soong_config_set,qtilocation,feature_nhz,false)
 $(call soong_config_set,qtilocation,feature_locauto,false)
 $(call soong_config_set,klee_rmnetctl,legacy_driver,true)
