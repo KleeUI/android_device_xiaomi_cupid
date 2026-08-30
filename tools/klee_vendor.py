@@ -64,17 +64,52 @@ def _run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _patch_probe(top: Path, patch_file: Path, reverse: bool) -> bool:
+def _apply_patch(
+    top: Path, patch_file: Path, *, reverse: bool
+) -> subprocess.CompletedProcess[str]:
     command = [
         "patch",
         "-p1",
-        "--dry-run",
         "--batch",
-        "--silent",
+        "--fuzz=0",
         "--reverse" if reverse else "--forward",
         f"--input={patch_file}",
     ]
-    return _run(command, top).returncode == 0
+    return _run(command, top)
+
+
+def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
+    """Apply and undo the complete patch stack in an isolated vendor tree."""
+    with tempfile.TemporaryDirectory(prefix="klee-vendor-patches-") as directory:
+        probe_top = Path(directory)
+        original: dict[str, bytes] = {}
+        for relative in REQUIRED_VENDOR_FILES:
+            source = top / relative
+            destination = probe_top / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, destination)
+            original[relative] = source.read_bytes()
+
+        patch_names = tuple(reversed(PATCH_NAMES)) if reverse else PATCH_NAMES
+        for name in patch_names:
+            result = _apply_patch(
+                probe_top, device_dir / "patches" / name, reverse=reverse
+            )
+            if result.returncode:
+                return False
+
+        undo_names = PATCH_NAMES if reverse else tuple(reversed(PATCH_NAMES))
+        for name in undo_names:
+            result = _apply_patch(
+                probe_top, device_dir / "patches" / name, reverse=not reverse
+            )
+            if result.returncode:
+                return False
+
+        return all(
+            (probe_top / relative).read_bytes() == content
+            for relative, content in original.items()
+        )
 
 
 def apply_vendor_patches(
@@ -82,9 +117,10 @@ def apply_vendor_patches(
 ) -> list[tuple[str, str]]:
     """Apply Klee metadata patches once, or verify their current state.
 
-    A patch is either forward-applicable (pending) or reverse-applicable
-    (already applied).  Any third state is treated as drift and is never
-    modified automatically.
+    Several patches modify the same generated file, so probing each patch in
+    isolation misclassifies both pristine and fully normalized trees.  Probe
+    the complete stack in temporary copies and only modify a tree that exactly
+    matches the pristine stack input.
     """
     missing = [path for path in REQUIRED_VENDOR_FILES if not (top / path).is_file()]
     if missing:
@@ -92,36 +128,34 @@ def apply_vendor_patches(
             "vendor input is incomplete:\n  " + "\n  ".join(missing)
         )
 
-    results: list[tuple[str, str]] = []
     for name in PATCH_NAMES:
         patch_file = device_dir / "patches" / name
         if not patch_file.is_file():
             raise VendorPreparationError(f"missing metadata patch: {patch_file}")
 
-        if _patch_probe(top, patch_file, reverse=False):
-            state = "pending"
-            if not check_only:
-                command = [
-                    "patch",
-                    "-p1",
-                    "--batch",
-                    "--forward",
-                    f"--input={patch_file}",
-                ]
-                result = _run(command, top)
-                if result.returncode:
-                    raise VendorPreparationError(
-                        f"failed to apply {name}:\n{result.stdout.rstrip()}"
-                    )
-                state = "applied"
-        elif _patch_probe(top, patch_file, reverse=True):
-            state = "already-applied"
-        else:
+    forward = _probe_patch_stack(top, device_dir, reverse=False)
+    reverse = _probe_patch_stack(top, device_dir, reverse=True)
+    if forward == reverse:
+        state = "both directions match" if forward else "neither direction matches"
+        raise VendorPreparationError(
+            f"vendor patch stack is ambiguous or has drift: {state}; "
+            "regenerate vendor metadata or review the tree manually"
+        )
+
+    if reverse:
+        return [(name, "already-applied") for name in PATCH_NAMES]
+    if check_only:
+        return [(name, "pending") for name in PATCH_NAMES]
+
+    results: list[tuple[str, str]] = []
+    for name in PATCH_NAMES:
+        patch_file = device_dir / "patches" / name
+        result = _apply_patch(top, patch_file, reverse=False)
+        if result.returncode:
             raise VendorPreparationError(
-                f"{name} matches neither the generated nor normalized tree; "
-                "regenerate vendor metadata or review the drift manually"
+                f"failed to apply {name}:\n{result.stdout.rstrip()}"
             )
-        results.append((name, state))
+        results.append((name, "applied"))
     return results
 
 
