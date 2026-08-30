@@ -1,9 +1,42 @@
 --- a/vendor/xiaomi/sm8450-common/Android.bp
 +++ b/vendor/xiaomi/sm8450-common/Android.bp
-@@ -20156,18 +20156,6 @@
- }
- 
- cc_prebuilt_library_shared {
+@@ -5 +5,6 @@
+-soong_namespace {}
++soong_namespace {
++    imports: [
++        "vendor/qcom/opensource/agm",
++        "vendor/qcom/opensource/pal",
++    ],
++}
+@@ -4917,7 +4922,7 @@ cc_prebuilt_library_shared {
+                 "proprietary/vendor/lib64/libmcs.so",
+             ],
+             shared_libs: [
+-                "libagm",
++                "//vendor/qcom/opensource/agm:libagm",
+                 "libaudioroute",
+                 "libar-acdb",
+                 "liblog",
+@@ -6146,7 +6151,7 @@ cc_prebuilt_library_shared {
+                 "libqc2audio_basecodec",
+                 "libcodec2_vndk",
+                 "libstagefright_foundation",
+-                "libpalclient",
++                "//vendor/qcom/opensource/pal:libpalclient",
+                 "libc++",
+                 "libc",
+                 "libm",
+@@ -8084,7 +8089,7 @@ cc_prebuilt_library_shared {
+             shared_libs: [
+                 "liblog",
+                 "libcutils",
+-                "libar-pal",
++                "//vendor/qcom/opensource/pal:libar-pal",
+                 "libc++",
+                 "libc",
+                 "libm",
+@@ -20158,30 +20162,0 @@
+-cc_prebuilt_library_shared {
 -    name: "libar-pal",
 -    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
 -    srcs: ["proprietary/vendor/lib64/libar-pal.so"],
@@ -16,13 +49,49 @@
 -}
 -
 -cc_prebuilt_library_shared {
-     name: "libar-acdb",
-     defaults: ["klee_xiaomi_sm8450_compat_defaults"],
-     srcs: ["proprietary/vendor/lib64/libar-acdb.so"],
-@@ -20276,20 +20264,6 @@
- }
- 
- cc_prebuilt_library_shared {
+-    name: "libar-acdb",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libar-acdb.so"],
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libats",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libats.so"],
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "liblx-osal",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/liblx-osal.so"],
+-}
+-
+@@ -20254,38 +20228,0 @@
+-// AudioReach is consumed as one ABI-locked vendor stack on Cupid. These
+-// prebuilts come from the matching stock vendor image; mixing the open-source
+-// graph manager with stock ACDB/OSAL libraries is ABI-incompatible.
+-cc_prebuilt_library_shared {
+-    name: "libar-gpr",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libar-gpr.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "libar-gsl",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/libar-gsl.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
+-    name: "liblx-ar_util",
+-    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
+-    srcs: ["proprietary/vendor/lib64/liblx-ar_util.so"],
+-    prefer: true,
+-}
+-
+-cc_prebuilt_library_shared {
 -    name: "libagmclient",
 -    defaults: ["klee_xiaomi_sm8450_compat_defaults"],
 -    srcs: ["proprietary/vendor/lib64/libagmclient.so"],
@@ -36,14 +105,7 @@
 -    prefer: true,
 -}
 -
--cc_prebuilt_library_shared {
-     name: "libaudioroute_ext",
-     defaults: ["klee_xiaomi_sm8450_compat_defaults"],
-     srcs: ["proprietary/vendor/lib64/libaudioroute_ext.so"],
-@@ -20302,77 +20276,3 @@
-     srcs: ["proprietary/vendor/lib64/libxlog.so"],
-     prefer: true,
- }
+@@ -20305,74 +20241,0 @@
 -
 -cc_prebuilt_library_shared {
 -    name: "libagm_compress_plugin",
