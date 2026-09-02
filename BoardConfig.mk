@@ -437,10 +437,11 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
 # The tracked Waipio/MiCode kernel build is the single source of truth for
 # every Cupid kernel module, including the AudioReach/codec-facing group.
-# Keeping this list empty is intentional: a prebuilt module may remain in the
-# vendor inventory for recovery, but it must never silently win the normal
-# source-built image.
-CUPID_RETAINED_PREBUILT_KERNEL_MODULES :=
+# The proprietary Cupid graphics userspace expects the stock KGSL dma-buf
+# import ABI. Keep that one boundary module from the matched vendor kit while
+# all other kernel modules continue to come from the tracked source build.
+CUPID_RETAINED_PREBUILT_KERNEL_MODULES := \
+    msm_kgsl.ko
 ifneq ($(strip $(filter-out \
     $(CUPID_ALL_KERNEL_MODULES), \
     $(CUPID_RETAINED_PREBUILT_KERNEL_MODULES))),)
