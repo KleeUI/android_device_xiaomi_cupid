@@ -29,6 +29,7 @@ PATCH_NAMES = (
     "0004-cupid-install-klee-stock-delta-files.patch",
     "0005-sm8450-common-prefer-open-location-libraries.patch",
     "0006-sm8450-common-select-source-audio-runtime.patch",
+    "0007-sm8450-common-select-source-location-base-util.patch",
 )
 
 REQUIRED_VENDOR_FILES = (
