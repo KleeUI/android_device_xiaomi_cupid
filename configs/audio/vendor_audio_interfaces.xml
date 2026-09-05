@@ -8,11 +8,11 @@ SPDX-License-Identifier: Apache-2.0
     <library name="agmservice"
             libraryName="libagmipcservice.so"
             method="registerService"
-            mandatory="true" />
+            mandatory="false" />
     <library name="palservice"
             libraryName="libpalipcservice.so"
             method="registerService"
-            mandatory="true" />
+            mandatory="false" />
     <library name="audio-core"
             libraryName="libaudiocorehal.qti.so"
             method="registerServices"
