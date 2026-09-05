@@ -1,0 +1,14 @@
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -4466,10 +4466,7 @@
+         },
+     },
+     compile_multilib: "64",
+-    // The matching Qualcomm open-source implementation is selected by the
+-    // Cupid device tree; keep this blob available only as an extraction
+-    // fallback for products that do not enable that implementation.
+-    prefer: false,
++    prefer: true,
+     soc_specific: true,
+ }
+ 
