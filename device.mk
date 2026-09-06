@@ -300,6 +300,8 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     extphonelib \
     extphonelib.xml \
+    extphonelib-product \
+    extphonelib_product.xml \
     qti-telephony-hidl-wrapper \
     qti_telephony_hidl_wrapper.xml \
     qti-telephony-utils \
@@ -307,7 +309,9 @@ PRODUCT_PACKAGES += \
     ims-ext-common \
     ims_ext_common.xml \
     qti-telephony-hidl-wrapper-prd \
-    qti_telephony_hidl_wrapper_prd.xml
+    qti_telephony_hidl_wrapper_prd.xml \
+    qti-telephony-utils-prd \
+    qti_telephony_utils_prd.xml
 
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=QTI \
