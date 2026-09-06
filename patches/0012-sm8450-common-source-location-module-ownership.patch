@@ -1,0 +1,26 @@
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -4383,6 +4383,6 @@
+ 
+ cc_prebuilt_library_shared {
+-    name: "libloc_api_v02",
++    name: "libloc_api_v02_prebuilt",
+     owner: "xiaomi",
+     enabled: false,
+     strip: {
+@@ -4599,6 +4599,6 @@
+ 
+ cc_prebuilt_library_shared {
+-    name: "libloc_socket",
++    name: "libloc_socket_prebuilt",
+     owner: "xiaomi",
+     enabled: false,
+     strip: {
+@@ -9259,6 +9259,6 @@
+ 
+ cc_prebuilt_library_shared {
+-    name: "libsynergy_loc_api",
++    name: "libsynergy_loc_api_prebuilt",
+     owner: "xiaomi",
+     enabled: false,
+     strip: {
