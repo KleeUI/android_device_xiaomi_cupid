@@ -32,6 +32,9 @@ PATCH_NAMES = (
     "0007-sm8450-common-select-source-location-base-util.patch",
     "0009-sm8450-common-restore-stock-location-base-util.patch",
     "0010-sm8450-common-prefer-source-location-adapters.patch",
+    "0011-sm8450-common-disable-duplicate-location-prebuilts.patch",
+    "0012-sm8450-common-source-location-module-ownership.patch",
+    "0013-location-source-soong-modules.patch",
 )
 
 REQUIRED_VENDOR_FILES = (
@@ -81,17 +84,36 @@ def _apply_patch(
     return _run(command, top)
 
 
+def _patch_target_paths(device_dir: Path) -> set[str]:
+    """Collect every repository path touched by the metadata patch stack."""
+    paths: set[str] = set()
+    for name in PATCH_NAMES:
+        patch_file = device_dir / "patches" / name
+        for raw in patch_file.read_text(encoding="utf-8").splitlines():
+            if raw.startswith("--- ") or raw.startswith("+++ "):
+                path = raw[4:].split("\t", 1)[0]
+                if path == "/dev/null":
+                    continue
+                if path.startswith("a/") or path.startswith("b/"):
+                    paths.add(path[2:])
+    return paths
+
+
 def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
     """Apply and undo the complete patch stack in an isolated vendor tree."""
     with tempfile.TemporaryDirectory(prefix="klee-vendor-patches-") as directory:
         probe_top = Path(directory)
-        original: dict[str, bytes] = {}
-        for relative in REQUIRED_VENDOR_FILES:
+        original: dict[str, bytes | None] = {}
+        target_paths = set(REQUIRED_VENDOR_FILES) | _patch_target_paths(device_dir)
+        for relative in target_paths:
             source = top / relative
             destination = probe_top / relative
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source, destination)
-            original[relative] = source.read_bytes()
+            if source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                original[relative] = source.read_bytes()
+            else:
+                original[relative] = None
 
         patch_names = tuple(reversed(PATCH_NAMES)) if reverse else PATCH_NAMES
         for name in patch_names:
@@ -109,10 +131,14 @@ def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
             if result.returncode:
                 return False
 
-        return all(
-            (probe_top / relative).read_bytes() == content
-            for relative, content in original.items()
-        )
+        for relative, content in original.items():
+            candidate = probe_top / relative
+            if content is None:
+                if candidate.exists():
+                    return False
+            elif not candidate.is_file() or candidate.read_bytes() != content:
+                return False
+        return True
 
 
 def apply_vendor_patches(

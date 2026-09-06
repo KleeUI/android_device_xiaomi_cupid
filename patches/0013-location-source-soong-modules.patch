@@ -1,0 +1,181 @@
+diff --git a/vendor/qcom/opensource/location/Android.bp b/vendor/qcom/opensource/location/Android.bp
+index c05c5102560a8be3e99def511cadf8fb6ab19edc..1e81769031ea4d76be5ec0b359fae27c85fdac8d 100644
+--- a/vendor/qcom/opensource/location/Android.bp
++++ b/vendor/qcom/opensource/location/Android.bp
+@@ -1,3 +1,9 @@
++soong_namespace {
++    imports: [
++        "vendor/xiaomi/sm8450-common",
++    ],
++}
++
+ GNSS_CFLAGS = [
+     "-Werror",
+     "-Wformat",
+diff --git a/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.bp b/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.bp
+index f60a7a0beae4d4d21148e7293037f29a551f0039..06c399ff98b418e521b0aa9b65172b395383416b 100644
+--- a/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.bp
++++ b/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.bp
+@@ -1,4 +1,44 @@
+ 
++cc_library_shared {
++    name: "libloc_api_v02",
++    defaults: ["qtilocationopensrc_common_defaults"],
++    vendor: true,
++    compile_multilib: "64",
++
++    cflags: [
++        "-fno-short-enums",
++        "-D_ANDROID_",
++    ] + GNSS_CFLAGS,
++
++    srcs: [
++        "LocApiV02.cpp",
++        "loc_api_v02_log.cpp",
++        "loc_api_v02_client.cpp",
++        "loc_api_sync_req.cpp",
++        "location_service_v02.c",
++    ],
++
++    shared_libs: [
++        "libutils",
++        "libcutils",
++        "libqmi_cci",
++        "libqmi_common_so",
++        "libloc_core",
++        "libgps.utils",
++        "libdl",
++        "liblog",
++    ],
++
++    header_libs: [
++        "libloc_core_headers",
++        "libgps.utils_headers",
++        "libloc_pla_headers",
++        "liblocation_api_headers",
++    ],
++
++    export_include_dirs: ["."],
++}
++
+ cc_library_headers {
+ 
+     name: "libloc_api_v02_headers",
+diff --git a/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.mk b/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.mk
+index 60440501223fa8e1f8ad35d4be319f8dfa8e59a8..f350414816a0c11588dc381a5df8a26fb9ac35fa 100644
+--- a/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.mk
++++ b/vendor/qcom/opensource/location/loc_api/loc_api_v02/Android.mk
+@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
+ 
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := libloc_api_v02
++LOCAL_MODULE := libloc_api_v02_legacy
+ LOCAL_MODULE_PATH_32 := $(TARGET_OUT_VENDOR)/lib
+ LOCAL_MODULE_PATH_64 := $(TARGET_OUT_VENDOR)/lib64
+ LOCAL_MODULE_TAGS := optional
+diff --git a/vendor/qcom/opensource/location/synergy_loc_api/Android.bp b/vendor/qcom/opensource/location/synergy_loc_api/Android.bp
+index 753c188163b2854f404b5b6fa468965c745335d7..8d586c31cf376d304b398e3a77cabc0174233d3d 100644
+--- a/vendor/qcom/opensource/location/synergy_loc_api/Android.bp
++++ b/vendor/qcom/opensource/location/synergy_loc_api/Android.bp
+@@ -1,4 +1,39 @@
+ 
++cc_library_shared {
++    name: "libsynergy_loc_api",
++    defaults: ["qtilocationopensrc_common_defaults"],
++    vendor: true,
++    compile_multilib: "64",
++
++    cflags: [
++        "-fno-short-enums",
++        "-D_ANDROID_",
++    ] + GNSS_CFLAGS,
++
++    srcs: ["SynergyLocApi.cpp"],
++
++    shared_libs: [
++        "libutils",
++        "libcutils",
++        "libqmi_cci",
++        "libqmi_common_so",
++        "libloc_core",
++        "libgps.utils",
++        "libdl",
++        "liblog",
++    ],
++
++    header_libs: [
++        "libloc_core_headers",
++        "libgps.utils_headers",
++        "libloc_pla_headers",
++        "loc_sll_if_headers",
++        "liblocation_api_headers",
++    ],
++
++    export_include_dirs: ["."],
++}
++
+ cc_library_headers {
+ 
+     name: "libsynergyloc_api_headers",
+diff --git a/vendor/qcom/opensource/location/synergy_loc_api/Android.mk b/vendor/qcom/opensource/location/synergy_loc_api/Android.mk
+index 2f9136d9ab47de822fa350a8be6f91f6c1409139..ae1f3301be63cde46c5929a70a63286a1a7204b4 100644
+--- a/vendor/qcom/opensource/location/synergy_loc_api/Android.mk
++++ b/vendor/qcom/opensource/location/synergy_loc_api/Android.mk
+@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
+ 
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := libsynergy_loc_api
++LOCAL_MODULE := libsynergy_loc_api_legacy
+ 
+ LOCAL_MODULE_PATH_32 := $(TARGET_OUT_VENDOR)/lib
+ LOCAL_MODULE_PATH_64 := $(TARGET_OUT_VENDOR)/lib64
+diff --git a/vendor/qcom/opensource/location/utils/loc_socket/Android.bp b/vendor/qcom/opensource/location/utils/loc_socket/Android.bp
+new file mode 100644
+index 0000000000000000000000000000000000000000..151adfa6c9aacc31da6508013037cfe680819796
+--- /dev/null
++++ b/vendor/qcom/opensource/location/utils/loc_socket/Android.bp
+@@ -0,0 +1,29 @@
++cc_library_shared {
++    name: "libloc_socket",
++    defaults: ["qtilocationopensrc_common_defaults"],
++    vendor: true,
++    compile_multilib: "64",
++
++    cflags: [
++        "-fno-short-enums",
++        "-D_ANDROID_",
++    ] + GNSS_CFLAGS,
++
++    srcs: ["LocSocket.cpp"],
++
++    shared_libs: [
++        "libutils",
++        "libcutils",
++        "liblog",
++        "libgps.utils",
++    ],
++
++    header_libs: [
++        "libloc_core_headers",
++        "libgps.utils_headers",
++        "libloc_pla_headers",
++        "liblocation_api_headers",
++    ],
++
++    export_include_dirs: ["."],
++}
+diff --git a/vendor/qcom/opensource/location/utils/loc_socket/Android.mk b/vendor/qcom/opensource/location/utils/loc_socket/Android.mk
+index 365486e003ec7d11f6a7c1d1a467e32aa2d1f274..e5c5724f87d9f79e6727d6823aecc38aba58aa48 100644
+--- a/vendor/qcom/opensource/location/utils/loc_socket/Android.mk
++++ b/vendor/qcom/opensource/location/utils/loc_socket/Android.mk
+@@ -4,7 +4,7 @@ LOCAL_PATH := $(call my-dir)
+ 
+ include $(CLEAR_VARS)
+ 
+-LOCAL_MODULE := libloc_socket
++LOCAL_MODULE := libloc_socket_legacy
+ LOCAL_MODULE_PATH_32 := $(TARGET_OUT_VENDOR)/lib
+ LOCAL_MODULE_PATH_64 := $(TARGET_OUT_VENDOR)/lib64
+ LOCAL_MODULE_TAGS := optional
