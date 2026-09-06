@@ -293,13 +293,19 @@ PRODUCT_PACKAGES += \
     update_engine_sideload \
     update_verifier
 
-# Qualcomm's common product already selects the system_ext HIDL wrapper and
-# telephony utilities plus the product IMS extension from the upstream tree.
-# Add the remaining system_ext API and product wrapper required by Xiaomi's
-# radio applications.
+# Qualcomm radio applications declare these libraries as mandatory shared
+# Java libraries.  Cupid intentionally selects them here rather than relying
+# on an optional common-product fragment, so the generated system_ext/product
+# images contain the exact paths referenced by TelephonyComponentFactory.
 PRODUCT_PACKAGES += \
     extphonelib \
     extphonelib.xml \
+    qti-telephony-hidl-wrapper \
+    qti_telephony_hidl_wrapper.xml \
+    qti-telephony-utils \
+    qti_telephony_utils.xml \
+    ims-ext-common \
+    ims_ext_common.xml \
     qti-telephony-hidl-wrapper-prd \
     qti_telephony_hidl_wrapper_prd.xml
 
