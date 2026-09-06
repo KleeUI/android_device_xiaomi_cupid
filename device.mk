@@ -69,6 +69,15 @@ KERNEL_MODULES_INSTALL := dlkm
 KERNEL_MODULES_OUT := \
     out/target/product/$(TARGET_PRODUCT)/$(KERNEL_MODULES_INSTALL)/lib/modules
 
+# Product makefiles are evaluated before BoardConfig.mk, so the generic
+# Qualcomm GPS board fragment cannot reliably gate the source adapters here.
+# Declare the location capability explicitly and inherit the matching
+# open-source package list.  This keeps libloc_api_v02, libloc_socket, and
+# libsynergy_loc_api on the same source-built ABI as libloc_core instead of
+# silently selecting the extracted Xiaomi prebuilts.
+BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := default
+$(call inherit-product, vendor/qcom/opensource/location/gps_vendor_product.mk)
+
 # Import the pinned CodeLinaro platform definitions without inheriting its
 # vendor-only taro product or legacy global board assignments.
 _cupid_qcom_system_defs := $(sort \
