@@ -175,7 +175,10 @@ CONFIG_MSM_MMRM := y
 
 TARGET_KERNEL_VERSION := 5.10
 
-TARGET_USES_QCOM_LEGACY_QMI_LOCATION := false
+# Use Qualcomm's source QMI location adapter with the source-built location
+# core.  Keeping the extracted adapter enabled mixes incompatible C++ object
+# layouts and crashes the GNSS service on the first ZPP indication.
+TARGET_USES_QCOM_LEGACY_QMI_LOCATION := true
 TARGET_BUILD_QCOM_SIGMA_DUT := false
 
 # Qualcomm's qcwcn userspace controls the source-built qca_cld3 driver through

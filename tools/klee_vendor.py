@@ -31,6 +31,7 @@ PATCH_NAMES = (
     "0006-sm8450-common-select-source-audio-runtime.patch",
     "0007-sm8450-common-select-source-location-base-util.patch",
     "0009-sm8450-common-restore-stock-location-base-util.patch",
+    "0010-sm8450-common-prefer-source-location-adapters.patch",
 )
 
 REQUIRED_VENDOR_FILES = (
