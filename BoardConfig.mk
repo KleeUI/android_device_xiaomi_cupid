@@ -53,6 +53,12 @@ BOARD_KERNEL_BASE := 0x00000000
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
+# Build Cupid's base DTBs and Qualcomm techpack overlays from the tracked
+# kernel and devicetree projects. The kernel tree exposes
+# kernel/xiaomi/sm8450-devicetrees through its vendor DTS link, so the Klee
+# merge step can produce the boot DTB and separated dtbo.img without stock
+# image inputs.
+BOARD_USES_QCOM_MERGE_DTBS_SCRIPT := true
 BOARD_VENDOR_RAMDISK_FRAGMENTS += dlkm
 BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
 
@@ -496,15 +502,10 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
 
-# Keep the stock base-DTB table separate from its matching stock DTBO.  The
-# Cupid overlays are applied by the boot loader and must not be merged into the
-# base payload a second time during image construction.
-BOARD_PREBUILT_DTBIMAGE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/dtb
-
-CUPID_STOCK_DTBO := vendor/xiaomi/cupid/proprietary/dtbo.img
-ifneq ($(wildcard $(CUPID_STOCK_DTBO)),)
-BOARD_PREBUILT_DTBOIMAGE := $(CUPID_STOCK_DTBO)
-endif
+# DTB and DTBO images are intentionally source-built. Do not reintroduce
+# BOARD_PREBUILT_DTBIMAGE_DIR or a stock BOARD_PREBUILT_DTBOIMAGE here: either
+# variable bypasses the merge step and silently puts the device back on the
+# extracted Xiaomi blobs.
 
 # Qualcomm board fragments describe the modules that must be packaged into
 # vendor_dlkm and vendor_boot. Give those fragments a stable Klee output root;
