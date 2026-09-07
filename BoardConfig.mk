@@ -248,39 +248,42 @@ BOARD_VENDOR_SEPOLICY_DIRS += \
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 TARGET_KERNEL_ARCH := arm64
 BOARD_KERNEL_IMAGE_NAME := Image
-TARGET_KERNEL_SOURCE := kernel/xiaomi/sm8450
-TARGET_KERNEL_CONFIG := \
-    gki_defconfig \
-    vendor/waipio_GKI.config \
-    vendor/xiaomi_GKI.config \
-    vendor/cupid_GKI.config \
-    vendor/debugfs.config
-TARGET_KERNEL_CONFIG_EXT += \
-    $(DEVICE_PATH)/configs/klee_GKI.config
+TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
+TARGET_KERNEL_PLATFORM_PATH := kernel_platform
+TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
-TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
-# Keep Klee's maintained audio and camera trees canonical while retaining the
-# Xiaomi module kit as the root for the remaining device-specific drivers.
-TARGET_KERNEL_EXT_MODULES := \
-    qcom/opensource/mmrm-driver \
-    ../../../vendor/qcom/opensource/audio-kernel \
-    ../../../vendor/qcom/opensource/camera-kernel \
-    qcom/opensource/cvp-kernel \
-    qcom/opensource/dataipa/drivers/platform/msm \
-    qcom/opensource/datarmnet/core \
-    qcom/opensource/datarmnet-ext/aps \
-    qcom/opensource/datarmnet-ext/offload \
-    qcom/opensource/datarmnet-ext/shs \
-    qcom/opensource/datarmnet-ext/perf \
-    qcom/opensource/datarmnet-ext/perf_tether \
-    qcom/opensource/datarmnet-ext/sch \
-    qcom/opensource/datarmnet-ext/wlan \
-    qcom/opensource/display-drivers/msm \
-    qcom/opensource/eva-kernel \
-    qcom/opensource/video-driver \
-    qcom/opensource/wlan/qcacld-3.0/.qca6490 \
-    qcom/opensource/wlan/qcacld-3.0/.qca6750
 TARGET_NEEDS_DTBOIMAGE := true
+KLEE_KERNEL_DTBO_TARGET := dtbo.img
+
+# Cupid DTB/DTBO inputs are source-only. The manifest links this directory
+# into the inline Waipio kernel's vendor DTS root; a missing link is a hard
+# configuration error rather than permission to reuse Xiaomi images.
+KLEE_SOURCE_DTB_REQUIRED := true
+KLEE_KERNEL_SOURCE_DTB_ROOT := $(DEVICE_PATH)/kernel/dts
+ifeq ($(wildcard $(KLEE_KERNEL_SOURCE_DTB_ROOT)/Makefile),)
+$(error Cupid source DT tree is missing at $(KLEE_KERNEL_SOURCE_DTB_ROOT))
+endif
+ifneq ($(strip $(BOARD_PREBUILT_DTBIMAGE_DIR)),)
+$(error Cupid source DT build forbids BOARD_PREBUILT_DTBIMAGE_DIR)
+endif
+ifneq ($(strip $(BOARD_PREBUILT_DTBOIMAGE)),)
+$(error Cupid source DT build forbids BOARD_PREBUILT_DTBOIMAGE)
+endif
+TARGET_KERNEL_DTB_BASES := \
+    qcom/waipio.dtb \
+    qcom/waipiop.dtb \
+    qcom/waipio-v2.dtb \
+    qcom/waipiop-v2.dtb \
+    qcom/waipio-lte.dtb
+TARGET_KERNEL_DTB_OVERLAYS := \
+    qcom/cupid-sm8450-pm8008-overlay.dtbo \
+    qcom/camera/cupid-sm8450-camera-sensor.dtbo
+KLEE_KERNEL_DTB_SOURCE_MARKERS := \
+    bindings/media/camera \
+    qcom/Makefile \
+    qcom/cupid-sm8450-pm8008-overlay.dts \
+    qcom/audio/cupid-audio-mtp.dts \
+    qcom/camera/cupid-sm8450-camera-sensor.dts
 
 # The Waipio GKI keeps storage, clocks, regulators, interrupt routing and
 # IOMMU support modular. These modules must be available before first-stage
