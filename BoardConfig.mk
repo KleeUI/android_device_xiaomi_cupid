@@ -54,10 +54,8 @@ BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
 # Build Cupid's base DTBs and Qualcomm techpack overlays from the tracked
-# kernel and devicetree projects. The kernel tree exposes
-# kernel/xiaomi/sm8450-devicetrees through its vendor DTS link, so the Klee
-# merge step can produce the boot DTB and separated dtbo.img without stock
-# image inputs.
+# DTS tree linked into the inline Waipio kernel. The Klee source-DT path
+# produces the boot DTB and separated dtbo.img without stock image inputs.
 BOARD_USES_QCOM_MERGE_DTBS_SCRIPT := true
 BOARD_VENDOR_RAMDISK_FRAGMENTS += dlkm
 BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
