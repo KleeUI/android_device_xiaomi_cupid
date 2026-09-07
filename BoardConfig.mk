@@ -52,6 +52,7 @@ BOARD_KERNEL_PAGESIZE := 4096
 BOARD_KERNEL_BASE := 0x00000000
 BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
+BOARD_KERNEL_SEPARATED_DTBO := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
 # Build Cupid's base DTBs and Qualcomm techpack overlays from the tracked
 # DTS tree linked into the inline Waipio kernel. The Klee source-DT path
@@ -276,6 +277,8 @@ TARGET_KERNEL_DTB_BASES := \
 TARGET_KERNEL_DTB_OVERLAYS := \
     qcom/cupid-sm8450-pm8008-overlay.dtbo \
     qcom/camera/cupid-sm8450-camera-sensor.dtbo
+TARGET_MERGE_DTBS_WILDCARD := *
+TARGET_MERGE_DTBOS_WILDCARD := *cupid*
 KLEE_KERNEL_DTB_SOURCE_MARKERS := \
     bindings/media/camera \
     qcom/Makefile \
