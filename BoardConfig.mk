@@ -181,9 +181,12 @@ CONFIG_MSM_MMRM := y
 TARGET_KERNEL_VERSION := 5.10
 
 # Use Qualcomm's source QMI location adapter with the source-built location
-# core.  Keeping the extracted adapter enabled mixes incompatible C++ object
-# layouts and crashes the GNSS service on the first ZPP indication.
-TARGET_USES_QCOM_LEGACY_QMI_LOCATION := true
+# core.  The legacy Android.mk adapter is a 32-bit-only compatibility shim;
+# Cupid's source QMI libraries are 64-bit and the modern Android.bp adapters
+# are already included by gps_vendor_product.mk.  Disable the legacy shim so
+# Kati does not create an impossible android-arm dependency on 64-bit QMI
+# prebuilts (and so the runtime uses the source-built 64-bit ABI).
+TARGET_USES_QCOM_LEGACY_QMI_LOCATION := false
 TARGET_BUILD_QCOM_SIGMA_DUT := false
 
 # Qualcomm's qcwcn userspace controls the source-built qca_cld3 driver through
