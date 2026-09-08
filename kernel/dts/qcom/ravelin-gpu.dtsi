@@ -1,4 +1,14 @@
 
+
+/*
+ * Qualcomm's public DT binding snapshots do not consistently expose the
+ * frequency-limiter reset ID. Keep the source DT tree self-contained while
+ * remaining compatible with newer binding headers that define it.
+ */
+#ifndef GPUCC_GPU_CC_FREQUENCY_LIMITER_IRQ_CLEAR
+#define GPUCC_GPU_CC_FREQUENCY_LIMITER_IRQ_CLEAR 9
+#endif
+
 #define MHZ_TO_KBPS(mhz, w) ((mhz * 1000000 * w) / (1024))
 
 &soc {
