@@ -1,5 +1,17 @@
 #include <dt-bindings/thermal/thermal_qti.h>
 
+/* Keep the modem sensor IDs available with older public thermal bindings. */
+#ifndef QMI_SDR0_PA
+#define QMI_SDR0_PA 64
+#define QMI_SDR1_PA 65
+#define QMI_MODEM_CFG 66
+#define QMI_LTE_CC 67
+#define QMI_MCG_FR1_CC 68
+#define QMI_MCG_FR2_CC 69
+#define QMI_SCG_FR1_CC 70
+#define QMI_SCG_FR2_CC 71
+#endif
+
 &soc {
 	qmi-tmd-devices {
 		compatible = "qcom,qmi-cooling-devices";
