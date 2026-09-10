@@ -50,6 +50,10 @@ $(call inherit-product, frameworks/native/build/phone-xhdpi-6144-dalvik-heap.mk)
 TARGET_BOARD_PLATFORM := taro
 TARGET_USES_QMAA := false
 TARGET_USES_QCOM_BSP := true
+# The Waipio source-built IPA/RMNET stack does not use the legacy IPACM
+# product.  That fragment selects binary-only qti_ipa headers and libipanat
+# for taro through the generic platform list, so keep it out of Cupid.
+TARGET_DISABLE_IPACM := true
 # Build the complete userspace AudioReach stack from the pinned Qualcomm
 # sources so AGM/PAL and GSL/GPR/OSAL/ACDB share one ABI.  DSP firmware and
 # calibration data remain the device-specific proprietary inputs.
