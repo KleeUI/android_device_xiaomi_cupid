@@ -254,6 +254,29 @@ TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
 TARGET_KERNEL_PLATFORM_PATH := kernel_platform
 TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
+# Build the Qualcomm device DLKMs against the same platform KERNEL_KIT as the
+# in-tree Waipio modules.  The module root is a tracked source repository;
+# the audio tree remains the maintained vendor copy used by Klee.
+TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
+TARGET_KERNEL_EXT_MODULES := \
+    qcom/opensource/mmrm-driver \
+    ../../../vendor/qcom/opensource/audio-kernel \
+    qcom/opensource/camera-kernel \
+    qcom/opensource/cvp-kernel \
+    qcom/opensource/dataipa/drivers/platform/msm \
+    qcom/opensource/datarmnet/core \
+    qcom/opensource/datarmnet-ext/aps \
+    qcom/opensource/datarmnet-ext/offload \
+    qcom/opensource/datarmnet-ext/shs \
+    qcom/opensource/datarmnet-ext/perf \
+    qcom/opensource/datarmnet-ext/perf_tether \
+    qcom/opensource/datarmnet-ext/sch \
+    qcom/opensource/datarmnet-ext/wlan \
+    qcom/opensource/display-drivers/msm \
+    qcom/opensource/eva-kernel \
+    qcom/opensource/video-driver \
+    qcom/opensource/wlan/qcacld-3.0/.qca6490 \
+    qcom/opensource/wlan/qcacld-3.0/.qca6750
 TARGET_NEEDS_DTBOIMAGE := true
 KLEE_KERNEL_DTBO_TARGET := dtbo.img
 
