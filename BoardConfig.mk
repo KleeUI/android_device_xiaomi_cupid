@@ -255,26 +255,27 @@ TARGET_KERNEL_PLATFORM_PATH := kernel_platform
 TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
 # Build the Qualcomm device DLKMs against the same platform KERNEL_KIT as the
-# in-tree Waipio modules.  The module root is a tracked source repository;
-# the audio tree remains the maintained vendor copy used by Klee.
+# in-tree Waipio modules. Prefer the independently maintained Klee/Qualcomm
+# trees; retain the Xiaomi aggregate only for modules without an equivalent
+# project in the current manifest.
 TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
 TARGET_KERNEL_EXT_MODULES := \
     qcom/opensource/mmrm-driver \
     ../../../vendor/qcom/opensource/audio-kernel \
-    qcom/opensource/camera-kernel \
+    ../../../vendor/qcom/opensource/camera-kernel \
     qcom/opensource/cvp-kernel \
-    qcom/opensource/dataipa/drivers/platform/msm \
-    qcom/opensource/datarmnet/core \
-    qcom/opensource/datarmnet-ext/aps \
-    qcom/opensource/datarmnet-ext/offload \
-    qcom/opensource/datarmnet-ext/shs \
-    qcom/opensource/datarmnet-ext/perf \
-    qcom/opensource/datarmnet-ext/perf_tether \
-    qcom/opensource/datarmnet-ext/sch \
-    qcom/opensource/datarmnet-ext/wlan \
-    qcom/opensource/display-drivers/msm \
+    ../../../vendor/qcom/opensource/dataipa/drivers/platform/msm \
+    ../../../vendor/qcom/opensource/datarmnet/core \
+    ../../../vendor/qcom/opensource/datarmnet-ext/aps \
+    ../../../vendor/qcom/opensource/datarmnet-ext/offload \
+    ../../../vendor/qcom/opensource/datarmnet-ext/shs \
+    ../../../vendor/qcom/opensource/datarmnet-ext/perf \
+    ../../../vendor/qcom/opensource/datarmnet-ext/perf_tether \
+    ../../../vendor/qcom/opensource/datarmnet-ext/sch \
+    ../../../vendor/qcom/opensource/datarmnet-ext/wlan \
+    ../../../vendor/qcom/opensource/display-drivers/msm \
     qcom/opensource/eva-kernel \
-    qcom/opensource/video-driver \
+    ../../../vendor/qcom/opensource/video-driver \
     qcom/opensource/wlan/qcacld-3.0/.qca6490 \
     qcom/opensource/wlan/qcacld-3.0/.qca6750
 TARGET_NEEDS_DTBOIMAGE := true
