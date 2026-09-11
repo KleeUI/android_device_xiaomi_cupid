@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "source": "Klee source kernel and Qualcomm open-source DLKM trees",
+  "retained_prebuilt": [
+    {
+      "name": "msm-eva.ko",
+      "path": "vendor/xiaomi/cupid/proprietary/kernel/modules/msm-eva.ko",
+      "reason": "The Android 17 Waipio platform source does not publish the EVA implementation.",
+      "sha256": "ea935e53ed2026bfbbcc7ac30d5f960c3c5ba9892868cc7d8f43e8b88771a6b0",
+      "size": 725216
+    },
+    {
+      "name": "msm_kgsl.ko",
+      "path": "vendor/xiaomi/cupid/proprietary/kernel/modules/msm_kgsl.ko",
+      "reason": "Cupid's proprietary graphics userspace requires the retail KGSL dma-buf ABI.",
+      "sha256": "c924e7aea79335448dcea1f8375c48074d7a1c4acdfbdc7685d190d0c305c82a",
+      "size": 2535128
+    }
+  ]
+}

@@ -1,0 +1,270 @@
+{
+  "version": 1,
+  "page_size": 4096,
+  "dtb_variants": [
+    {
+      "name": "waipio-le.dtb",
+      "base": "qcom/waipio-le.dtb",
+      "overlays": [
+        "qcom/camera/waipio-camera.dtbo",
+        "qcom/mmrm/waipio-mmrm.dtbo",
+        "qcom/mmrm/waipio-mmrm-test.dtbo",
+        "qcom/eva/waipio-eva.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/display/display/waipio-sde.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [457, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Waipio LE"],
+        "compatible": ["qcom,waipio"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,cvp@ab00000", "/soc/qcom,dp_display@ae90000",
+        "/soc/qcom,vidc@aa00000", "/soc/qcom,cam-req-mgr",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36439, 41157, 44827, 49152, 54526]},
+        "/soc/qcom,csiphy0@ace4000": {"rgltr-enable-sync": [1]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    },
+    {
+      "name": "waipio-lte.dtb",
+      "base": "qcom/waipio-lte.dtb",
+      "overlays": [
+        "qcom/display/display/waipio-sde.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/mmrm/waipio-mmrm.dtbo",
+        "qcom/mmrm/waipio-mmrm-test.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [552, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Waipio LTE SoC"],
+        "compatible": ["qcom,waipio"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,dp_display@ae90000", "/soc/qcom,vidc@aa00000",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "forbidden_nodes": ["/soc/qcom,cvp@ab00000", "/soc/qcom,cam-req-mgr"],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36439, 41157, 44827, 49152, 54526]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    },
+    {
+      "name": "waipio-v2.dtb",
+      "base": "qcom/waipio-v2.dtb",
+      "overlays": [
+        "qcom/camera/waipio-camera.dtbo",
+        "qcom/mmrm/waipio-v2-mmrm.dtbo",
+        "qcom/mmrm/waipio-v2-mmrm-test.dtbo",
+        "qcom/eva/waipio-eva.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/display/display/waipio-sde.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [457, 131072],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Waipio v2 SoC"],
+        "compatible": ["qcom,waipio"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,cvp@ab00000", "/soc/qcom,dp_display@ae90000",
+        "/soc/qcom,vidc@aa00000", "/soc/qcom,cam-req-mgr",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36438, 41157, 44827, 49152, 54526]},
+        "/soc/qcom,csiphy0@ace4000": {"rgltr-enable-sync": [1]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    },
+    {
+      "name": "waipio.dtb",
+      "base": "qcom/waipio.dtb",
+      "overlays": [
+        "qcom/eva/waipio-eva.dtbo",
+        "qcom/display/display/waipio-sde.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/camera/waipio-camera.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/mmrm/waipio-mmrm.dtbo",
+        "qcom/mmrm/waipio-mmrm-test.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [457, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Waipio SoC"],
+        "compatible": ["qcom,waipio"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,cvp@ab00000", "/soc/qcom,dp_display@ae90000",
+        "/soc/qcom,vidc@aa00000", "/soc/qcom,cam-req-mgr",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36439, 41157, 44827, 49152, 54526]},
+        "/soc/qcom,csiphy0@ace4000": {"rgltr-enable-sync": [1]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    },
+    {
+      "name": "waipiop-v2.dtb",
+      "base": "qcom/waipiop-v2.dtb",
+      "overlays": [
+        "qcom/camera/waipio-camera.dtbo",
+        "qcom/mmrm/waipio-v2-mmrm.dtbo",
+        "qcom/mmrm/waipio-v2-mmrm-test.dtbo",
+        "qcom/eva/waipio-eva.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/display/display/waipio-sde.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [482, 131072],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. WaipioP v2 SoC"],
+        "compatible": ["qcom,waipiop"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,cvp@ab00000", "/soc/qcom,dp_display@ae90000",
+        "/soc/qcom,vidc@aa00000", "/soc/qcom,cam-req-mgr",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36438, 41157, 44827, 49152, 54526]},
+        "/soc/qcom,csiphy0@ace4000": {"rgltr-enable-sync": [1]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    },
+    {
+      "name": "waipiop.dtb",
+      "base": "qcom/waipiop.dtb",
+      "overlays": [
+        "qcom/eva/waipio-eva.dtbo",
+        "qcom/display/display/waipio-sde.dtbo",
+        "qcom/video/waipio-vidc.dtbo",
+        "qcom/camera/waipio-camera.dtbo",
+        "qcom/audio/waipio-audio.dtbo",
+        "qcom/mmrm/waipio-mmrm.dtbo",
+        "qcom/mmrm/waipio-mmrm-test.dtbo"
+      ],
+      "expected_root_properties": {
+        "qcom,msm-id": [482, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. WaipioP SoC"],
+        "compatible": ["qcom,waipiop"]
+      },
+      "forbidden_root_properties": ["qcom,pmic-id", "qcom,pmic-id-size", "xiaomi,miboard-id"],
+      "required_nodes": [
+        "/soc/qcom,cvp@ab00000", "/soc/qcom,dp_display@ae90000",
+        "/soc/qcom,vidc@aa00000", "/soc/qcom,cam-req-mgr",
+        "/soc/spf_core_platform", "/soc/qcom,mmrm", "/soc/qcom,mmrm-test"
+      ],
+      "expected_node_properties": {
+        "/soc/qcom,mmrm": {"mm-rail-fact-volt": [36439, 41157, 44827, 49152, 54526]},
+        "/soc/qcom,csiphy0@ace4000": {"rgltr-enable-sync": [1]}
+      },
+      "expected_node_strings": {
+        "/soc/qcom,mmrm-test": {"status": ["disable"]}
+      }
+    }
+  ],
+  "dtbo_variants": [
+    {
+      "name": "cupid-sm8450.dtbo",
+      "base": "qcom/cupid-sm8450-pm8008-overlay.dtbo",
+      "overlays": [
+        "qcom/camera/cupid-sm8450-camera-sensor.dtbo",
+        "qcom/audio/cupid-audio-mtp.dtbo",
+        "qcom/display/display/cupid-sde-display-mtp-overlay.dtbo"
+      ],
+      "root_properties": {
+        "qcom,msm-id": [457, 131072, 482, 131072, 457, 65536, 482, 65536],
+        "qcom,board-id": [65544, 0],
+        "qcom,pmic-id": [47, 0, 0, 0, 0, 0, 0, 0],
+        "qcom,pmic-id-size": [8],
+        "xiaomi,miboard-id": [2, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Cupid based on Qualcomm Technologies, Inc SM8450"],
+        "compatible": ["qcom,waipio-mtp", "qcom,waipio", "qcom,mtp"]
+      },
+      "applies_to": [
+        "waipio-le.dtb",
+        "waipio-v2.dtb",
+        "waipio.dtb",
+        "waipiop-v2.dtb",
+        "waipiop.dtb"
+      ],
+      "id": 0,
+      "rev": 0,
+      "custom": [0, 0, 0, 0]
+    },
+    {
+      "name": "cupid-sm8450-lte.dtbo",
+      "base": "qcom/cupid-sm8450-pm8008-overlay.dtbo",
+      "overlays": [
+        "qcom/audio/cupid-audio-mtp.dtbo",
+        "qcom/display/display/cupid-sde-display-mtp-overlay.dtbo"
+      ],
+      "root_properties": {
+        "qcom,msm-id": [552, 65536],
+        "qcom,board-id": [65544, 0],
+        "qcom,pmic-id": [47, 0, 0, 0, 0, 0, 0, 0],
+        "qcom,pmic-id-size": [8],
+        "xiaomi,miboard-id": [2, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Cupid based on Qualcomm Technologies, Inc SM8450"],
+        "compatible": ["qcom,waipio-mtp", "qcom,waipio", "qcom,mtp"]
+      },
+      "applies_to": [
+        "waipio-lte.dtb"
+      ],
+      "id": 0,
+      "rev": 0,
+      "custom": [0, 0, 0, 0]
+    }
+  ],
+  "allowed_dtb_selector_collisions": [
+    [
+      "waipio-le.dtb",
+      "waipio.dtb"
+    ]
+  ]
+}

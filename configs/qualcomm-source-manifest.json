@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "projects": [
+    {
+      "path": "vendor/qcom/opensource/cvp-kernel",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/cvp-kernel.git",
+      "revision": "dcf120f6617fbf3335ffdcb1894b8ffc62e8bd6b",
+      "module": "msm-cvp.ko"
+    },
+    {
+      "path": "vendor/qcom/opensource/eva-kernel",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/eva-kernel.git",
+      "revision": "8fee9b929fabf46ef975a03d55aa9262e059725e",
+      "module": "msm-eva.ko"
+    }
+  ]
+}

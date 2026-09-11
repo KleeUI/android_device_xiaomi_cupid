@@ -54,10 +54,9 @@ BOARD_RAMDISK_USE_LZ4 := true
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_KERNEL_SEPARATED_DTBO := true
 BOARD_INCLUDE_RECOVERY_DTBO := true
-# Build Cupid's base DTBs and Qualcomm techpack overlays from the tracked
-# DTS tree linked into the inline Waipio kernel. The Klee source-DT path
-# produces the boot DTB and separated dtbo.img without stock image inputs.
-BOARD_USES_QCOM_MERGE_DTBS_SCRIPT := true
+# Build Cupid's DTBs and DTBOs from the tracked source tree with Klee's
+# device-owned layout assembler. No inherited merge script or stock image
+# participates in the kernel bundle.
 BOARD_VENDOR_RAMDISK_FRAGMENTS += dlkm
 BOARD_VENDOR_RAMDISK_FRAGMENT.dlkm.KERNEL_MODULE_DIRS := top
 
@@ -246,7 +245,8 @@ BOARD_VENDOR_SEPOLICY_DIRS += $(wildcard \
 BOARD_VENDOR_SEPOLICY_DIRS += \
     $(DEVICE_PATH)/sepolicy/vendor_compat
 
-# Klee inline GKI.
+# Klee source-built Waipio GKI. The platform tree is the Android 17 Qualcomm
+# kernel input; Klee owns the transaction and packaging rules below.
 BOARD_USES_GENERIC_KERNEL_IMAGE := true
 TARGET_KERNEL_ARCH := arm64
 BOARD_KERNEL_IMAGE_NAME := Image
@@ -254,35 +254,33 @@ TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
 TARGET_KERNEL_PLATFORM_PATH := kernel_platform
 TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
 TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
-# Build the Qualcomm device DLKMs against the same platform KERNEL_KIT as the
-# in-tree Waipio modules. Prefer the independently maintained Klee/Qualcomm
-# trees; retain the Xiaomi aggregate only for modules without an equivalent
-# project in the current manifest.
-TARGET_KERNEL_EXT_MODULE_ROOT := kernel/xiaomi/sm8450-modules
+# Build every Qualcomm device DLKM from Klee's independently tracked source
+# projects against the same platform KERNEL_KIT as the inline Waipio kernel.
+TARGET_KERNEL_EXT_MODULE_ROOT := vendor/qcom/opensource
 TARGET_KERNEL_EXT_MODULES := \
-    qcom/opensource/mmrm-driver \
-    ../../../vendor/qcom/opensource/audio-kernel \
-    ../../../vendor/qcom/opensource/camera-kernel \
-    qcom/opensource/cvp-kernel \
-    ../../../vendor/qcom/opensource/dataipa/drivers/platform/msm \
-    ../../../vendor/qcom/opensource/datarmnet/core \
-    ../../../vendor/qcom/opensource/datarmnet-ext/aps \
-    ../../../vendor/qcom/opensource/datarmnet-ext/offload \
-    ../../../vendor/qcom/opensource/datarmnet-ext/shs \
-    ../../../vendor/qcom/opensource/datarmnet-ext/perf \
-    ../../../vendor/qcom/opensource/datarmnet-ext/perf_tether \
-    ../../../vendor/qcom/opensource/datarmnet-ext/sch \
-    ../../../vendor/qcom/opensource/datarmnet-ext/wlan \
-    ../../../vendor/qcom/opensource/display-drivers/msm \
-    qcom/opensource/eva-kernel \
-    ../../../vendor/qcom/opensource/video-driver \
-    qcom/opensource/wlan/qcacld-3.0/.qca6490 \
-    qcom/opensource/wlan/qcacld-3.0/.qca6750
+    mmrm-driver \
+    audio-kernel \
+    camera-kernel \
+    cvp-kernel \
+    dataipa/drivers/platform/msm \
+    datarmnet/core \
+    datarmnet-ext/aps \
+    datarmnet-ext/offload \
+    datarmnet-ext/shs \
+    datarmnet-ext/perf \
+    datarmnet-ext/perf_tether \
+    datarmnet-ext/sch \
+    datarmnet-ext/wlan \
+    display-drivers/msm \
+    eva-kernel \
+    video-driver \
+    wlan/qcacld-3.0
 TARGET_NEEDS_DTBOIMAGE := true
 KLEE_KERNEL_DTBO_TARGET := dtbo.img
+KLEE_KERNEL_DT_LAYOUT := $(DEVICE_PATH)/configs/kernel-dt-layout.json
 
 # Cupid DTB/DTBO inputs are source-only. The manifest links this directory
-# into the inline Waipio kernel's vendor DTS root; a missing link is a hard
+# into the device-owned source DTS root; a missing link is a hard
 # configuration error rather than permission to reuse Xiaomi images.
 KLEE_SOURCE_DTB_REQUIRED := true
 KLEE_KERNEL_SOURCE_DTB_ROOT := $(DEVICE_PATH)/kernel/dts
@@ -295,18 +293,6 @@ endif
 ifneq ($(strip $(BOARD_PREBUILT_DTBOIMAGE)),)
 $(error Cupid source DT build forbids BOARD_PREBUILT_DTBOIMAGE)
 endif
-TARGET_KERNEL_DTB_BASES := \
-    qcom/waipio.dtb \
-    qcom/waipiop.dtb \
-    qcom/waipio-v2.dtb \
-    qcom/waipiop-v2.dtb \
-    qcom/waipio-lte.dtb
-TARGET_KERNEL_DTB_OVERLAYS := \
-    qcom/cupid-sm8450-pm8008-overlay.dtbo \
-    qcom/camera/waipio-camera.dtbo \
-    qcom/camera/cupid-sm8450-camera-sensor.dtbo
-TARGET_MERGE_DTBS_WILDCARD := *
-TARGET_MERGE_DTBOS_WILDCARD := *cupid*
 KLEE_KERNEL_DTB_SOURCE_MARKERS := \
     bindings/media/camera \
     qcom/Makefile \
@@ -322,6 +308,16 @@ KLEE_KERNEL_DTB_SOURCE_MARKERS := \
 # the matching module kit is retained in the device's private vendor input.
 CUPID_KERNEL_PREBUILT_DIR := vendor/xiaomi/cupid/proprietary/kernel
 CUPID_KERNEL_MODULE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/modules
+CUPID_KERNEL_MODULE_PROVENANCE_FILE := \
+    $(DEVICE_PATH)/configs/kernel-module-provenance.json
+ifeq ($(wildcard $(CUPID_KERNEL_MODULE_PROVENANCE_FILE)),)
+$(error Missing retained-module provenance: $(CUPID_KERNEL_MODULE_PROVENANCE_FILE))
+endif
+CUPID_QUALCOMM_SOURCE_MANIFEST := \
+    $(DEVICE_PATH)/configs/qualcomm-source-manifest.json
+ifeq ($(wildcard $(CUPID_QUALCOMM_SOURCE_MANIFEST)),)
+$(error Missing Qualcomm source manifest: $(CUPID_QUALCOMM_SOURCE_MANIFEST))
+endif
 
 # Qualcomm Android.mk files are scanned even though Cupid packages the Klee
 # source build directly.  Point their parse-time KERNEL_KIT probe at the same
@@ -479,10 +475,12 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
 # The tracked Waipio/MiCode kernel build is the single source of truth for
 # every Cupid kernel module, including the AudioReach/codec-facing group.
-# The proprietary Cupid graphics userspace expects the stock KGSL dma-buf
-# import ABI. Keep that one boundary module from the matched vendor kit while
-# all other kernel modules continue to come from the tracked source build.
+# The platform source does not currently publish the EVA implementation. The
+# proprietary Cupid media userspace also expects the retail KGSL dma-buf ABI.
+# Keep only these two explicitly documented boundary modules from the matched
+# ABI kit; all other kernel modules continue to come from tracked source.
 CUPID_RETAINED_PREBUILT_KERNEL_MODULES := \
+    msm-eva.ko \
     msm_kgsl.ko
 ifneq ($(strip $(filter-out \
     $(CUPID_ALL_KERNEL_MODULES), \
@@ -510,10 +508,10 @@ CUPID_VENDOR_DLKM_MODULE_PATHS := \
         $(filter $(CUPID_SOURCE_KERNEL_MODULES), \
             $(CUPID_VENDOR_DLKM_MODULES)))
 
-# Keep the Klee kernel target honest: every module named by the Cupid module
-# manifests must be emitted by the source build. Modules whose configuration
-# differs from the retained ABI kit are packaged directly from that output.
-KLEE_KERNEL_MODULES += $(CUPID_ALL_KERNEL_MODULES)
+# Keep the Klee kernel target honest: every source-owned module named by the
+# Cupid manifests must be emitted by this invocation. Retained modules are
+# validated and packaged separately from the explicitly pinned ABI kit.
+KLEE_KERNEL_MODULES += $(CUPID_SOURCE_KERNEL_MODULES)
 
 # Module load lists are ordered basenames, never filesystem paths.  Keep the
 # complete module set in vendor_boot so recovery can initialize the hardware
