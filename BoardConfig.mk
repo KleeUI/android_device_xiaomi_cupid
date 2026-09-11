@@ -303,6 +303,7 @@ TARGET_KERNEL_DTB_BASES := \
     qcom/waipio-lte.dtb
 TARGET_KERNEL_DTB_OVERLAYS := \
     qcom/cupid-sm8450-pm8008-overlay.dtbo \
+    qcom/camera/waipio-camera.dtbo \
     qcom/camera/cupid-sm8450-camera-sensor.dtbo
 TARGET_MERGE_DTBS_WILDCARD := *
 TARGET_MERGE_DTBOS_WILDCARD := *cupid*
@@ -311,6 +312,7 @@ KLEE_KERNEL_DTB_SOURCE_MARKERS := \
     qcom/Makefile \
     qcom/cupid-sm8450-pm8008-overlay.dts \
     qcom/audio/cupid-audio-mtp.dts \
+    qcom/camera/waipio-camera.dts \
     qcom/camera/cupid-sm8450-camera-sensor.dts
 
 # The Waipio GKI keeps storage, clocks, regulators, interrupt routing and
