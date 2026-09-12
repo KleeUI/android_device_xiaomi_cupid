@@ -54,6 +54,11 @@ TARGET_USES_QCOM_BSP := true
 # product.  That fragment selects binary-only qti_ipa headers and libipanat
 # for taro through the generic platform list, so keep it out of Cupid.
 TARGET_DISABLE_IPACM := true
+# The source IPA module graph includes rmnet_mem as a provider for gsim and
+# datarmnet consumers. Enable the Klee-owned datarmnet extension package for
+# Taro and request that provider explicitly; it is not a legacy IPACM binary.
+TARGET_DATARMNET_EXT_ENABLE := true
+PRODUCT_PACKAGES += rmnet_mem.ko
 # Build the complete userspace AudioReach stack from the pinned Qualcomm
 # sources so AGM/PAL and GSL/GPR/OSAL/ACDB share one ABI.  DSP firmware and
 # calibration data remain the device-specific proprietary inputs.
