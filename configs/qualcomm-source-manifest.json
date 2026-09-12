@@ -18,6 +18,46 @@
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_datarmnet-ext.git",
       "revision": "e8bcc75ecf565ec9a6d4f85819b98acf15d1f606",
       "module": "rmnet_mem.ko"
+    },
+    {
+      "path": "vendor/qcom/opensource/mmrm-driver",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_mmrm-driver.git",
+      "revision": "915ca0f198650d089c6b38e0b41379225f856cc5"
+    },
+    {
+      "path": "vendor/qcom/opensource/audio-kernel",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_audio-kernel.git",
+      "revision": "3105f0e52880f25ff05f35e4e78382cfd602791f"
+    },
+    {
+      "path": "vendor/qcom/opensource/camera-kernel",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_camera-kernel.git",
+      "revision": "1ff4058766af41c054ad55c1dacb80e2d6475216"
+    },
+    {
+      "path": "vendor/qcom/opensource/dataipa",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
+      "revision": "f0c113f2a05bf3cbcac87e6e248c360b7522dfca"
+    },
+    {
+      "path": "vendor/qcom/opensource/datarmnet",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_datarmnet.git",
+      "revision": "d316f7627d9ebf0d8e218cabb76995074a93e475"
+    },
+    {
+      "path": "vendor/qcom/opensource/display-drivers",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_display-drivers.git",
+      "revision": "39287d18d3e00f3f488dd32163cb64593b20ec55"
+    },
+    {
+      "path": "vendor/qcom/opensource/video-driver",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_video-driver.git",
+      "revision": "61bbcb09e0bf2f6e0d6dd64cb845977584fbdf3f"
+    },
+    {
+      "path": "vendor/qcom/opensource/wlan/qcacld-3.0",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qcacld-3.0.git",
+      "revision": "bc8da784983444aad28f7548c45880ef5d8df185"
     }
   ]
 }
