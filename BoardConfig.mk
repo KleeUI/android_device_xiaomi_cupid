@@ -265,6 +265,7 @@ TARGET_KERNEL_EXT_MODULES := \
     dataipa/drivers/platform/msm \
     datarmnet/core \
     datarmnet-ext/aps \
+    datarmnet-ext/mem \
     datarmnet-ext/offload \
     datarmnet-ext/shs \
     datarmnet-ext/perf \

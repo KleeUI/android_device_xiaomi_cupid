@@ -12,6 +12,12 @@
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/eva-kernel.git",
       "revision": "8fee9b929fabf46ef975a03d55aa9262e059725e",
       "module": "msm-eva.ko"
+    },
+    {
+      "path": "vendor/qcom/opensource/datarmnet-ext",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_datarmnet-ext.git",
+      "revision": "e8bcc75ecf565ec9a6d4f85819b98acf15d1f606",
+      "module": "rmnet_mem.ko"
     }
   ]
 }
