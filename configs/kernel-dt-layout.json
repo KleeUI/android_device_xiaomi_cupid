@@ -3,6 +3,158 @@
   "page_size": 4096,
   "dtb_variants": [
     {
+      "name": "cape-v2.dtb",
+      "base": "qcom/cape-v2.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [540, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Cape LTE Only SoC"],
+        "compatible": ["qcom,cape-v2"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "cape.dtb",
+      "base": "qcom/cape.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [530, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Cape SoC"],
+        "compatible": ["qcom,cape"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "capep.dtb",
+      "base": "qcom/capep.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [531, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. CapeP SoC"],
+        "compatible": ["qcom,capep"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "diwali-hsp.dtb",
+      "base": "qcom/diwali-hsp.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [506, 65536],
+        "qcom,board-id": [0, 2]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Diwali HSP SoC"],
+        "compatible": ["qcom,diwali"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "diwali-lte.dtb",
+      "base": "qcom/diwali-lte.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [564, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Diwali LTE"],
+        "compatible": ["qcom,diwali-lte"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "diwali.dtb",
+      "base": "qcom/diwali.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [506, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Diwali SoC"],
+        "compatible": ["qcom,diwali"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "diwalip.dtb",
+      "base": "qcom/diwalip.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [547, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. DiwaliP SoC"],
+        "compatible": ["qcom,diwalip"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
+      "name": "ukee.dtb",
+      "base": "qcom/ukee.dtb",
+      "overlays": [],
+      "dtbo_required": false,
+      "expected_root_properties": {
+        "qcom,msm-id": [591, 65536],
+        "qcom,board-id": [0, 0]
+      },
+      "expected_root_strings": {
+        "model": ["Qualcomm Technologies, Inc. Ukee SoC"],
+        "compatible": ["qcom,ukee"]
+      },
+      "forbidden_root_properties": [],
+      "required_nodes": [],
+      "forbidden_nodes": [],
+      "expected_node_properties": {},
+      "expected_node_strings": {}
+    },
+    {
       "name": "waipio-le.dtb",
       "base": "qcom/waipio-le.dtb",
       "overlays": [
