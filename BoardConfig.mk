@@ -476,12 +476,10 @@ CUPID_VENDOR_DLKM_LOAD_MODULES := \
 CUPID_ALL_KERNEL_MODULES := $(CUPID_VENDOR_DLKM_MODULES)
 # The tracked Waipio/MiCode kernel build is the single source of truth for
 # every Cupid kernel module, including the AudioReach/codec-facing group.
-# The platform source does not currently publish the EVA implementation. The
-# proprietary Cupid media userspace also expects the retail KGSL dma-buf ABI.
-# Keep only these two explicitly documented boundary modules from the matched
-# ABI kit; all other kernel modules continue to come from tracked source.
+# The proprietary Cupid graphics userspace expects the retail KGSL dma-buf
+# ABI. Keep that boundary module from the matched ABI kit. CVP and EVA are
+# built from the pinned Qualcomm source projects, like the other DLKMs.
 CUPID_RETAINED_PREBUILT_KERNEL_MODULES := \
-    msm-eva.ko \
     msm_kgsl.ko
 ifneq ($(strip $(filter-out \
     $(CUPID_ALL_KERNEL_MODULES), \
