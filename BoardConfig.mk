@@ -272,6 +272,7 @@ TARGET_KERNEL_EXT_MODULES := \
     datarmnet-ext/perf_tether \
     datarmnet-ext/sch \
     datarmnet-ext/wlan \
+    mm-drivers/sync_fence \
     display-drivers/msm \
     eva-kernel \
     video-driver \
@@ -423,6 +424,7 @@ CUPID_BOOT_CRITICAL_LOAD_MODULES := \
     frpc-adsprpc.ko \
     gpucc-waipio.ko \
     msm_kgsl.ko \
+    sync_fence.ko \
     msm_drm.ko
 ifneq ($(strip $(filter-out \
     $(CUPID_SECOND_STAGE_LOAD_MODULES), \
