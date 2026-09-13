@@ -76,34 +76,31 @@ lunch cupid_userdebug
 klee_build -jXX
 ```
 
-## Stock DTB and DTBO
+## Device-tree source policy
 
-The public CodeLinaro Waipio 5.10 release does not include the board
-device-tree source used by retail Xiaomi 12 firmware. Before building a
-flashable image, extract the complete, ordered base-DTB table from
-`vendor_boot` and the DTBO from the active slot of a matching `cupid` device.
-Do not filter the base table down to generic Waipio DTBs: the retail Cupid
-overlays reference Xiaomi downstream display, camera, and audio nodes that are
-absent from those public base trees.
+Klee builds the Cupid DTB and DTBO images from source. `BoardConfig.mk`
+deliberately rejects `BOARD_PREBUILT_DTBIMAGE_DIR` and
+`BOARD_PREBUILT_DTBOIMAGE`; a missing source tree is a configuration error, not
+permission to fall back to an extracted Xiaomi image.
 
-Populate and verify the local DTB directory with:
+The source corpus must come from pinned MiCode or CodeLinaro revisions with
+their original notices and an auditable commit or tree identifier. Klee owns
+the build adapter, variant selection, output normalization, selector ordering,
+overlay composition, and semantic validation described by
+`configs/kernel-dt-layout.json`. LineageOS may be used as a differential
+reference while investigating hardware coverage, but it is not an accepted
+source import or build dependency.
+
+Stock firmware remains useful as an external test oracle. The extraction tool
+may be used to unpack a matching `vendor_boot.img` into a scratch directory for
+comparison:
 
 ```bash
 python3 device/xiaomi/cupid/tools/extract_vendor_boot_dtbs.py \
     vendor_boot.img \
-    vendor/xiaomi/cupid/proprietary/kernel/dtb
-
-cd vendor/xiaomi/cupid/proprietary/kernel/dtb
-sha256sum -c \
-    ../../../../../../device/xiaomi/cupid/configs/vendor_boot_dtbs_os3.0.3.0.sha256
+    /tmp/cupid-stock-dtb
 ```
 
-Place the matching DTBO at:
-
-```text
-vendor/xiaomi/cupid/proprietary/dtbo.img
-```
-
-The checked hash manifest describes Cupid OS 3.0.3.0.VLCCNXM. These
-hardware-specific images remain local proprietary inputs and are not committed
-to the public device repository.
+`configs/vendor_boot_dtbs_os3.0.3.0.sha256` records the ordered Cupid OS
+3.0.3.0.VLCCNXM baseline. It is validation data only and is never consumed as a
+build input.
