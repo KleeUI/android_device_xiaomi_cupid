@@ -64,6 +64,11 @@
       "path": "vendor/qcom/opensource/wlan/qcacld-3.0",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qcacld-3.0.git",
       "revision": "bc8da784983444aad28f7548c45880ef5d8df185"
+    },
+    {
+      "path": "vendor/qcom/opensource/wlan/platform",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_wlan_platform.git",
+      "revision": "0e7ec6740343b473483e8a111bb7f671d77a0cd5"
     }
   ]
 }
