@@ -78,7 +78,6 @@ memlat.ko
 qcom_logbuf_vendor_hooks.ko
 panel_event_notifier.ko
 sync_fence.ko
-qcom_sync_file.ko
 hung_task_enh.ko
 qfprom-sys.ko
 qcom_pm8008-regulator.ko

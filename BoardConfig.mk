@@ -168,9 +168,11 @@ USE_SENSOR_MULTI_HAL := true
 TARGET_USES_QCOM_BSP := true
 TARGET_ENABLE_QC_AV_ENHANCEMENTS := true
 
-# Build the fence and external-display providers consumed by the source-built
-# display DLKM. The public Waipio kernel kit exports their ABI but does not
-# contain their implementations.
+# Build the external fence and external-display providers consumed by the
+# source-built display DLKM. Klee deliberately keeps one owner for
+# /dev/spec_sync: the external implementation supplies the wait/bind ABI used
+# by the display driver, while the legacy in-tree provider is disabled by the
+# Klee kernel transaction.
 TARGET_QCOM_MSM_EXT_DISPLAY_DLKM := true
 TARGET_QCOM_SYNC_FENCE_DLKM := true
 TARGET_QCOM_HW_FENCE_DLKM := true
@@ -277,6 +279,9 @@ TARGET_KERNEL_EXT_MODULES := \
     eva-kernel \
     video-driver \
     wlan/qcacld-3.0
+ifneq ($(strip $(filter mm-drivers/sync_fence,$(TARGET_KERNEL_EXT_MODULES))),mm-drivers/sync_fence)
+$(error Cupid display build requires the tracked external mm-drivers/sync_fence provider)
+endif
 TARGET_NEEDS_DTBOIMAGE := true
 KLEE_KERNEL_DTBO_TARGET := dtbo.img
 KLEE_KERNEL_DT_LAYOUT := $(DEVICE_PATH)/configs/kernel-dt-layout.json
@@ -362,6 +367,17 @@ $(error Empty first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
 endif
 ifeq ($(strip $(CUPID_SECOND_STAGE_LOAD_MODULES)),)
 $(error Empty second-stage kernel module list: $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
+
+# The two speculative-sync implementations own the same /dev/spec_sync node.
+# Check every Klee load set together so a future first-stage or vendor_dlkm
+# edit cannot silently reintroduce the legacy in-tree provider.
+CUPID_SPEC_SYNC_MODULES := $(filter sync_fence.ko qcom_sync_file.ko, \
+    $(CUPID_FIRST_STAGE_LOAD_MODULES) \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES) \
+    $(CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES))
+ifneq ($(strip $(CUPID_SPEC_SYNC_MODULES)),sync_fence.ko)
+$(error Cupid must declare exactly one speculative-sync provider: sync_fence.ko)
 endif
 
 # KeyMint starts before vendor_dlkm is mounted.  Load only the Qualcomm secure
