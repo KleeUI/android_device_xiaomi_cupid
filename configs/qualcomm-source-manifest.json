@@ -25,6 +25,12 @@
       "revision": "915ca0f198650d089c6b38e0b41379225f856cc5"
     },
     {
+      "path": "vendor/qcom/opensource/mm-drivers",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_mm-drivers.git",
+      "revision": "ffef365b08cfb55818f97d5d6054b760aa667e04",
+      "module": "sync_fence.ko"
+    },
+    {
       "path": "vendor/qcom/opensource/audio-kernel",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_audio-kernel.git",
       "revision": "3105f0e52880f25ff05f35e4e78382cfd602791f"
