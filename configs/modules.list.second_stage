@@ -9,8 +9,6 @@ mhi_dev_uci.ko
 mhi_dev_netdev.ko
 mhi_dev_dtr.ko
 phy-qcom-ufs-qmp-v4-lahaina.ko
-phy-qcom-ufs-qmp-v4-parrot.ko
-phy-qcom-ufs-qmp-v4-anarok.ko
 phy-qcom-ufs-qmp-v3.ko
 phy-qcom-ufs-qmp-14nm.ko
 pinctrl-spmi-gpio.ko
@@ -72,7 +70,6 @@ msm_ext_display.ko
 icnss2.ko
 plh_scmi.ko
 gplaf_scmi.ko
-shared_rail_scmi.ko
 qdss_bridge.ko
 memlat.ko
 qcom_logbuf_vendor_hooks.ko
@@ -89,10 +86,8 @@ rdbg.ko
 lt9611uxc.ko
 msm_kgsl.ko
 zram.ko
-hdcp.ko
+hdcp_qseecom.ko
 qseecom-mod.ko
-wl2866d.ko
-wl2866d_ldo.ko
 qcom-i2c-pmic.ko
 sg.ko
 spi-msm-geni.ko
@@ -122,22 +117,14 @@ usb_f_gsi.ko
 ucsi_glink.ko
 repeater.ko
 repeater-i2c-eusb2.ko
-redriver.ko
-nb7vpq904m.ko
+ssusb-redriver-nb7vpq904m.ko
 atmel_mxt_ts.ko
 focaltech_fts.ko
 synaptics_dsx.ko
-fts_touch_spi.ko
-xiaomi_touch.ko
 nt36xxx-i2c.ko
 nt36xxx-spi.ko
-goodix_core.ko
 pm8941-pwrkey.ko
 qcom-hv-haptics.ko
-aw862xx_haptic.ko
-aw8697-haptic.ko
-fpc1540.ko
-goodix_tee.ko
 i2c-msm-geni.ko
 i3c-master-msm-geni.ko
 ir-spi.ko
@@ -145,7 +132,7 @@ qcom_ipc_lite.ko
 synx-driver.ko
 radio-i2c-rtc6226-qca.ko
 qcom-pon.ko
-qti_battery_charger_main.ko
+qti_battery_charger.ko
 qcom-spmi-temp-alarm.ko
 qti-adc-tm.ko
 qti_qmi_sensor_v2.ko
@@ -159,7 +146,6 @@ ddr_cdev.ko
 qti_userspace_cdev.ko
 qti_cpufreq_cdev.ko
 qti_devfreq_cdev.ko
-mi_thermal_interface.ko
 btpower.ko
 bt_fm_slim.ko
 qcom_edac.ko
@@ -171,7 +157,6 @@ leds-qti-tri-led.ko
 leds-qpnp-vibrator-ldo.ko
 plh_vendor.ko
 gplaf_vendor.ko
-shared_rail_vendor.ko
 qce50.ko
 qcedev-mod.ko
 ipa_fmwk.ko
@@ -238,4 +223,3 @@ q6_notifier_dlkm.ko
 q6_pdr_dlkm.ko
 adsp_loader_dlkm.ko
 fan53555.ko
-stmvl53l5.ko

@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "policy": "source-only",
+  "description": "Modules intentionally excluded from the Cupid source contract because the published Klee/AOSP kernel and pinned Qualcomm trees do not contain an ABI-equivalent implementation. They must not be replaced by 5.10.256 Xiaomi prebuilts while this product uses the 5.10.81 source kernel.",
+  "unavailable": [
+    {
+      "name": "fts_touch_spi.ko",
+      "subsystem": "touch",
+      "reason": "Xiaomi ST SPI driver is not present in the published source tree; the published touch-drivers source has an ST implementation, but Cupid DTS uses a Xiaomi-specific st,spi compatible and its protocol/firmware binding has not yet been ported; the generic in-tree driver is not ABI-equivalent."
+    },
+    {
+      "name": "xiaomi_touch.ko",
+      "subsystem": "touch",
+      "reason": "Xiaomi touchfeature companion driver is not present in the published source tree."
+    },
+    {
+      "name": "goodix_core.ko",
+      "subsystem": "fingerprint",
+      "reason": "Cupid fingerprint node uses the Xiaomi Goodix fingerprint stack; the generic touchscreen Goodix driver is not an ABI-equivalent replacement."
+    },
+    {
+      "name": "goodix_tee.ko",
+      "subsystem": "fingerprint",
+      "reason": "TEE companion for the Xiaomi Goodix fingerprint stack is not present in the published source tree."
+    },
+    {
+      "name": "aw862xx_haptic.ko",
+      "subsystem": "haptics",
+      "reason": "AW862xx Xiaomi haptic driver is not present in the published source tree."
+    },
+    {
+      "name": "aw8697-haptic.ko",
+      "subsystem": "haptics",
+      "reason": "AW8697 Xiaomi haptic driver is not present in the published source tree; qcom-hv-haptics remains source-built."
+    },
+    {
+      "name": "fpc1540.ko",
+      "subsystem": "fingerprint",
+      "reason": "FPC1540 fingerprint driver is not present in the published source tree."
+    },
+    {
+      "name": "wl2866d.ko",
+      "subsystem": "regulator",
+      "reason": "WL2866D camera regulator driver is not present in the published source tree."
+    },
+    {
+      "name": "wl2866d_ldo.ko",
+      "subsystem": "regulator",
+      "reason": "WL2866D LDO companion is not present in the published source tree."
+    },
+    {
+      "name": "mi_thermal_interface.ko",
+      "subsystem": "thermal",
+      "reason": "Xiaomi thermal userspace bridge is not present in the published source tree; generic thermal_config is source-built."
+    },
+    {
+      "name": "shared_rail_scmi.ko",
+      "subsystem": "power",
+      "reason": "Xiaomi shared-rail SCMI provider is not present in the published source tree; plh_scmi/gplaf_scmi are the available source providers."
+    },
+    {
+      "name": "shared_rail_vendor.ko",
+      "subsystem": "power",
+      "reason": "Xiaomi shared-rail vendor provider is not present in the published source tree; plh_vendor/gplaf_vendor are the available source providers."
+    },
+    {
+      "name": "stmvl53l5.ko",
+      "subsystem": "tof",
+      "reason": "ST VL53L5 ToF driver is not present in the published source tree."
+    },
+    {
+      "name": "rndisipam.ko",
+      "subsystem": "rmnet",
+      "reason": "Legacy IPA RMNET alias is not present in the pinned dataipa source tree; rmnet_core/rmnet_mem and related source modules are packaged."
+    },
+    {
+      "name": "ipa_clientsm.ko",
+      "subsystem": "rmnet",
+      "reason": "Legacy IPA client alias is not present in the pinned dataipa source tree; ipa_fmwk/ipam/ipanetm are packaged."
+    },
+    {
+      "name": "phy-qcom-ufs-qmp-v4-anarok.ko",
+      "subsystem": "ufs",
+      "reason": "The Cupid source kernel produces the Waipio UFS provider; no Anarok provider is selected for this board."
+    },
+    {
+      "name": "phy-qcom-ufs-qmp-v4-parrot.ko",
+      "subsystem": "ufs",
+      "reason": "The Cupid source kernel produces the Waipio UFS provider; no Parrot provider is selected for this board."
+    }
+  ]
+}

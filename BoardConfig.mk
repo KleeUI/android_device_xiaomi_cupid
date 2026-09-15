@@ -326,6 +326,11 @@ CUPID_QUALCOMM_SOURCE_MANIFEST := \
 ifeq ($(wildcard $(CUPID_QUALCOMM_SOURCE_MANIFEST)),)
 $(error Missing Qualcomm source manifest: $(CUPID_QUALCOMM_SOURCE_MANIFEST))
 endif
+CUPID_SOURCE_MODULE_GAPS_MANIFEST := \
+    $(DEVICE_PATH)/configs/source-module-gaps.json
+ifeq ($(wildcard $(CUPID_SOURCE_MODULE_GAPS_MANIFEST)),)
+$(error Missing source-module gap manifest: $(CUPID_SOURCE_MODULE_GAPS_MANIFEST))
+endif
 
 # Qualcomm Android.mk files are scanned even though Cupid packages the Klee
 # source build directly.  Point their parse-time KERNEL_KIT probe at the same
@@ -420,8 +425,7 @@ CUPID_EARLY_USB_LOAD_MODULES := \
     repeater.ko \
     repeater-i2c-eusb2.ko \
     phy-msm-snps-eusb2.ko \
-    redriver.ko \
-    nb7vpq904m.ko \
+    ssusb-redriver-nb7vpq904m.ko \
     dwc3-msm.ko \
     ucsi_glink.ko
 ifneq ($(strip $(filter-out \
