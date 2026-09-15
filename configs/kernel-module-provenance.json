@@ -1,13 +1,5 @@
 {
   "version": 1,
-  "source": "Klee source kernel and Qualcomm open-source DLKM trees",
-  "retained_prebuilt": [
-    {
-      "name": "msm_kgsl.ko",
-      "path": "vendor/xiaomi/cupid/proprietary/kernel/modules/msm_kgsl.ko",
-      "reason": "Cupid's proprietary graphics userspace requires the retail KGSL dma-buf ABI.",
-      "sha256": "c924e7aea79335448dcea1f8375c48074d7a1c4acdfbdc7685d190d0c305c82a",
-      "size": 2535128
-    }
-  ]
+  "source": "Klee source kernel and Qualcomm open-source DLKM trees; no retained prebuilt modules",
+  "retained_prebuilt": []
 }
