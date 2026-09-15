@@ -128,6 +128,7 @@ nt36xxx-spi.ko
 pm8941-pwrkey.ko
 qcom-hv-haptics.ko
 i2c-msm-geni.ko
+nfc_i2c.ko
 i3c-master-msm-geni.ko
 ir-spi.ko
 qcom_ipc_lite.ko
