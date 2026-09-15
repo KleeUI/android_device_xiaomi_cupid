@@ -18,6 +18,7 @@ sensors_ssc.ko
 adsp_loader_dlkm.ko
 qcom_dma_heaps.ko
 gpucc-waipio.ko
+qcom_va_minidump.ko
 msm_kgsl.ko
 sync_fence.ko
 msm_drm.ko

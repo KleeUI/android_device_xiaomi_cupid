@@ -312,8 +312,8 @@ KLEE_KERNEL_DTB_SOURCE_MARKERS := \
 # The Waipio GKI keeps storage, clocks, regulators, interrupt routing and
 # IOMMU support modular. These modules must be available before first-stage
 # init can discover UFS and mount the dynamic partitions. Android 17's
-# filesystem generator consumes source files while it creates its graph, so
-# the matching module kit is retained in the device's private vendor input.
+# filesystem generator consumes the pinned source transaction while it
+# creates its graph; the private input tree is parse-time compatibility only.
 CUPID_KERNEL_PREBUILT_DIR := vendor/xiaomi/cupid/proprietary/kernel
 CUPID_KERNEL_MODULE_DIR := $(CUPID_KERNEL_PREBUILT_DIR)/modules
 CUPID_KERNEL_MODULE_PROVENANCE_FILE := \
@@ -368,6 +368,17 @@ CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES := \
     $(strip $(shell awk \
         'NF && $$1 !~ /^\#/ && !seen[$$1]++ { print $$1 }' \
         "$(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE)"))
+# Keep source module dependencies in the same second-stage contract as
+# their consumers; otherwise depmod silently drops unresolved providers
+# from the final vendor_dlkm image.
+CUPID_RUNTIME_DEPENDENCY_MODULES := \
+    qcom_va_minidump.ko \
+    qcom_glink_spss.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_SECOND_STAGE_LOAD_MODULES), \
+    $(CUPID_RUNTIME_DEPENDENCY_MODULES))),)
+$(error Cupid runtime dependency modules are missing from $(CUPID_SECOND_STAGE_MODULES_FILE))
+endif
 ifeq ($(strip $(CUPID_FIRST_STAGE_LOAD_MODULES)),)
 $(error Empty first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
 endif
