@@ -69,6 +69,21 @@
       "path": "vendor/qcom/opensource/wlan/platform",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_wlan_platform.git",
       "revision": "0e7ec6740343b473483e8a111bb7f671d77a0cd5"
+    },
+    {
+      "path": "vendor/qcom/opensource/wlan/fw-api",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/fw-api.git",
+      "revision": "0ab817e9e3e1cf8e06251570943618a20a245a49"
+    },
+    {
+      "path": "vendor/qcom/opensource/wlan/qca-wifi-host-cmn",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qca-wifi-host-cmn.git",
+      "revision": "8b8b699f39fc0942b8ba636fe1a9149d92c5bfad"
+    },
+    {
+      "path": "vendor/qcom/opensource/wlan/wlan-devicetree",
+      "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/wlan-devicetree.git",
+      "revision": "a2b0e0858c947f21ff9448312fbe4d0ce0b8fbbf"
     }
   ]
 }
