@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "module_lists": [
+    "kernel_platform/msm-kernel/modules.list.msm.waipio",
+    "device/xiaomi/cupid/configs/modules.list.second_stage",
+    "device/xiaomi/cupid/configs/modules.list.vendor_dlkm"
+  ],
+  "product_staging_dirs": [
+    "obj/PACKAGING/vendor_ramdisk_fragment-stage-dlkm_intermediates/lib/modules",
+    "obj/PACKAGING/depmod_vendor_ramdisk_stripped_intermediates",
+    "obj/PACKAGING/depmod_vendor_stripped_intermediates",
+    "vendor_ramdisk/lib/modules",
+    "vendor_dlkm/lib/modules",
+    "dlkm/lib/modules"
+  ]
+}

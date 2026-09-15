@@ -342,6 +342,8 @@ CUPID_SECOND_STAGE_MODULES_FILE := \
     $(DEVICE_PATH)/configs/modules.list.second_stage
 CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE := \
     $(DEVICE_PATH)/configs/modules.list.vendor_dlkm
+CUPID_KERNEL_STAGING_MANIFEST := \
+    $(DEVICE_PATH)/configs/kernel-module-staging.json
 ifeq ($(wildcard $(CUPID_FIRST_STAGE_MODULES_FILE)),)
 $(error Missing first-stage kernel module list: $(CUPID_FIRST_STAGE_MODULES_FILE))
 endif
@@ -350,6 +352,9 @@ $(error Missing second-stage kernel module list: $(CUPID_SECOND_STAGE_MODULES_FI
 endif
 ifeq ($(wildcard $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE)),)
 $(error Missing vendor_dlkm kernel module list: $(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE))
+endif
+ifeq ($(wildcard $(CUPID_KERNEL_STAGING_MANIFEST)),)
+$(error Missing kernel module staging manifest: $(CUPID_KERNEL_STAGING_MANIFEST))
 endif
 # Preserve Qualcomm's dependency order while removing repeated entries.  The
 # public Waipio list names both watchdog modules twice; loading an already
