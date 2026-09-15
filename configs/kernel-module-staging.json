@@ -12,5 +12,11 @@
     "vendor_ramdisk/lib/modules",
     "vendor_dlkm/lib/modules",
     "dlkm/lib/modules"
+  ],
+  "invalidate_outputs": [
+    "vendor_boot.img",
+    "vendor_boot-test-harness.img",
+    "vendor_boot-debug.img",
+    "vendor_dlkm.img"
   ]
 }
