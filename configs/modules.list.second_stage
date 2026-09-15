@@ -16,6 +16,7 @@ pinctrl-spmi-mpp.ko
 pwm-qti-lpg.ko
 pci-msm-drv.ko
 camcc-waipio.ko
+qcom_va_minidump.ko
 camera.ko
 camcc-diwali.ko
 debugcc-diwali.ko
@@ -50,6 +51,7 @@ llcc_perfmon.ko
 smp2p_sleepstate.ko
 sensors_ssc.ko
 glink_pkt.ko
+qcom_glink_spss.ko
 glink_probe.ko
 pmic_glink.ko
 qti_battery_debug.ko
