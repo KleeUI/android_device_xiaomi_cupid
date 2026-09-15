@@ -278,6 +278,7 @@ TARGET_KERNEL_EXT_MODULES := \
     display-drivers/msm \
     eva-kernel \
     video-driver \
+    wlan/platform \
     wlan/qcacld-3.0
 ifneq ($(strip $(filter mm-drivers/sync_fence,$(TARGET_KERNEL_EXT_MODULES))),mm-drivers/sync_fence)
 $(error Cupid display build requires the tracked external mm-drivers/sync_fence provider)
