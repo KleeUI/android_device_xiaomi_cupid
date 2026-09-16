@@ -255,7 +255,12 @@ BOARD_KERNEL_IMAGE_NAME := Image
 TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
 TARGET_KERNEL_PLATFORM_PATH := kernel_platform
 TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
-TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE)
+# The Qualcomm Waipio build defaults to VARIANT=consolidate, which selects
+# its debug-only consolidate fragment (KASAN, page poisoning, lockdep and
+# panic_on_taint).  Cupid is a production userdebug target; keep Klee's
+# source-built GKI on the non-debug variant unless a dedicated diagnostic
+# build explicitly overrides this make argument.
+TARGET_KERNEL_ADDITIONAL_FLAGS := TARGET_PRODUCT=$(PRODUCT_DEVICE) VARIANT=gki
 # Build every Qualcomm device DLKM from Klee's independently tracked source
 # projects against the same platform KERNEL_KIT as the inline Waipio kernel.
 TARGET_KERNEL_EXT_MODULE_ROOT := vendor/qcom/opensource
