@@ -369,11 +369,28 @@ endif
 # public Waipio list names both watchdog modules twice; loading an already
 # loaded first-stage module is unnecessary and can make early-init diagnostics
 # look like a real module failure.
-CUPID_FIRST_STAGE_LOAD_MODULES := \
+CUPID_UPSTREAM_FIRST_STAGE_LOAD_MODULES := \
     $(strip $(shell awk \
         'NF && $$1 !~ /^\#/ && $$1 != "deferred-free-helper.ko" && \
         !seen[$$1]++ { print $$1 }' \
         "$(CUPID_FIRST_STAGE_MODULES_FILE)"))
+# Qualcomm shares this list between the consolidate diagnostic kernel and the
+# production GKI.  These providers are selected only by
+# waipio_consolidate.config; the GKI config deliberately leaves them disabled.
+# Keep that variant boundary in the Cupid-owned product contract instead of
+# requiring outputs which cannot be emitted by a production GKI build.
+CUPID_CONSOLIDATE_ONLY_FIRST_STAGE_MODULES := \
+    msm_rtb.ko \
+    sched-walt-debug.ko
+ifneq ($(strip $(filter-out \
+    $(CUPID_UPSTREAM_FIRST_STAGE_LOAD_MODULES), \
+    $(CUPID_CONSOLIDATE_ONLY_FIRST_STAGE_MODULES))),)
+$(error Consolidate-only module policy is stale for $(CUPID_FIRST_STAGE_MODULES_FILE))
+endif
+CUPID_FIRST_STAGE_LOAD_MODULES := \
+    $(filter-out \
+        $(CUPID_CONSOLIDATE_ONLY_FIRST_STAGE_MODULES), \
+        $(CUPID_UPSTREAM_FIRST_STAGE_LOAD_MODULES))
 CUPID_SECOND_STAGE_LOAD_MODULES := \
     $(strip $(shell awk \
         'NF && $$1 !~ /^\#/ && !seen[$$1]++ { print $$1 }' \
@@ -382,11 +399,11 @@ CUPID_VENDOR_DLKM_EXCLUSIVE_LOAD_MODULES := \
     $(strip $(shell awk \
         'NF && $$1 !~ /^\#/ && !seen[$$1]++ { print $$1 }' \
         "$(CUPID_VENDOR_DLKM_EXCLUSIVE_MODULES_FILE)"))
-# Keep source module dependencies in the same second-stage contract as
-# their consumers; otherwise depmod silently drops unresolved providers
-# from the final vendor_dlkm image.
+# Keep source module dependencies in the same second-stage contract as their
+# consumers; otherwise depmod silently drops unresolved providers from the
+# final vendor_dlkm image.  VA minidump is not a provider for the minidump core:
+# its API has disabled-config stubs and production GKI intentionally omits it.
 CUPID_RUNTIME_DEPENDENCY_MODULES := \
-    qcom_va_minidump.ko \
     qcom_glink_spss.ko
 ifneq ($(strip $(filter-out \
     $(CUPID_SECOND_STAGE_LOAD_MODULES), \

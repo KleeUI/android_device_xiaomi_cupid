@@ -16,7 +16,6 @@ pinctrl-spmi-mpp.ko
 pwm-qti-lpg.ko
 pci-msm-drv.ko
 camcc-waipio.ko
-qcom_va_minidump.ko
 camera.ko
 camcc-diwali.ko
 debugcc-diwali.ko
