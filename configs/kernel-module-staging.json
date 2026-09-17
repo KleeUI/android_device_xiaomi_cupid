@@ -5,10 +5,18 @@
     "device/xiaomi/cupid/configs/modules.list.second_stage",
     "device/xiaomi/cupid/configs/modules.list.vendor_dlkm"
   ],
+  "exclude_modules": [
+    "msm_rtb.ko",
+    "sched-walt-debug.ko"
+  ],
   "product_staging_dirs": [
     "obj/PACKAGING/vendor_ramdisk_fragment-stage-dlkm_intermediates/lib/modules",
+    "obj/PACKAGING/depmod_VENDOR_RAMDISK_intermediates/lib/modules/0.0/lib/modules",
+    "obj/PACKAGING/depmod_VENDOR_intermediates/lib/modules/0.0/vendor/lib/modules",
     "obj/PACKAGING/depmod_vendor_ramdisk_stripped_intermediates",
     "obj/PACKAGING/depmod_vendor_stripped_intermediates",
+    "obj/PACKAGING/target_files_intermediates/cupid-target_files/VENDOR_BOOT/RAMDISK_FRAGMENTS/dlkm/RAMDISK/lib/modules",
+    "obj/PACKAGING/target_files_intermediates/cupid-target_files/VENDOR_DLKM/lib/modules",
     "vendor_ramdisk/lib/modules",
     "vendor_dlkm/lib/modules",
     "dlkm/lib/modules"
@@ -17,6 +25,10 @@
     "vendor_boot.img",
     "vendor_boot-test-harness.img",
     "vendor_boot-debug.img",
-    "vendor_dlkm.img"
+    "vendor_dlkm.img",
+    "super.img",
+    "obj/PACKAGING/target_files_intermediates/cupid-target_files.zip",
+    "obj/PACKAGING/target_files_intermediates/cupid-target_files.zip.list",
+    "cupid-ota.zip"
   ]
 }
