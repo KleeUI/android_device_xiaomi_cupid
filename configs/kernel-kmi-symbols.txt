@@ -1,0 +1,6 @@
+# Additional production-GKI symbols required by Cupid Qualcomm modules.
+__kfifo_from_user_r
+__kfifo_in_r
+__kfifo_len_r
+__kfifo_out_r
+__kfifo_to_user_r

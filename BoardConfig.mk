@@ -255,6 +255,10 @@ BOARD_KERNEL_IMAGE_NAME := Image
 TARGET_KERNEL_SOURCE := kernel_platform/msm-kernel
 TARGET_KERNEL_PLATFORM_PATH := kernel_platform
 TARGET_KERNEL_BUILD_CONFIG := common/build.config.msm.waipio
+# IPA's record-oriented FIFO helpers are part of Cupid's device-module ABI but
+# not the smaller production GKI allowlist. Klee extends both mixed-build KMI
+# inputs only for this transaction and restores the imported trees afterwards.
+TARGET_KERNEL_KMI_SYMBOL_LISTS := $(DEVICE_PATH)/configs/kernel-kmi-symbols.txt
 # The Qualcomm Waipio build defaults to VARIANT=consolidate, which selects
 # its debug-only consolidate fragment (KASAN, page poisoning, lockdep and
 # panic_on_taint).  Cupid is a production userdebug target; keep Klee's
