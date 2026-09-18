@@ -43,7 +43,7 @@
     {
       "path": "vendor/qcom/opensource/dataipa",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
-      "revision": "f0c113f2a05bf3cbcac87e6e248c360b7522dfca"
+      "revision": "605a9e80aabb26a02e2200aaba62a51a1c68a266"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet",
@@ -58,12 +58,12 @@
     {
       "path": "vendor/qcom/opensource/video-driver",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_video-driver.git",
-      "revision": "61bbcb09e0bf2f6e0d6dd64cb845977584fbdf3f"
+      "revision": "49757a68312e6864d6abcab15bfde5ea6c3b60b6"
     },
     {
       "path": "vendor/qcom/opensource/wlan/qcacld-3.0",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qcacld-3.0.git",
-      "revision": "bc8da784983444aad28f7548c45880ef5d8df185"
+      "revision": "e4130c5e32b02dfe0deedf7c424ccf7d99ef7b64"
     },
     {
       "path": "vendor/qcom/opensource/wlan/platform",
