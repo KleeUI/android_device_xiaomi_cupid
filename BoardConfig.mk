@@ -467,7 +467,8 @@ CUPID_EARLY_USB_LOAD_MODULES := \
     repeater.ko \
     repeater-i2c-eusb2.ko \
     phy-msm-snps-eusb2.ko \
-    ssusb-redriver-nb7vpq904m.ko \
+    redriver.ko \
+    nb7vpq904m.ko \
     dwc3-msm.ko \
     ucsi_glink.ko
 ifneq ($(strip $(filter-out \

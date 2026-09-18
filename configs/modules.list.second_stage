@@ -87,7 +87,7 @@ rdbg.ko
 lt9611uxc.ko
 msm_kgsl.ko
 zram.ko
-hdcp_qseecom.ko
+hdcp.ko
 qseecom-mod.ko
 qcom-i2c-pmic.ko
 sg.ko
@@ -118,7 +118,8 @@ usb_f_gsi.ko
 ucsi_glink.ko
 repeater.ko
 repeater-i2c-eusb2.ko
-ssusb-redriver-nb7vpq904m.ko
+redriver.ko
+nb7vpq904m.ko
 atmel_mxt_ts.ko
 focaltech_fts.ko
 synaptics_dsx.ko
@@ -134,7 +135,7 @@ qcom_ipc_lite.ko
 synx-driver.ko
 radio-i2c-rtc6226-qca.ko
 qcom-pon.ko
-qti_battery_charger.ko
+qti_battery_charger_main.ko
 qcom-spmi-temp-alarm.ko
 qti-adc-tm.ko
 qti_qmi_sensor_v2.ko
