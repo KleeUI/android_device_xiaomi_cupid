@@ -226,3 +226,6 @@ q6_notifier_dlkm.ko
 q6_pdr_dlkm.ko
 adsp_loader_dlkm.ko
 fan53555.ko
+hwid.ko
+xiaomi_touch.ko
+fts_touch_spi.ko

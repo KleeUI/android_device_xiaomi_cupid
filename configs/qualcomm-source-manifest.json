@@ -84,6 +84,11 @@
       "path": "vendor/qcom/opensource/wlan/wlan-devicetree",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/wlan-devicetree.git",
       "revision": "a2b0e0858c947f21ff9448312fbe4d0ce0b8fbbf"
+    },
+    {
+      "path": "vendor/qcom/opensource/touch-drivers",
+      "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_touch-drivers.git",
+      "revision": "362e4c69a939eb5dddc05a5748361b24a91a683d"
     }
   ]
 }

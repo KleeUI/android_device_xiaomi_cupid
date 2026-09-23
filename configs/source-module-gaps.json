@@ -4,16 +4,6 @@
   "description": "Modules intentionally excluded from the Cupid source contract because the selected kernel and pinned Qualcomm trees do not contain an ABI-equivalent implementation. They must not be replaced by Xiaomi prebuilts built against a different kernel ABI.",
   "unavailable": [
     {
-      "name": "fts_touch_spi.ko",
-      "subsystem": "touch",
-      "reason": "Xiaomi ST SPI driver is not present in the published source tree; the published touch-drivers source has an ST implementation, but Cupid DTS uses a Xiaomi-specific st,spi compatible and its protocol/firmware binding has not yet been ported; the generic in-tree driver is not ABI-equivalent."
-    },
-    {
-      "name": "xiaomi_touch.ko",
-      "subsystem": "touch",
-      "reason": "Xiaomi touchfeature companion driver is not present in the published source tree."
-    },
-    {
       "name": "goodix_core.ko",
       "subsystem": "fingerprint",
       "reason": "Cupid fingerprint node uses the Xiaomi Goodix fingerprint stack; the generic touchscreen Goodix driver is not an ABI-equivalent replacement."

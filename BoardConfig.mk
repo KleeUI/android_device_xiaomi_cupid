@@ -272,6 +272,7 @@ TARGET_KERNEL_EXT_MODULES := \
     mmrm-driver \
     audio-kernel \
     camera-kernel \
+    touch-drivers/xiaomi \
     cvp-kernel \
     dataipa/drivers/platform/msm \
     datarmnet/core \
@@ -627,6 +628,8 @@ BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE := \
 BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
     $(BOARD_VENDOR_KERNEL_MODULES_BLOCKLIST_FILE)
 BOOT_KERNEL_MODULES := $(CUPID_ALL_KERNEL_MODULES)
+BOARD_VENDOR_KERNEL_MODULES_OPTIONS_FILE := $(DEVICE_PATH)/configs/modules.options
+BOARD_VENDOR_RAMDISK_KERNEL_MODULES_OPTIONS_FILE := $(BOARD_VENDOR_KERNEL_MODULES_OPTIONS_FILE)
 
 # Android's kernel-module archive path clears the individual module variables
 # later in core/config.mk.  Cupid intentionally packages its ABI-verified
