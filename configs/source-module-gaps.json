@@ -1,7 +1,7 @@
 {
   "version": 1,
   "policy": "source-only",
-  "description": "Modules intentionally excluded from the Cupid source contract because the published Klee/AOSP kernel and pinned Qualcomm trees do not contain an ABI-equivalent implementation. They must not be replaced by 5.10.256 Xiaomi prebuilts while this product uses the 5.10.81 source kernel.",
+  "description": "Modules intentionally excluded from the Cupid source contract because the selected kernel and pinned Qualcomm trees do not contain an ABI-equivalent implementation. They must not be replaced by Xiaomi prebuilts built against a different kernel ABI.",
   "unavailable": [
     {
       "name": "fts_touch_spi.ko",
@@ -67,16 +67,6 @@
       "name": "stmvl53l5.ko",
       "subsystem": "tof",
       "reason": "ST VL53L5 ToF driver is not present in the published source tree."
-    },
-    {
-      "name": "rndisipam.ko",
-      "subsystem": "rmnet",
-      "reason": "Legacy IPA RMNET alias is not present in the pinned dataipa source tree; rmnet_core/rmnet_mem and related source modules are packaged."
-    },
-    {
-      "name": "ipa_clientsm.ko",
-      "subsystem": "rmnet",
-      "reason": "Legacy IPA client alias is not present in the pinned dataipa source tree; ipa_fmwk/ipam/ipanetm are packaged."
     },
     {
       "name": "phy-qcom-ufs-qmp-v4-anarok.ko",
