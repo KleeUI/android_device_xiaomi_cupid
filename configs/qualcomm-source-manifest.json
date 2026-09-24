@@ -43,7 +43,7 @@
     {
       "path": "vendor/qcom/opensource/dataipa",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
-      "revision": "06715633d5d96c79e07548d5323bd757e632812e"
+      "revision": "ea0b8b9911b51e7824ffe9dd3c6d0d59fbeaafd4"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet",
@@ -88,7 +88,7 @@
     {
       "path": "vendor/qcom/opensource/touch-drivers",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_touch-drivers.git",
-      "revision": "362e4c69a939eb5dddc05a5748361b24a91a683d"
+      "revision": "769e8a57ccd6d00c03ea3cad0ba0d872b387cb24"
     }
   ]
 }
