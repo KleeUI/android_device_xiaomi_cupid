@@ -121,6 +121,27 @@ install_symlink {
 }
 
 install_symlink {
+    name: "cupid_qca6490_board_local_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/bd_l3.elf",
+    symlink_target: "/vendor/firmware_mnt/image/bd_l3.elf",
+}
+
+install_symlink {
+    name: "cupid_qca6490_board_global_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/bd_l3gl.elf",
+    symlink_target: "/vendor/firmware_mnt/image/bd_l3gl.elf",
+}
+
+install_symlink {
+    name: "cupid_qca6490_board_gf_global_firmware",
+    vendor: true,
+    installed_location: "firmware/qca6490/bd_l3gfgl.elf",
+    symlink_target: "/vendor/firmware_mnt/image/bd_l3gfgl.elf",
+}
+
+install_symlink {
     name: "cupid_qca6490_wifi_config",
     vendor: true,
     installed_location: "firmware/wlan/qca_cld/qca6490/WCNSS_qcom_cfg.ini",
