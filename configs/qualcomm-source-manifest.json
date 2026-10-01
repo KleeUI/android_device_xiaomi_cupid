@@ -38,7 +38,7 @@
     {
       "path": "vendor/qcom/opensource/camera-kernel",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_camera-kernel.git",
-      "revision": "ac0fff3b962250d17c94bbcf30ba5dc562493836"
+      "revision": "0f653119736b1db4330e261693b17fd632e8f74b"
     },
     {
       "path": "vendor/qcom/opensource/dataipa",
