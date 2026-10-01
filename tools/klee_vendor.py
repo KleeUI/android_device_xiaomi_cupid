@@ -141,6 +141,29 @@ def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
         return True
 
 
+def _normalize_audio_filegroup(top: Path, *, check_only: bool) -> tuple[str, str]:
+    """Restore the device-owned blob reference after metadata normalization."""
+    vendor = top / "vendor/xiaomi/cupid"
+    generated = vendor / "Android.bp"
+    block = (
+        'filegroup {\n'
+        '    name: "cupid_audioadsprpcd_blob",\n'
+        '    srcs: ["proprietary/vendor/bin/audioadsprpcd"],\n'
+        '    visibility: ["//device/xiaomi/cupid"],\n'
+        '}\n'
+    )
+    generated_text = generated.read_text(encoding="utf-8")
+    module_name = 'name: "cupid_audioadsprpcd_blob"'
+    if module_name in generated_text:
+        if generated_text.count(module_name) != 1 or generated_text.count(block) != 1:
+            raise VendorPreparationError("audio filegroup in generated metadata has drift")
+        return ("cupid_audioadsprpcd_blob", "already-applied")
+    if check_only:
+        return ("cupid_audioadsprpcd_blob", "pending")
+    generated.write_text(generated_text.rstrip() + "\n\n" + block, encoding="utf-8")
+    return ("cupid_audioadsprpcd_blob", "applied")
+
+
 def apply_vendor_patches(
     top: Path, device_dir: Path, *, check_only: bool = False
 ) -> list[tuple[str, str]]:
@@ -172,9 +195,13 @@ def apply_vendor_patches(
         )
 
     if reverse:
-        return [(name, "already-applied") for name in PATCH_NAMES]
+        return [(name, "already-applied") for name in PATCH_NAMES] + [
+            _normalize_audio_filegroup(top, check_only=check_only)
+        ]
     if check_only:
-        return [(name, "pending") for name in PATCH_NAMES]
+        return [(name, "pending") for name in PATCH_NAMES] + [
+            _normalize_audio_filegroup(top, check_only=True)
+        ]
 
     results: list[tuple[str, str]] = []
     for name in PATCH_NAMES:
@@ -185,6 +212,7 @@ def apply_vendor_patches(
                 f"failed to apply {name}:\n{result.stdout.rstrip()}"
             )
         results.append((name, "applied"))
+    results.append(_normalize_audio_filegroup(top, check_only=False))
     return results
 
 
