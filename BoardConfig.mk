@@ -86,6 +86,11 @@ BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
 # before mkfs/AVB generation so build_image computes a fitting tree and FEC
 # layout instead of producing an image that must be resized after the fact.
 BOARD_VENDORIMAGE_PARTITION_SIZE := 1922281472
+# Match the existing logical slot without dropping source-built modules.
+# The read-only module tree uses about 407 inodes; retain headroom without
+# allocating ext4's default thousands of unused inodes in this small image.
+BOARD_VENDOR_DLKMIMAGE_PARTITION_SIZE := 95768576
+BOARD_VENDOR_DLKMIMAGE_EXTFS_INODE_COUNT := 512
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
 BOARD_FLASH_BLOCK_SIZE := 131072
