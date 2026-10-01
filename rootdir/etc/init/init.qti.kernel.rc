@@ -5,6 +5,13 @@
 # Bring up only the hardware providers needed by early Android services in the
 # synchronous path.
 on early-init
+    # The mixed-build GKI owns firmware_class; platform-only config fragments
+    # do not change its fallback default. Let ueventd serve the existing
+    # vendor and firmware_mnt search paths before loading hardware providers.
+    # Keep SELinux enforcing and retain the source-built kernel/module ABI.
+    write /proc/sys/kernel/firmware_config/ignore_sysfs_fallback 0
+    write /proc/sys/kernel/firmware_config/force_sysfs_fallback 1
+
     exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -b -s --all=/vendor/lib/modules/modules.load.cupid
 
 # The modem, DSP, Bluetooth and VM firmware partitions are handled by the

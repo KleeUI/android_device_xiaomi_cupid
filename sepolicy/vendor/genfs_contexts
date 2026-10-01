@@ -2,3 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 genfscon sysfs /devices/platform/soc/b0000000.qcom,cnss-qca6490/fs_ready u:object_r:vendor_sysfs_cnss:s0
+
+# The platform already grants vendor_init writes to this public type.
+# Label only the firmware-loader sysctl subtree, not generic /proc nodes.
+genfscon proc /sys/kernel/firmware_config u:object_r:proc_firmware_config:s0
