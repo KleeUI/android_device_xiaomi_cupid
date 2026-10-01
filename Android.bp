@@ -159,7 +159,7 @@ install_symlink {
 cc_prebuilt_binary {
     name: "cupid_audioadsprpcd",
     stem: "audioadsprpcd",
-    srcs: [":cupid_audioadsprpcd_blob"],
+    srcs: ["//vendor/xiaomi/cupid:cupid_audioadsprpcd_blob"],
     vendor: true,
     compile_multilib: "64",
     strip: { none: true },
