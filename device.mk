@@ -280,6 +280,7 @@ PRODUCT_COPY_FILES += \
 # it whenever TARGET_QTI_GRALLOC4_COMPAT is enabled.
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
+    NavigationBarModeGesturalOverlay \
     android.hardware.audio.parameter_parser.example_service \
     android.hardware.bluetooth.audio-impl \
     android.hardware.boot-service.qti \
@@ -333,6 +334,10 @@ PRODUCT_PACKAGES += \
     qti_telephony_hidl_wrapper_prd.xml \
     qti-telephony-utils-prd \
     qti_telephony_utils_prd.xml
+
+# Select the complete gesture overlay by default while preserving user mode changes.
+PRODUCT_VENDOR_PROPERTIES += \
+    ro.boot.vendor.overlay.theme=com.android.internal.systemui.navbar.gestural
 
 PRODUCT_VENDOR_PROPERTIES += \
     ro.soc.manufacturer=QTI \
