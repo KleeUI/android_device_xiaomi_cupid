@@ -2,6 +2,9 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# The normal init directory scan does not recurse into hw/.
+import /vendor/etc/init/hw/init.mi_thermald.rc
+
 # Bring up only the hardware providers needed by early Android services in the
 # synchronous path.
 on early-init

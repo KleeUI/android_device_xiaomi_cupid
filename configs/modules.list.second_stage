@@ -148,6 +148,7 @@ sdpm_clk.ko
 ddr_cdev.ko
 qti_userspace_cdev.ko
 qti_cpufreq_cdev.ko
+mi_thermal_interface.ko
 qti_devfreq_cdev.ko
 btpower.ko
 bt_fm_slim.ko

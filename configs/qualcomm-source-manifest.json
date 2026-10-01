@@ -53,7 +53,7 @@
     {
       "path": "vendor/qcom/opensource/display-drivers",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_display-drivers.git",
-      "revision": "a20874718b258eb5e0d8dc61daaca7bffe5806f1"
+      "revision": "c538206bb8c9aff8ff5d0b37a3f71871943d5a94"
     },
     {
       "path": "vendor/qcom/opensource/video-driver",

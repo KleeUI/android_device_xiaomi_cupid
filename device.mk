@@ -280,6 +280,7 @@ PRODUCT_COPY_FILES += \
 # it whenever TARGET_QTI_GRALLOC4_COMPAT is enabled.
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
+    cupid_audioadsprpcd \
     NavigationBarModeGesturalOverlay \
     android.hardware.audio.parameter_parser.example_service \
     android.hardware.bluetooth.audio-impl \

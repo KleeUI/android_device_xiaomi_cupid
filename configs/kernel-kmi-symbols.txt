@@ -1,6 +1,8 @@
-# Additional production-GKI symbols required by Cupid Qualcomm modules.
+# Existing Cupid device-owned symbols plus additive thermal core exports.
 __kfifo_from_user_r
 __kfifo_in_r
 __kfifo_len_r
 __kfifo_out_r
 __kfifo_to_user_r
+thermal_message_register
+thermal_message_unregister

@@ -154,3 +154,15 @@ install_symlink {
     installed_location: "firmware/wlan/qca_cld/qca6490/wlan_mac.bin",
     symlink_target: "/mnt/vendor/persist/qca6490/wlan_mac.bin",
 }
+
+// Use the paired Xiaomi listener verified with the proprietary FastRPC stack.
+cc_prebuilt_binary {
+    name: "cupid_audioadsprpcd",
+    stem: "audioadsprpcd",
+    srcs: [":cupid_audioadsprpcd_blob"],
+    vendor: true,
+    compile_multilib: "64",
+    strip: { none: true },
+    shared_libs: ["liblog", "libc++", "libc", "libm", "libdl"],
+    init_rc: ["rootdir/etc/init/vendor.qti.audio-adsprpc-service.rc"],
+}

@@ -534,8 +534,9 @@ ifneq ($(strip $(filter-out \
     $(CUPID_DEVICE_INACTIVE_LOAD_MODULES))),)
 $(error Inactive Cupid modules are missing from the packaged module set)
 endif
+# The userspace-controlled thermal interface is normal-boot-only.
 CUPID_RECOVERY_LOAD_MODULES := \
-    $(filter-out $(CUPID_DEVICE_INACTIVE_LOAD_MODULES), \
+    $(filter-out $(CUPID_DEVICE_INACTIVE_LOAD_MODULES) mi_thermal_interface.ko, \
         $(CUPID_FIRST_STAGE_LOAD_MODULES) \
         $(CUPID_SECOND_STAGE_LOAD_MODULES))
 CUPID_VENDOR_DLKM_LOAD_MODULES := \
