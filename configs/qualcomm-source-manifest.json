@@ -4,13 +4,13 @@
     {
       "path": "vendor/qcom/opensource/cvp-kernel",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/cvp-kernel.git",
-      "revision": "dcf120f6617fbf3335ffdcb1894b8ffc62e8bd6b",
+      "revision": "baf682181686e1d8d6cae7768b56ec36523dd982",
       "module": "msm-cvp.ko"
     },
     {
       "path": "vendor/qcom/opensource/eva-kernel",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/eva-kernel.git",
-      "revision": "8fee9b929fabf46ef975a03d55aa9262e059725e",
+      "revision": "6c125a4912c4785b6eb1d3e5feb05210f42ea81b",
       "module": "msm-eva.ko"
     },
     {
@@ -43,7 +43,7 @@
     {
       "path": "vendor/qcom/opensource/dataipa",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
-      "revision": "ea0b8b9911b51e7824ffe9dd3c6d0d59fbeaafd4"
+      "revision": "9d5841065ec03531ad5e4dbd773283d60bcb4f08"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet",
@@ -68,7 +68,7 @@
     {
       "path": "vendor/qcom/opensource/wlan/platform",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_wlan_platform.git",
-      "revision": "0e7ec6740343b473483e8a111bb7f671d77a0cd5"
+      "revision": "6d2ee9e89769fac394f5575704a15a3b636d4bf8"
     },
     {
       "path": "vendor/qcom/opensource/wlan/fw-api",
