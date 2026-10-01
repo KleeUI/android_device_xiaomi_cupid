@@ -38,12 +38,12 @@
     {
       "path": "vendor/qcom/opensource/camera-kernel",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_camera-kernel.git",
-      "revision": "0f653119736b1db4330e261693b17fd632e8f74b"
+      "revision": "33e0ac9dd233e470dde12b7efdcdbb27f1ea62d3"
     },
     {
       "path": "vendor/qcom/opensource/dataipa",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
-      "revision": "9d5841065ec03531ad5e4dbd773283d60bcb4f08"
+      "revision": "07d2d5ac10b2aa4b8dc4cb2a5874e2b1b72e39aa"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet",
@@ -68,7 +68,7 @@
     {
       "path": "vendor/qcom/opensource/wlan/platform",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_wlan_platform.git",
-      "revision": "6d2ee9e89769fac394f5575704a15a3b636d4bf8"
+      "revision": "7dd6aaa7c22180ce3627ccc4719ac2c7cfa2aef7"
     },
     {
       "path": "vendor/qcom/opensource/wlan/fw-api",
@@ -88,7 +88,7 @@
     {
       "path": "vendor/qcom/opensource/touch-drivers",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_touch-drivers.git",
-      "revision": "769e8a57ccd6d00c03ea3cad0ba0d872b387cb24"
+      "revision": "5fcfdb2af42e944506c54d910958d4adedae0e44"
     }
   ]
 }
