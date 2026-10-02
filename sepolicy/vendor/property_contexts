@@ -2,3 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 vendor.camera.sensor. u:object_r:vendor_camera_prop:s0 prefix string
+
+# Xiaomi thermal daemon's dedicated runtime state path.
+vendor.sys.thermal.data.path u:object_r:vendor_thermal_normal_prop:s0 exact string

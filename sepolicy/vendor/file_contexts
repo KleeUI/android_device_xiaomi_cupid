@@ -11,3 +11,11 @@
 # Qualcomm ships the eSE PowerManager beside the Secure Element HAL and both
 # implementations share the existing, narrowly scoped secure-element domain.
 /(vendor|system/vendor)/bin/hw/vendor\.qti\.esepowermanager@1\.1-service        u:object_r:hal_secure_element_default_exec:s0
+
+# Xiaomi thermal service and its dedicated runtime state.
+/(vendor|system/vendor)/bin/mi_thermald u:object_r:mi_thermald_exec:s0
+/data/vendor/thermal(/.*)? u:object_r:thermal_data_file:s0
+/sys/class/thermal/thermal_message/flash_state u:object_r:sys_thermal_flash_state:s0
+/sys/class/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0
+/sys/devices/virtual/thermal/thermal_message/flash_state u:object_r:sys_thermal_flash_state:s0
+/sys/devices/virtual/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0

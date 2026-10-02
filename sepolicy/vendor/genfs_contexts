@@ -6,3 +6,7 @@ genfscon sysfs /devices/platform/soc/b0000000.qcom,cnss-qca6490/fs_ready u:objec
 # The platform already grants vendor_init writes to this public type.
 # Label only the firmware-loader sysctl subtree, not generic /proc nodes.
 genfscon proc /sys/kernel/firmware_config u:object_r:proc_firmware_config:s0
+
+# Xiaomi thermal message controls exposed by the source-built kernel.
+genfscon sysfs /devices/virtual/thermal/thermal_message/flash_state u:object_r:sys_thermal_flash_state:s0
+genfscon sysfs /devices/virtual/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0
