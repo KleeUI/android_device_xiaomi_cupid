@@ -43,7 +43,7 @@
     {
       "path": "vendor/qcom/opensource/dataipa",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_dataipa.git",
-      "revision": "07d2d5ac10b2aa4b8dc4cb2a5874e2b1b72e39aa"
+      "revision": "448fb5f7b27d2590a8b3159e4cccefd21fb27d13"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet",
