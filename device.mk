@@ -248,6 +248,11 @@ PRODUCT_PACKAGES += \
 # plugin remains part of the proprietary boundary.
 PRODUCT_PACKAGES += \
     android.hardware.gnss-aidl-service-qti \
+    cupid_apdr.conf \
+    cupid_batching.conf \
+    cupid_izat.conf \
+    cupid_lowi.conf \
+    cupid_sap.conf \
     gnss_antenna_info.conf \
     gnss@2.0-base.policy \
     gnss@2.0-edgnss-daemon.policy \

@@ -166,3 +166,40 @@ cc_prebuilt_binary {
     shared_libs: ["liblog", "libc++", "libc", "libm", "libdl"],
     init_rc: ["rootdir/etc/init/vendor.qti.audio-adsprpc-service.rc"],
 }
+
+// The private location daemons read these configuration files from vendor/etc.
+// Device-prefixed module names avoid claiming ownership of shared GNSS modules.
+prebuilt_etc {
+    name: "cupid_izat.conf",
+    src: "configs/gnss/izat.conf",
+    filename: "izat.conf",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "cupid_lowi.conf",
+    src: "configs/gnss/lowi.conf",
+    filename: "lowi.conf",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "cupid_sap.conf",
+    src: "configs/gnss/sap.conf",
+    filename: "sap.conf",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "cupid_batching.conf",
+    src: "configs/gnss/batching.conf",
+    filename: "batching.conf",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "cupid_apdr.conf",
+    src: "configs/gnss/apdr.conf",
+    filename: "apdr.conf",
+    vendor: true,
+}
