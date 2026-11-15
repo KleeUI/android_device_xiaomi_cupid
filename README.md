@@ -4,6 +4,12 @@ This repository is Klee's independently implemented integration for the Xiaomi
 12. It targets the Qualcomm SM8450 (`taro`) platform and consumes official
 CodeLinaro platform projects through Klee's `qcom/waipio.xml` manifest.
 
+**中文使用与自行编译：** [Xiaomi 12 / Cupid 使用和编译指南](docs/BUILDING.zh-CN.md)
+（环境准备、源码同步、专有输入、整包构建、产物检查和故障排查）。
+
+For a scoped record of the most recent documented device check, see the
+[R6 post-flash validation report](docs/r6-postflash-validation-20261115.md).
+
 ## Hardware baseline
 
 - SoC: Qualcomm SM8450
@@ -67,14 +73,40 @@ owns the Klee product-package selection.
 
 ## Build
 
-Initialize Klee with the Waipio manifest, provide the kernel and proprietary
-repositories, then run:
+Use a full Android source checkout, not a standalone clone of this device
+repository. Initialize Cupid with the Waipio manifest:
 
 ```bash
-source build/envsetup.sh
-lunch cupid_userdebug
-klee_build -jXX
+repo init -u https://github.com/KleeUI/android.git \
+    -b Klee-1.0 -m qcom/waipio.xml
+repo sync -c --no-clone-bundle --no-tags -j4
 ```
+
+The manifest supplies the kernel, device trees, and external module sources,
+but it does **not** supply the complete `vendor/xiaomi/cupid` and
+`vendor/xiaomi/sm8450-common` proprietary inputs. Prepare those inputs and the
+device delta as described above and in the [full guide](docs/BUILDING.zh-CN.md).
+Normalize the supported metadata baseline before selecting the product:
+
+```bash
+python3 device/xiaomi/cupid/setup-makefiles.py
+python3 device/xiaomi/cupid/setup-makefiles.py --check
+source build/envsetup.sh
+lunch cupid-cp2a-userdebug
+klee_build -j8
+```
+
+Review the check output: `pending` is not a build-ready state even when the
+check exits successfully. `8` is an example job count; select one appropriate
+to host memory and CPU capacity. Klee also supports `lunch cupid_userdebug`
+when the Klee environment is loaded, with `cp2a` as its default release.
+
+`klee_build` defaults to `droid`; it builds the source kernel and modules
+inline. To request packaging artifacts explicitly after preparing the same
+environment, use `klee_build -j8 target-files-package otapackage`. The default
+output tree is `out/target/product/cupid/`. A successful compile or generated
+OTA is not a claim that installation and every hardware function have been
+qualified; consult the validation report for the tested scope.
 
 ## Device-tree source policy
 
