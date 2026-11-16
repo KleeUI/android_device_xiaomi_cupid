@@ -7,8 +7,8 @@
 DEVICE_PATH := device/xiaomi/cupid
 
 # The source AudioReach namespaces provide the canonical AGM/PAL libraries.
-# Keep them visible to Soong's product package resolver while lower ABI-locked
-# Qualcomm libraries remain in the common vendor namespace.
+# Keep them visible to Soong's product package resolver. The source-build
+# contract below also checks the lower runtime definitions and vendor shadows.
 PRODUCT_SOONG_NAMESPACES += \
     vendor/qcom/opensource/agm \
     vendor/qcom/opensource/pal
@@ -64,6 +64,16 @@ PRODUCT_PACKAGES += rmnet_mem.ko
 # calibration data remain the device-specific proprietary inputs.
 TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES := false
 TARGET_USES_SOONG_AUDIOREACH_GRAPH_SERVICES := true
+
+# Direct source libraries must be visible to Soong consumers as well as Make
+# product packages. The pinned Klee source trees provide the matching Soong
+# adapters and guards around duplicate Make modules; the contract checks both.
+_cupid_source_contract := $(shell python3 $(DEVICE_PATH)/tools/check_source_build_contract.py --top .)
+ifneq ($(findstring source-build contract: OK,$(_cupid_source_contract)),source-build contract: OK)
+$(error Cupid source-build contract failed: $(_cupid_source_contract). Run setup-makefiles.py after synchronizing all source inputs)
+endif
+_cupid_source_contract :=
+
 $(call soong_config_set,qtilocation,feature_nhz,false)
 $(call soong_config_set,qtilocation,feature_locauto,false)
 $(call soong_config_set,klee_rmnetctl,legacy_driver,true)
@@ -356,9 +366,10 @@ $(call inherit-product-if-exists, vendor/xiaomi/sm8450-common/sm8450-common-vend
 $(call inherit-product, device/xiaomi/cupid/klee-compat.mk)
 $(call inherit-product-if-exists, vendor/xiaomi/cupid/cupid-vendor.mk)
 
-# Cupid uses the source AGM/PAL AIDL runtime while retaining only the lower
-# graph/ACDB/OSAL ABI-locked libraries as proprietary inputs.  Remove the
-# legacy HIDL package names inherited by the generic Taro fragment.
+# Cupid uses one source AudioReach stack: AGM/PAL and the graph/ACDB/OSAL
+# libraries are built together. DSP firmware, calibration, and private codec
+# or effect extensions remain separate proprietary inputs. Remove the legacy
+# HIDL package names inherited by the generic Taro fragment.
 PRODUCT_PACKAGES := $(filter-out \
     libagmservice libagmservice:% \
     libagmipcservice libagmipcservice:% \

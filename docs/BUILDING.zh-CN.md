@@ -97,6 +97,9 @@ repo status
 和内核 vendor DTS 等链接；不要另行克隆随机内核，也不要用库存 DTB/DTBO 替换链接。
 source-policy 校验只检查清单来源与固定版本策略，不会验证每个项目的下载完整性或硬件功能。
 
+源码构建合同还会检查规范化后的 vendor 元数据，因此先完成下一节的专有输入准备，
+再运行合同检查；空目录或仅有产品开关不能证明已经选中源码模块。
+
 ## 4. 准备完整专有输入和设备差量
 
 先从你有权使用、且与当前设备集成匹配的来源准备以下目录及其全部依赖文件：
@@ -151,11 +154,31 @@ python3 device/xiaomi/cupid/setup-makefiles.py
 python3 device/xiaomi/cupid/setup-makefiles.py --check
 ```
 
-补丁涉及两份 vendor 元数据及配套 location 源码元数据，因此必须在完整源码同步后运行。
+补丁规范化两份 vendor 元数据；配套源码模块由清单中的 Klee 仓库提供，因此必须在
+完整源码同步后运行。另会对清单固定版本的 libvmmem 应用可重复检查的格式修复。
 请检查输出状态：正常应用后再次检查应显示 `already-applied`；`pending` 表示尚未应用。
 `--check` 只报告状态，出现 `pending` 时也可能返回退出码 0，不能只看退出码判断就绪。
 若提示 `ambiguous or has drift`，先比较受影响文件和补丁基线；不要强制套补丁或删除检查。
 在同步或重置被补丁修改的子仓库前，先记录并保存这些本地修改。
+新源码包装器不再需要旧 `cupid_audioadsprpcd_blob` filegroup；正常状态是
+`already-absent`，旧目录首次升级会显示 `removed`，检查模式可能显示 `pending-removal`。
+
+### 验证源码模块和预编译覆盖
+
+```bash
+python3 device/xiaomi/cupid/tools/check_source_build_contract.py \
+  --top "$PWD"
+```
+
+合同定义在 `device/xiaomi/cupid/configs/source-build-contract.json`，逐项列出
+AudioReach AGM/PAL/graphservices/utils、GNSS 框架和适配器、公共 Thermal HAL、
+显示模块和 libvmmem 的真实定义文件、模块类型及产品选择。检查还会拒绝覆盖这些模块
+的活动 vendor 预编译定义；设备产品解析时会自动运行同一检查。
+
+这是静态预检，不代替 Make/Soong 完整求值、实际编译或设备测试。显示 `libsdmcore`
+属于 `hardware/qcom/display`；独立 display-core 树提供头文件及可选 SnapAlloc。
+固定版本的 thermal-engine 树仅提供 `libThermal_headers`，没有温控策略守护进程。
+闭源边界及仍缺源码的驱动见 [源码构建范围](SOURCE_BUILD.zh-CN.md)。
 
 ## 5. 选择目标并编译
 
@@ -236,6 +259,17 @@ sha256sum out/target/product/cupid/{boot,vendor_boot,dtbo,recovery,system,system
 当前分区配置使用 ext4 的 system/system_ext/product、EROFS 的 vendor，以及
 源码构建的 vendor_dlkm；改变文件系统、AVB、分区大小或内核 ABI 后必须重新检查整个
 配套产物，不能只因为一个分区能构建就认为整包可安装。
+
+本次构建已生成 `module-info.json` 后，再验证实际模块归属和安装输出：
+
+```bash
+python3 device/xiaomi/cupid/tools/check_source_build_contract.py \
+  --top "$PWD" \
+  --module-info out/target/product/cupid/module-info.json
+```
+
+该文件必须来自当前源码与当前构建，旧构建的包图不能证明本次选择正确。此项通过也
+不等于 ELF 依赖、镜像打包、刷机或硬件功能已经验收。
 
 ## 7. 更新源码、增量编译与干净重建
 

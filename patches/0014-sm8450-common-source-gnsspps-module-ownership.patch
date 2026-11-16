@@ -1,0 +1,9 @@
+--- a/vendor/xiaomi/sm8450-common/Android.bp
++++ b/vendor/xiaomi/sm8450-common/Android.bp
+@@ -3972,4 +3972,5 @@
+ cc_prebuilt_library_shared {
+-    name: "libgnsspps",
++    name: "libgnsspps_prebuilt",
+     owner: "xiaomi",
++    enabled: false,
+     strip: {

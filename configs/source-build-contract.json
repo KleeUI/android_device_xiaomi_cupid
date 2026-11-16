@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "policy": "source-where-available",
+  "description": "Static source ownership requirements after vendor normalization. This does not assert a successful build or complete hardware coverage. Kernel/DT provenance and unavailable drivers are governed by the existing kernel manifests and source-module-gaps.json.",
+  "source_built": [
+    {
+      "name": "audio-listener-loader",
+      "root": "device/xiaomi/cupid",
+      "modules": [
+        {
+          "name": "cupid_audioadsprpcd",
+          "file": "Android.bp",
+          "type": "cc_binary"
+        }
+      ]
+    },
+    {
+      "name": "primary-audio-hal",
+      "root": "vendor/qcom/opensource/audio-hal/primary-hal",
+      "modules": [
+        {
+          "name": "audiohalservice.qti",
+          "file": "hal/service/Android.bp",
+          "type": "cc_binary"
+        },
+        {
+          "name": "libaudio_module_config.qti",
+          "file": "hal/core/module_config/Android.bp",
+          "type": "cc_library_static",
+          "installed": false
+        },
+        {
+          "name": "libaudioeffecthal.qti",
+          "file": "hal/effects/Android.mk",
+          "type": "BUILD_SHARED_LIBRARY"
+        },
+        {
+          "name": "libaudiocorehal.qti",
+          "file": "hal/core/Android.mk",
+          "type": "BUILD_SHARED_LIBRARY"
+        },
+        {
+          "name": "cupid_audioadsprpcd_srcs",
+          "file": "adsprpcd/Android.bp",
+          "type": "filegroup",
+          "installed": false,
+          "graph_module": false
+        }
+      ],
+      "required_files": [
+        "adsprpcd/adsprpcd.c"
+      ]
+    },
+    {
+      "name": "audioreach-agm",
+      "root": "vendor/qcom/opensource/agm",
+      "modules": [
+        {
+          "name": "libagm",
+          "file": "service/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libagmclient",
+          "file": "ipc/aidl/client/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libagmipcservice",
+          "file": "ipc/aidl/server/Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "audioreach-pal",
+      "root": "vendor/qcom/opensource/pal",
+      "modules": [
+        {
+          "name": "libar-pal",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libpalclient",
+          "file": "ipc/aidl/client/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libpalipcservice",
+          "file": "ipc/aidl/server/Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "audioreach-graphservices",
+      "root": "vendor/qcom/opensource/audioreach/graphservices",
+      "modules": [
+        {
+          "name": "liblx-osal",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "liblx-ar_util",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libar-acdb",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libar-gpr",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libar-gsl",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libats",
+          "file": "Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "audioreach-utils",
+      "root": "vendor/qcom/opensource/audioreach/utils",
+      "modules": [
+        {
+          "name": "libaudio_log_utils",
+          "file": "audio-log-utils/Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "gnss-framework",
+      "root": "hardware/qcom/gps",
+      "modules": [
+        {
+          "name": "libloc_core",
+          "file": "core/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "liblocation_api",
+          "file": "location/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "android.hardware.gnss-aidl-service-qti",
+          "file": "android/aidl-impl/Android.mk",
+          "type": "BUILD_EXECUTABLE"
+        }
+      ]
+    },
+    {
+      "name": "location-adapters",
+      "root": "vendor/qcom/opensource/location",
+      "modules": [
+        {
+          "name": "libloc_api_v02",
+          "file": "loc_api/loc_api_v02/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libloc_socket",
+          "file": "utils/loc_socket/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libsynergy_loc_api",
+          "file": "synergy_loc_api/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libgnsspps",
+          "file": "gnsspps/Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "thermal-public-hal",
+      "root": "vendor/qcom/opensource/thermal-hal",
+      "modules": [
+        {
+          "name": "android.hardware.thermal-service.qti",
+          "file": "Android.bp",
+          "type": "cc_binary"
+        }
+      ]
+    },
+    {
+      "name": "thermal-client-headers",
+      "root": "vendor/qcom/opensource/thermal-engine",
+      "modules": [
+        {
+          "name": "libThermal_headers",
+          "file": "Android.bp",
+          "type": "cc_library_headers",
+          "installed": false
+        }
+      ],
+      "description": "The pinned repository exports headers only, not a thermal-engine daemon."
+    },
+    {
+      "name": "display-userspace",
+      "root": "hardware/qcom/display",
+      "modules": [
+        {
+          "name": "mapper.qti",
+          "file": "gralloc/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "libgralloc.qti",
+          "file": "gralloc/Android.bp",
+          "type": "cc_library_shared"
+        },
+        {
+          "name": "vendor.qti.hardware.display.allocator-service",
+          "file": "gralloc/Android.bp",
+          "type": "cc_binary"
+        },
+        {
+          "name": "vendor.qti.hardware.display.allocator-service-legacy",
+          "file": "gralloc/Android.bp",
+          "type": "cc_binary"
+        },
+        {
+          "name": "vendor.qti.hardware.display.composer-service",
+          "file": "composer/Android.bp",
+          "type": "cc_binary"
+        },
+        {
+          "name": "libsdmcore",
+          "file": "sdm/libs/core/Android.bp",
+          "type": "cc_library_shared"
+        }
+      ]
+    },
+    {
+      "name": "display-core-headers",
+      "root": "vendor/qcom/opensource/display-core",
+      "modules": [
+        {
+          "name": "display_core_headers",
+          "file": "Android.bp",
+          "type": "cc_library_headers",
+          "installed": false
+        }
+      ]
+    },
+    {
+      "name": "virtual-memory",
+      "root": "vendor/qcom/opensource/libvmmem",
+      "modules": [
+        {
+          "name": "libvmmem",
+          "file": "Android.bp",
+          "type": "cc_library"
+        }
+      ]
+    }
+  ],
+  "product_checks": [
+    {
+      "file": "device/xiaomi/cupid/device.mk",
+      "assignments": {
+        "TARGET_USES_PREBUILT_AUDIOREACH_GRAPH_SERVICES": "false",
+        "TARGET_USES_SOONG_AUDIOREACH_GRAPH_SERVICES": "true",
+        "BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE": "default",
+        "BUILD_DISPLAY_TECHPACK_SOURCE": "true",
+        "BUILD_DISPLAY_TECHPACK_SOURCE_VARIANT": "true",
+        "TARGET_USES_QMAA": "false"
+      },
+      "contains": [
+        "$(call inherit-product, vendor/qcom/opensource/location/gps_vendor_product.mk)",
+        "android.hardware.thermal-service.qti",
+        "android.hardware.gnss-aidl-service-qti",
+        "mapper.qti",
+        "vendor.qti.hardware.display.allocator-service"
+      ]
+    },
+    {
+      "file": "vendor/qcom/opensource/audioreach/graphservices/ar_osal/Android.mk",
+      "contains": [
+        "TARGET_USES_SOONG_AUDIOREACH_GRAPH_SERVICES"
+      ]
+    }
+  ],
+  "vendor_metadata": [
+    "vendor/xiaomi/cupid/Android.bp",
+    "vendor/xiaomi/sm8450-common/Android.bp"
+  ],
+  "required_proprietary_inputs": [
+    {
+      "name": "gnss-qti-extension",
+      "reason": "vendor.qti.gnss-service.so has no public ABI-equivalent replacement in the selected source trees."
+    },
+    {
+      "name": "xiaomi-thermal-policy",
+      "reason": "The public QTI HAL does not implement mi_thermald policy or Xiaomi's mi_thermal_interface.ko. Missing kernel bridges are recorded in source-module-gaps.json; this contract does not restore or authorize a mismatched prebuilt kernel module."
+    },
+    {
+      "name": "graphics-and-camera-private-runtime",
+      "reason": "CamX/ISP, Adreno userspace, tuning and selected private display extensions remain separate from the source-built display HAL."
+    },
+    {
+      "name": "remote-processor-firmware",
+      "reason": "DSP, modem, GNSS, Wi-Fi, Bluetooth and GPU firmware and board calibration are proprietary hardware inputs."
+    },
+    {
+      "name": "audio-private-inputs",
+      "reason": "DSP firmware, ACDB calibration, private codec/effect extensions and the paired listener/libadsprpc remain proprietary. The small audioadsprpcd loader can be source-built separately."
+    }
+  ]
+}

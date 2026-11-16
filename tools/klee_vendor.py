@@ -16,6 +16,7 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path, PurePosixPath
+import re
 import shutil
 import subprocess
 import tempfile
@@ -34,7 +35,15 @@ PATCH_NAMES = (
     "0010-sm8450-common-prefer-source-location-adapters.patch",
     "0011-sm8450-common-disable-duplicate-location-prebuilts.patch",
     "0012-sm8450-common-source-location-module-ownership.patch",
-    "0013-location-source-soong-modules.patch",
+    "0014-sm8450-common-source-gnsspps-module-ownership.patch",
+)
+
+# The manifest pins the Klee location and AudioReach forks with their complete
+# Soong adapters. Keep those source integrations out of the generated-vendor
+# metadata stack; applying historical 0013 again would change their namespace.
+# Independent source fixes may already be applied to an existing full checkout.
+SOURCE_PATCH_NAMES = (
+    "0015-libvmmem-use-size-t-format.patch",
 )
 
 REQUIRED_VENDOR_FILES = (
@@ -84,10 +93,14 @@ def _apply_patch(
     return _run(command, top)
 
 
-def _patch_target_paths(device_dir: Path) -> set[str]:
+def _patch_target_paths(
+    device_dir: Path, patch_names: tuple[str, ...] | None = None
+) -> set[str]:
     """Collect every repository path touched by the metadata patch stack."""
+    if patch_names is None:
+        patch_names = PATCH_NAMES
     paths: set[str] = set()
-    for name in PATCH_NAMES:
+    for name in patch_names:
         patch_file = device_dir / "patches" / name
         for raw in patch_file.read_text(encoding="utf-8").splitlines():
             if raw.startswith("--- ") or raw.startswith("+++ "):
@@ -99,12 +112,22 @@ def _patch_target_paths(device_dir: Path) -> set[str]:
     return paths
 
 
-def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
+def _probe_patch_stack(
+    top: Path,
+    device_dir: Path,
+    *,
+    reverse: bool,
+    patch_names: tuple[str, ...] | None = None,
+) -> bool:
     """Apply and undo the complete patch stack in an isolated vendor tree."""
+    if patch_names is None:
+        patch_names = PATCH_NAMES
     with tempfile.TemporaryDirectory(prefix="klee-vendor-patches-") as directory:
         probe_top = Path(directory)
         original: dict[str, bytes | None] = {}
-        target_paths = set(REQUIRED_VENDOR_FILES) | _patch_target_paths(device_dir)
+        target_paths = set(REQUIRED_VENDOR_FILES) | _patch_target_paths(
+            device_dir, patch_names
+        )
         for relative in target_paths:
             source = top / relative
             destination = probe_top / relative
@@ -115,15 +138,15 @@ def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
             else:
                 original[relative] = None
 
-        patch_names = tuple(reversed(PATCH_NAMES)) if reverse else PATCH_NAMES
-        for name in patch_names:
+        ordered_names = tuple(reversed(patch_names)) if reverse else patch_names
+        for name in ordered_names:
             result = _apply_patch(
                 probe_top, device_dir / "patches" / name, reverse=reverse
             )
             if result.returncode:
                 return False
 
-        undo_names = PATCH_NAMES if reverse else tuple(reversed(PATCH_NAMES))
+        undo_names = patch_names if reverse else tuple(reversed(patch_names))
         for name in undo_names:
             result = _apply_patch(
                 probe_top, device_dir / "patches" / name, reverse=not reverse
@@ -141,8 +164,51 @@ def _probe_patch_stack(top: Path, device_dir: Path, *, reverse: bool) -> bool:
         return True
 
 
+def _probe_applied_prefix(top: Path, device_dir: Path, count: int) -> bool:
+    """Validate an older normalized vendor stack without changing its input."""
+    with tempfile.TemporaryDirectory(prefix="klee-vendor-prefix-") as directory:
+        probe_top = Path(directory)
+        original: dict[str, bytes | None] = {}
+        for relative in set(REQUIRED_VENDOR_FILES) | _patch_target_paths(device_dir):
+            source = top / relative
+            destination = probe_top / relative
+            if source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                original[relative] = source.read_bytes()
+            else:
+                original[relative] = None
+
+        prefix = PATCH_NAMES[:count]
+        # Undo the candidate prefix, validate the current stack in both
+        # directions, then restore the original input verbatim. Unrelated
+        # generated metadata is deliberately preserved by each round trip.
+        operations = (
+            (tuple(reversed(prefix)), True),
+            (PATCH_NAMES, False),
+            (tuple(reversed(PATCH_NAMES)), True),
+            (prefix, False),
+        )
+        for names, reverse in operations:
+            for name in names:
+                result = _apply_patch(
+                    probe_top, device_dir / "patches" / name, reverse=reverse
+                )
+                if result.returncode:
+                    return False
+
+        for relative, content in original.items():
+            candidate = probe_top / relative
+            if content is None:
+                if candidate.exists():
+                    return False
+            elif not candidate.is_file() or candidate.read_bytes() != content:
+                return False
+        return True
+
+
 def _normalize_audio_filegroup(top: Path, *, check_only: bool) -> tuple[str, str]:
-    """Restore the device-owned blob reference after metadata normalization."""
+    """Drop the obsolete wrapper blob reference after the source migration."""
     vendor = top / "vendor/xiaomi/cupid"
     generated = vendor / "Android.bp"
     block = (
@@ -152,16 +218,19 @@ def _normalize_audio_filegroup(top: Path, *, check_only: bool) -> tuple[str, str
         '    visibility: ["//device/xiaomi/cupid"],\n'
         '}\n'
     )
-    generated_text = generated.read_text(encoding="utf-8")
-    module_name = 'name: "cupid_audioadsprpcd_blob"'
-    if module_name in generated_text:
-        if generated_text.count(module_name) != 1 or generated_text.count(block) != 1:
-            raise VendorPreparationError("audio filegroup in generated metadata has drift")
-        return ("cupid_audioadsprpcd_blob", "already-applied")
+    generated_bytes = generated.read_bytes()
+    generated_text = generated_bytes.decode("utf-8")
+    module_names = re.findall(r'\bname\s*:\s*"cupid_audioadsprpcd_blob"', generated_text)
+    if not module_names:
+        return ("cupid_audioadsprpcd_blob", "already-absent")
+    blocks = (block.encode("utf-8"), block.replace("\n", "\r\n").encode("utf-8"))
+    matches = [candidate for candidate in blocks if candidate in generated_bytes]
+    if len(module_names) != 1 or sum(generated_bytes.count(candidate) for candidate in blocks) != 1:
+        raise VendorPreparationError("audio filegroup in generated metadata has drift")
     if check_only:
-        return ("cupid_audioadsprpcd_blob", "pending")
-    generated.write_text(generated_text.rstrip() + "\n\n" + block, encoding="utf-8")
-    return ("cupid_audioadsprpcd_blob", "applied")
+        return ("cupid_audioadsprpcd_blob", "pending-removal")
+    generated.write_bytes(generated_bytes.replace(matches[0], b""))
+    return ("cupid_audioadsprpcd_blob", "removed")
 
 
 def apply_vendor_patches(
@@ -171,8 +240,9 @@ def apply_vendor_patches(
 
     Several patches modify the same generated file, so probing each patch in
     isolation misclassifies both pristine and fully normalized trees.  Probe
-    the complete stack in temporary copies and only modify a tree that exactly
-    matches the pristine stack input.
+    the complete stack in temporary copies. Accept pristine metadata, a fully
+    normalized tree, or a reversible prefix of the current stack. Independently
+    preflight source compatibility fixes before changing any persistent input.
     """
     missing = [path for path in REQUIRED_VENDOR_FILES if not (top / path).is_file()]
     if missing:
@@ -180,31 +250,62 @@ def apply_vendor_patches(
             "vendor input is incomplete:\n  " + "\n  ".join(missing)
         )
 
-    for name in PATCH_NAMES:
+    for name in PATCH_NAMES + SOURCE_PATCH_NAMES:
         patch_file = device_dir / "patches" / name
         if not patch_file.is_file():
             raise VendorPreparationError(f"missing metadata patch: {patch_file}")
 
     forward = _probe_patch_stack(top, device_dir, reverse=False)
     reverse = _probe_patch_stack(top, device_dir, reverse=True)
-    if forward == reverse:
+    applied_count: int | None = None
+    if forward and not reverse:
+        applied_count = 0
+    elif reverse and not forward:
+        applied_count = len(PATCH_NAMES)
+    elif not forward and not reverse:
+        matches = [
+            count
+            for count in range(1, len(PATCH_NAMES))
+            if _probe_applied_prefix(top, device_dir, count)
+        ]
+        if matches:
+            # Historical patches can cancel one another (0007 and 0009), so
+            # several prefixes may produce the same metadata. Every match
+            # reaches the same full stack and restores this input byte for
+            # byte; resume from the longest valid prefix.
+            applied_count = max(matches)
+    if applied_count is None:
         state = "both directions match" if forward else "neither direction matches"
         raise VendorPreparationError(
             f"vendor patch stack is ambiguous or has drift: {state}; "
             "regenerate vendor metadata or review the tree manually"
         )
 
-    if reverse:
-        return [(name, "already-applied") for name in PATCH_NAMES] + [
-            _normalize_audio_filegroup(top, check_only=check_only)
-        ]
-    if check_only:
-        return [(name, "pending") for name in PATCH_NAMES] + [
-            _normalize_audio_filegroup(top, check_only=True)
-        ]
+    source_states: list[tuple[str, bool]] = []
+    for name in SOURCE_PATCH_NAMES:
+        pending = _probe_patch_stack(
+            top, device_dir, reverse=False, patch_names=(name,)
+        )
+        applied = _probe_patch_stack(
+            top, device_dir, reverse=True, patch_names=(name,)
+        )
+        if pending == applied:
+            raise VendorPreparationError(
+                f"source compatibility patch has drift or missing input: {name}"
+            )
+        source_states.append((name, applied))
+
+    # Preflight the independent filegroup before any persistent writes as well.
+    _normalize_audio_filegroup(top, check_only=True)
 
     results: list[tuple[str, str]] = []
-    for name in PATCH_NAMES:
+    for index, name in enumerate(PATCH_NAMES):
+        if index < applied_count:
+            results.append((name, "already-applied"))
+            continue
+        if check_only:
+            results.append((name, "pending"))
+            continue
         patch_file = device_dir / "patches" / name
         result = _apply_patch(top, patch_file, reverse=False)
         if result.returncode:
@@ -212,7 +313,19 @@ def apply_vendor_patches(
                 f"failed to apply {name}:\n{result.stdout.rstrip()}"
             )
         results.append((name, "applied"))
-    results.append(_normalize_audio_filegroup(top, check_only=False))
+    for name, applied in source_states:
+        if applied:
+            results.append((name, "already-applied"))
+        elif check_only:
+            results.append((name, "pending"))
+        else:
+            result = _apply_patch(top, device_dir / "patches" / name, reverse=False)
+            if result.returncode:
+                raise VendorPreparationError(
+                    f"failed to apply {name}:\n{result.stdout.rstrip()}"
+                )
+            results.append((name, "applied"))
+    results.append(_normalize_audio_filegroup(top, check_only=check_only))
     return results
 
 

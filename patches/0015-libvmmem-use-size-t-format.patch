@@ -1,0 +1,7 @@
+--- a/vendor/qcom/opensource/libvmmem/vmmem.cpp
++++ b/vendor/qcom/opensource/libvmmem/vmmem.cpp
+@@ -132,3 +132,3 @@ int VmMem::PopulateAcl(struct acl_entry *acl, uint32_t nr_acl_entries,
+     if (vmperms.size() > nr_acl_entries) {
+-        LOG(PRI_ERROR, "Invalid number of acl_entries %lu", (vmperms.size()));
++        LOG(PRI_ERROR, "Invalid number of acl_entries %zu", vmperms.size());
+         return -EINVAL;

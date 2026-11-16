@@ -91,6 +91,7 @@ Normalize the supported metadata baseline before selecting the product:
 ```bash
 python3 device/xiaomi/cupid/setup-makefiles.py
 python3 device/xiaomi/cupid/setup-makefiles.py --check
+python3 device/xiaomi/cupid/tools/check_source_build_contract.py --top "$PWD"
 source build/envsetup.sh
 lunch cupid-cp2a-userdebug
 klee_build -j8
@@ -122,6 +123,35 @@ overlay composition, and semantic validation described by
 `configs/kernel-dt-layout.json`. LineageOS may be used as a differential
 reference while investigating hardware coverage, but it is not an accepted
 source import or build dependency.
+
+## Source-build contract
+
+`configs/source-build-contract.json` records source module names, their actual
+definition files, and product selection requirements. After synchronizing the
+complete source tree and normalizing the vendor metadata, check the contract:
+
+```bash
+python3 device/xiaomi/cupid/tools/check_source_build_contract.py \
+    --top "$PWD"
+```
+
+The product parse invokes this same preflight. A missing source definition,
+wrong module type, or active same-name vendor prebuilt is an error. AudioReach
+uses the Klee Soong adapters, including the matching guards around upstream
+Make modules; a directory or a switch alone is not evidence of source ownership.
+This static check does not evaluate every build condition or prove compilation.
+After generating the build graph, use `--module-info` with the product's current
+`module-info.json` to check the selected owners and installed outputs as well.
+
+Display gralloc, mapper, allocator, composer, and `libsdmcore` belong to
+`hardware/qcom/display`; the separate display-core tree exports headers and an
+optional SnapAlloc implementation. The pinned thermal-engine tree exports
+`libThermal_headers` only, not a policy daemon. GNSS private plugins,
+CamX/Adreno userspace, firmware, calibration and private audio extensions still
+require matching proprietary inputs. Xiaomi-specific kernel drivers missing
+from the source tree remain recorded in `configs/source-module-gaps.json`;
+this contract does not restore mismatched stock modules or claim complete
+hardware support. See [source-build scope](docs/SOURCE_BUILD.zh-CN.md).
 
 Stock firmware remains useful as an external test oracle. The extraction tool
 may be used to unpack a matching `vendor_boot.img` into a scratch directory for

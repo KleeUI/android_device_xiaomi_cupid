@@ -155,15 +155,19 @@ install_symlink {
     symlink_target: "/mnt/vendor/persist/qca6490/wlan_mac.bin",
 }
 
-// Use the paired Xiaomi listener verified with the proprietary FastRPC stack.
-cc_prebuilt_binary {
+// Build the maintained loader while keeping the ABI-matched Xiaomi listener.
+cc_binary {
     name: "cupid_audioadsprpcd",
     stem: "audioadsprpcd",
-    srcs: ["//vendor/xiaomi/cupid:cupid_audioadsprpcd_blob"],
+    // primary-hal/adsprpcd is in Soong's global namespace.
+    srcs: [":cupid_audioadsprpcd_srcs"],
     vendor: true,
     compile_multilib: "64",
-    strip: { none: true },
-    shared_libs: ["liblog", "libc++", "libc", "libm", "libdl"],
+    // Preserve stock startup: pass audiopd through and do not alter DSP paths
+    // or add the newer chargermode exit policy to the paired listener.
+    cflags: ["-DAUDIOADSPRPCD_LEGACY_STARTUP"],
+    include_dirs: ["external/fastrpc/inc"],
+    shared_libs: ["liblog", "libdl"],
     init_rc: ["rootdir/etc/init/vendor.qti.audio-adsprpc-service.rc"],
 }
 
