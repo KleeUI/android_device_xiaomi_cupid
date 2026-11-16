@@ -53,9 +53,168 @@ REQUIRED_VENDOR_FILES = (
     "vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk",
 )
 
+# The reviewed R6 launcher is an independent overlay, not generated metadata.
+# Match the entire module (apart from a uniform LF/CRLF choice) before projecting
+# it inside an isolated patch workspace. Never put this prebuilt back in TOP.
+_C2AUDIO_METADATA = "vendor/xiaomi/sm8450-common/Android.bp"
+_C2AUDIO_SOURCE_SHA256 = "f84dd4e42c9d4a285423f4552314aae15a0ffd94fe4d230ce5c91e2b2e027dd9"
+_C2AUDIO_PREBUILT = b'''cc_prebuilt_binary {
+    name: "vendor.qti.media.c2audio@1.0-service",
+    owner: "xiaomi",
+    target: {
+        android_arm64: {
+            srcs: [
+                "proprietary/vendor/bin/hw/vendor.qti.media.c2audio@1.0-service",
+            ],
+            shared_libs: [
+                "libutils",
+                "libcutils",
+                "liblog",
+                "libcodec2_vndk",
+                "libqc2audio_base",
+                "libqc2audio_utils",
+                "libqc2audio_basecodec",
+                "libqc2audio_platform",
+                "libqc2audio_core",
+                "libqdMetaData",
+                "android.hardware.media.c2@1.0",
+                "libavservices_minijail",
+                "libbinder",
+                "libhidlbase",
+                "libhidltransport",
+                "libhwbinder",
+                "libvndksupport",
+                "libcodec2_hidl@1.0",
+                "libc++",
+                "libc",
+                "libm",
+                "libdl",
+            ],
+        },
+    },
+    compile_multilib: "64",
+    strip: {
+        none: true,
+    },
+    prefer: true,
+    relative_install_path: "hw",
+    soc_specific: true,
+}
+'''
+_C2AUDIO_SOURCE_FILES = (
+    "vendor/xiaomi/sm8450-common/compat/c2audio-service/service.cpp",
+    "vendor/xiaomi/sm8450-common/compat/c2audio-service/qc2_factory_abi.h",
+)
+
 
 class VendorPreparationError(RuntimeError):
     """Raised when the local vendor inputs cannot be normalized safely."""
+
+
+def _c2audio_source_overlay(generated: bytes) -> bytes | None:
+    """Recognize only the reviewed source module, rejecting other C2 drift."""
+    names = list(re.finditer(
+        rb'\bname\s*:\s*"vendor\.qti\.media\.c2audio@1\.0-service"', generated
+    ))
+    source_references = generated.count(b'"compat/c2audio-service/')
+    if not names:
+        if source_references:
+            raise VendorPreparationError("C2 audio source module has unrecognized drift")
+        return None
+    if len(names) != 1:
+        raise VendorPreparationError("C2 audio module is duplicated or has drift")
+    name = names[0]
+    starts = list(re.finditer(
+        rb"(?m)^[a-z_][a-z0-9_]*[ \t]*\{[ \t]*\r?$", generated[:name.start()]
+    ))
+    end = re.search(rb"(?m)^\}\r?\n", generated[name.end():])
+    if not starts or end is None:
+        raise VendorPreparationError("C2 audio module has drift")
+    block = generated[starts[-1].start():name.end() + end.end()]
+    normalized = block.replace(b"\r\n", b"\n")
+    if block not in (normalized, normalized.replace(b"\n", b"\r\n")):
+        raise VendorPreparationError("C2 audio module has mixed line endings")
+    if normalized == _C2AUDIO_PREBUILT:
+        if source_references:
+            raise VendorPreparationError("C2 audio source module is duplicated or has drift")
+        return None
+    if hashlib.sha256(normalized).hexdigest() != _C2AUDIO_SOURCE_SHA256:
+        raise VendorPreparationError("C2 audio source module has unrecognized drift")
+    if source_references != 1:
+        raise VendorPreparationError("C2 audio source module is duplicated or has drift")
+    return block
+
+
+def _apply_with_c2audio_overlay(
+    top: Path, device_dir: Path, overlay: bytes, *, check_only: bool
+) -> list[tuple[str, str]]:
+    """Run the unchanged strict patch checks on an isolated projected copy."""
+    missing = [path for path in _C2AUDIO_SOURCE_FILES
+               if not (top / path).is_file() or not (top / path).stat().st_size]
+    if missing:
+        raise VendorPreparationError(
+            "C2 audio source overlay is missing its source inputs:\n  "
+            + "\n  ".join(missing)
+        )
+    paths = set(REQUIRED_VENDOR_FILES) | _patch_target_paths(
+        device_dir, PATCH_NAMES + SOURCE_PATCH_NAMES
+    )
+    with tempfile.TemporaryDirectory(prefix="klee-vendor-c2audio-") as directory:
+        projected = Path(directory)
+        original: dict[str, bytes | None] = {}
+        for relative in paths:
+            source = top / relative
+            destination = projected / relative
+            if source.is_file():
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source, destination)
+                original[relative] = source.read_bytes()
+            else:
+                original[relative] = None
+        generated = projected / _C2AUDIO_METADATA
+        generated.write_bytes(generated.read_bytes().replace(overlay, _C2AUDIO_PREBUILT, 1))
+        # The recursive call sees the exact canonical prebuilt, so it executes
+        # all existing forward/reverse, prefix, source and filegroup checks.
+        results = apply_vendor_patches(projected, device_dir, check_only=check_only)
+        if check_only:
+            return results + [("c2audio-source-overlay", "preserved")]
+        content = generated.read_bytes()
+        if content.count(_C2AUDIO_PREBUILT) != 1:
+            raise VendorPreparationError("metadata patches changed the C2 audio baseline")
+        generated.write_bytes(content.replace(_C2AUDIO_PREBUILT, overlay, 1))
+        if _c2audio_source_overlay(generated.read_bytes()) != overlay:
+            raise VendorPreparationError("C2 audio source overlay was not restored")
+
+        # Validate every input again before the first persistent write. Only
+        # actual metadata/source patch targets can leave this private workspace.
+        changes: list[tuple[Path, bytes]] = []
+        for relative, before in original.items():
+            destination = top / relative
+            current = destination.read_bytes() if destination.is_file() else None
+            if current != before:
+                raise VendorPreparationError("vendor inputs changed during normalization")
+            candidate = projected / relative
+            after = candidate.read_bytes() if candidate.is_file() else None
+            if after != before:
+                if after is None:
+                    raise VendorPreparationError("metadata patches unexpectedly deleted an input")
+                changes.append((destination, after))
+        for destination, after in changes:
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            descriptor, temporary_name = tempfile.mkstemp(
+                prefix=".klee-vendor-", dir=destination.parent
+            )
+            os.close(descriptor)
+            temporary = Path(temporary_name)
+            try:
+                temporary.write_bytes(after)
+                if destination.exists():
+                    # Changed content must keep a fresh mtime for incremental builds.
+                    shutil.copymode(destination, temporary)
+                os.replace(temporary, destination)
+            finally:
+                temporary.unlink(missing_ok=True)
+        return results + [("c2audio-source-overlay", "preserved")]
 
 
 def find_android_root(start: Path) -> Path:
@@ -254,6 +413,12 @@ def apply_vendor_patches(
         patch_file = device_dir / "patches" / name
         if not patch_file.is_file():
             raise VendorPreparationError(f"missing metadata patch: {patch_file}")
+
+    overlay = _c2audio_source_overlay((top / _C2AUDIO_METADATA).read_bytes())
+    if overlay is not None:
+        return _apply_with_c2audio_overlay(
+            top, device_dir, overlay, check_only=check_only
+        )
 
     forward = _probe_patch_stack(top, device_dir, reverse=False)
     reverse = _probe_patch_stack(top, device_dir, reverse=True)
