@@ -1,0 +1,118 @@
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
+@@ -28,7 +28,8 @@
+ 				"cannot send ese cmd as NFCC powered off\n");
+ 		return -ENODEV;
+ 	}
+-
++	if (nfc_dev->cold_reset.cmd_buf == NULL)
++		return -EFAULT;
+ 	ret = nfc_dev->nfc_write(nfc_dev, nfc_dev->cold_reset.cmd_buf,
+ 						nfc_dev->cold_reset.cmd_len,
+ 						MAX_RETRY_COUNT);
+@@ -52,6 +53,13 @@
+ 	int ret = -EPERM;
+ 	struct cold_reset *cold_rst = &nfc_dev->cold_reset;
+ 	char *rsp_buf = NULL;
++
++	if (cold_rst->rsp_len < COLD_RESET_RSP_LEN) {
++		dev_err(nfc_dev->nfc_device,
++			"%s: received cold reset rsp buffer length is invalid\n",
++			__func__);
++		return -EINVAL;
++	}
+ 
+ 	rsp_buf = kzalloc(cold_rst->rsp_len, GFP_DMA | GFP_KERNEL);
+ 	if (!rsp_buf)
+@@ -159,6 +167,7 @@
+ 	if (!cold_reset_arg)
+ 		return -ENOMEM;
+ 
++	mutex_lock(&nfc_dev->write_mutex);
+ 	ret = copy_struct_from_user(cold_reset_arg,
+ 				sizeof(struct ese_cold_reset_arg),
+ 				u64_to_user_ptr(ioctl_arg.buf),
+@@ -324,11 +333,18 @@
+ 		pr_debug("ese cmd is %d\n", cold_reset_arg->sub_cmd);
+ 
+ 	ret = nfc_dev->cold_reset.status;
++
+ err:
+-	kfree(nfc_dev->cold_reset.cmd_buf);
+-	kfree(cold_reset_arg);
+-	cold_reset_arg = NULL;
+-	nfc_dev->cold_reset.cmd_buf = NULL;
++	if (nfc_dev->cold_reset.cmd_buf != NULL) {
++		kfree(nfc_dev->cold_reset.cmd_buf);
++		nfc_dev->cold_reset.cmd_buf = NULL;
++	}
++	if (cold_reset_arg != NULL) {
++		kfree(cold_reset_arg);
++		cold_reset_arg = NULL;
++	}
++
++	mutex_unlock(&nfc_dev->write_mutex);
+ 
+ 	return ret;
+ }
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
+@@ -571,6 +571,15 @@
+ 
+ 	pr_debug("%s: %d, %d\n", __func__, imajor(inode), iminor(inode));
+ 
++	/* Set flag to block freezer fake signal if not set already.
++	 * Without this Signal being set, Driver is trying to do a read
++	 * which is causing the delay in moving to Hibernate Mode.
++	 */
++	if (!(current->flags & PF_NOFREEZE)) {
++		current->flags |= PF_NOFREEZE;
++		pr_debug("%s: current->flags 0x%x.\n", __func__, current->flags);
++	}
++
+ 	mutex_lock(&nfc_dev->dev_ref_mutex);
+ 
+ 	filp->private_data = nfc_dev;
+@@ -595,6 +604,12 @@
+ 		return -ENODEV;
+ 
+ 	pr_debug("%s: %d, %d\n", __func__, imajor(inode), iminor(inode));
++
++	/* unset the flag to restore to previous state */
++	if (current->flags & PF_NOFREEZE) {
++		current->flags &= ~PF_NOFREEZE;
++		pr_debug("%s: current->flags 0x%x.\n", __func__, current->flags);
++	}
+ 
+ 	mutex_lock(&nfc_dev->dev_ref_mutex);
+ 
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
+@@ -98,7 +98,7 @@
+ 
+ int i2c_read(struct nfc_dev *nfc_dev, char *buf, size_t count, int timeout)
+ {
+-	int ret;
++	int ret = 0;
+ 	struct i2c_dev *i2c_dev = &nfc_dev->i2c_dev;
+ 	struct platform_gpio *nfc_gpio = &nfc_dev->configs.gpio;
+ 	uint16_t i = 0;
+@@ -228,12 +228,13 @@
+ 	int ret = 0;
+ 	struct nfc_dev *nfc_dev = (struct nfc_dev *)filp->private_data;
+ 
++	mutex_lock(&nfc_dev->read_mutex);
+ 	if (filp->f_flags & O_NONBLOCK) {
+-		pr_err(":f_flag has O_NONBLOCK. EAGAIN\n");
+-		return -EAGAIN;
+-	}
+-	mutex_lock(&nfc_dev->read_mutex);
+-	ret = i2c_read(nfc_dev, nfc_dev->read_kbuf, count, 0);
++		ret = i2c_master_recv(nfc_dev->i2c_dev.client, nfc_dev->read_kbuf, count);
++		pr_debug("%s: NONBLOCK read ret = %d\n", __func__, ret);
++	} else {
++		ret = i2c_read(nfc_dev, nfc_dev->read_kbuf, count, 0);
++	}
+ 	if (ret > 0) {
+ 		if (copy_to_user(buf, nfc_dev->read_kbuf, ret)) {
+ 			pr_warn("%s : failed to copy to user space\n", __func__);

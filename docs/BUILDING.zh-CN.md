@@ -155,7 +155,10 @@ python3 device/xiaomi/cupid/setup-makefiles.py --check
 ```
 
 补丁规范化两份 vendor 元数据；配套源码模块由清单中的 Klee 仓库提供，因此必须在
-完整源码同步后运行。另会对清单固定版本的 libvmmem 应用可重复检查的格式修复。
+完整源码同步后运行。准备脚本也会修复 libvmmem 的格式参数，并在
+`kernel_platform/msm-kernel` 中应用 Cupid 的 NFC 读取消和 eSE 响应处理补丁。
+全新同步的 Waipio 内核会先补齐已在 Cupid 构建中使用的驱动改动，再应用修复。
+NFC 补丁以代码上下文匹配，兼容的本地改动可以保留。
 请检查输出状态：正常应用后再次检查应显示 `already-applied`；`pending` 表示尚未应用。
 `--check` 只报告状态，出现 `pending` 时也可能返回退出码 0，不能只看退出码判断就绪。
 若提示 `ambiguous or has drift`，先比较受影响文件和补丁基线；不要强制套补丁或删除检查。

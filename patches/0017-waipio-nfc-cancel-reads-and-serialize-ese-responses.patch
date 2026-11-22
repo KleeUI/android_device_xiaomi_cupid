@@ -1,0 +1,1428 @@
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
+@@ -3,348 +3,304 @@
+  * Copyright (c) 2020-2021, The Linux Foundation. All rights reserved.
+  */
+ 
+-#include <linux/slab.h>
+ #include <linux/gpio.h>
+ #include <linux/uaccess.h>
+ #include "nfc_common.h"
+ 
+-/**
+- * send_ese_cmd() - Send eSE command to NFC controller.
+- * @nfc_dev: NFC device handle.
+- *
+- * Return: 0 on pass and negative value on failure.
++static void complete_response_locked(struct cold_reset *reset, int result)
++{
++	lockdep_assert_held(&reset->state_lock);
++
++	if (reset->waiting) {
++		reset->result = result;
++		WRITE_ONCE(reset->waiting, false);
++		wake_up_interruptible(&reset->read_wq);
++	}
++}
++
++void nfc_ese_reader_cancel_locked(struct cold_reset *reset)
++{
++	lockdep_assert_held(&reset->state_lock);
++
++	if (reset->delegated)
++		complete_response_locked(reset, -ECANCELED);
++}
++
++void nfc_ese_ven_reset(struct nfc_dev *nfc_dev)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	complete_response_locked(reset, -ECANCELED);
++	/* VEN low discarded any response still queued by the controller. */
++	reset->response_expected = false;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++}
++
++/*
++ * Claim a response while holding read_mutex. A late reply for a cancelled
++ * request still belongs to the driver. Keep the OID reserved until the frame
++ * has been consumed or VEN low has cleared the controller's receive queue.
+  */
+-static int send_ese_cmd(struct nfc_dev *nfc_dev)
+-{
++bool nfc_ese_consume_response(struct nfc_dev *nfc_dev, const char *buf,
++			     size_t count, u64 ven_epoch)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++	size_t received, payload_len, remaining;
++	int ret = -EPROTO;
++	bool drained = false;
++	u8 status = 0;
++
++	lockdep_assert_held(&nfc_dev->read_mutex);
++	if (count < NCI_HDR_LEN || (u8)buf[0] != PROP_NCI_RSP_GID)
++		return false;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (ven_epoch != nfc_i2c_ven_epoch(nfc_dev) ||
++	    !reset->response_expected || reset->response_claimed ||
++	    (u8)buf[1] != reset->response_oid) {
++		spin_unlock_irqrestore(&reset->state_lock, flags);
++		return false;
++	}
++	reset->response_claimed = true;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++
++	received = count - NCI_HDR_LEN;
++	payload_len = (u8)buf[NCI_PAYLOAD_LEN_IDX];
++	if (received > payload_len)
++		goto complete;
++
++	if (received)
++		status = buf[NCI_HDR_LEN];
++
++	remaining = payload_len - received;
++	if (remaining) {
++		char *payload = (char *)nfc_dev->kbuf + NCI_HDR_LEN;
++
++		ret = nfc_i2c_read_epoch(nfc_dev, payload, remaining,
++					 NCI_CMD_RSP_TIMEOUT, ven_epoch);
++		if (ret < 0)
++			goto complete;
++		if (ret != remaining) {
++			ret = ret ? -EIO : -ETIMEDOUT;
++			goto complete;
++		}
++		if (!received)
++			status = payload[0];
++	}
++	drained = true;
++	ret = payload_len == COLD_RESET_RSP_LEN - NCI_HDR_LEN ?
++		status : -EPROTO;
++
++complete:
++	if (!drained && ven_epoch == nfc_i2c_ven_epoch(nfc_dev))
++		nfc_i2c_invalidate_frame(nfc_dev);
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (ven_epoch == nfc_i2c_ven_epoch(nfc_dev)) {
++		if (drained) {
++			reset->response_expected = false;
++			/*
++			 * A reply can confirm a change after the caller was
++			 * cancelled. Keep the controller's protection owner.
++			 */
++			if (!ret && reset->request.sub_cmd != ESE_COLD_RESET_DO) {
++				reset->is_crp_en =
++					reset->request.sub_cmd == ESE_COLD_RESET_PROTECT_EN;
++				reset->last_src_ese_prot = reset->is_crp_en ?
++					reset->request.src : ESE_COLD_RESET_ORIGIN_NONE;
++			}
++		}
++		complete_response_locked(reset, ret);
++	}
++	reset->response_claimed = false;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++	return true;
++}
++
++static int prepare_response(struct cold_reset *reset,
++			    const struct ese_cold_reset_arg *request, u8 oid,
++			    bool read_locked, bool *delegated)
++{
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (reset->response_expected || reset->response_claimed) {
++		ret = -EBUSY;
++	} else if (reset->reader && !reset->reader->read_enabled) {
++		ret = -ECANCELED;
++	} else if (reset->is_crp_en &&
++		   request->src != reset->last_src_ese_prot) {
++		ret = -EACCES;
++	} else if (reset->is_crp_en &&
++		   request->sub_cmd == ESE_COLD_RESET_PROTECT_EN) {
++		/* The controller already confirmed protection for this source. */
++		ret = 1;
++	} else {
++		*delegated = reset->reader || reset->is_nfc_enabled;
++		if (!*delegated && !read_locked) {
++			ret = -EAGAIN;
++		} else {
++			reset->delegated = *delegated;
++			reset->request = *request;
++			reset->response_oid = oid;
++			reset->response_expected = true;
++			WRITE_ONCE(reset->waiting, true);
++		}
++	}
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++	return ret;
++}
++
++static int finish_response(struct cold_reset *reset, int error, bool sent)
++{
++	unsigned long flags;
+ 	int ret;
+ 
+-	if (nfc_dev->nfc_state == NFC_STATE_FW_DWL) {
+-		dev_err(nfc_dev->nfc_device,
+-			"cannot send ese cmd as FW download is in-progress\n");
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (!sent)
++		reset->response_expected = false;
++	complete_response_locked(reset, error);
++	ret = reset->result;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++	return ret;
++}
++
++static int exchange_cold_reset(struct nfc_dev *nfc_dev,
++			       const struct ese_cold_reset_arg *request,
++			       size_t cmd_len)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	bool delegated, read_locked = false;
++	char *header = (char *)nfc_dev->kbuf;
++	long wait_ret;
++	int ret;
++	u64 ven_epoch;
++
++	lockdep_assert_held(&nfc_dev->write_mutex);
++	if (nfc_dev->nfc_state == NFC_STATE_FW_DWL)
+ 		return -EBUSY;
+-	}
+-	if (!gpio_get_value(nfc_dev->configs.gpio.ven)) {
+-		dev_err(nfc_dev->nfc_device,
+-				"cannot send ese cmd as NFCC powered off\n");
++	if (!gpio_get_value(nfc_dev->configs.gpio.ven))
+ 		return -ENODEV;
+-	}
+-	if (nfc_dev->cold_reset.cmd_buf == NULL)
++	if (nfc_dev->interface != PLATFORM_IF_I2C)
++		return -EOPNOTSUPP;
++
++	ret = prepare_response(reset, request, nfc_dev->write_kbuf[1],
++			       false, &delegated);
++	if (ret == -EAGAIN) {
++		if (!mutex_trylock(&nfc_dev->read_mutex))
++			return -EBUSY;
++		read_locked = true;
++		if (!nfc_i2c_read_at_frame_boundary(nfc_dev)) {
++			ret = -EBUSY;
++			goto out;
++		}
++		ret = prepare_response(reset, request, nfc_dev->write_kbuf[1],
++				       true, &delegated);
++	}
++	if (ret) {
++		if (ret == 1)
++			ret = 0;
++		goto out;
++	}
++
++	if (delegated && read_locked) {
++		mutex_unlock(&nfc_dev->read_mutex);
++		wake_up_all(&nfc_dev->read_lock_wq);
++		read_locked = false;
++	}
++
++	ven_epoch = nfc_i2c_ven_epoch(nfc_dev);
++	if (!READ_ONCE(reset->waiting)) {
++		ret = finish_response(reset, -ECANCELED, false);
++		goto out;
++	}
++
++	/* An I2C write error may still have left a command on the controller. */
++	ret = nfc_dev->nfc_write(nfc_dev, (char *)nfc_dev->write_kbuf,
++				 cmd_len, NO_RETRY);
++	if (ret != cmd_len) {
++		ret = finish_response(reset, ret < 0 ? ret : -EIO, true);
++		goto out;
++	}
++
++	if (delegated) {
++		wait_ret = wait_event_interruptible_timeout(reset->read_wq,
++			!READ_ONCE(reset->waiting),
++			msecs_to_jiffies(NCI_CMD_RSP_TIMEOUT));
++		ret = finish_response(reset,
++				      wait_ret < 0 ? wait_ret : -ETIMEDOUT,
++				      true);
++	} else {
++		ret = nfc_i2c_read_epoch(nfc_dev, header, NCI_HDR_LEN,
++					MAX_IRQ_WAIT_TIME, ven_epoch);
++		if (ret == NCI_HDR_LEN &&
++		    nfc_ese_consume_response(nfc_dev, header, ret, ven_epoch)) {
++			ret = finish_response(reset, -EIO, true);
++		} else {
++			if (ret > 0)
++				nfc_i2c_invalidate_frame(nfc_dev);
++			ret = finish_response(reset,
++					      ret < 0 ? ret : (ret ? -EIO : -ETIMEDOUT),
++					      true);
++		}
++	}
++
++out:
++	if (read_locked) {
++		mutex_unlock(&nfc_dev->read_mutex);
++		wake_up_all(&nfc_dev->read_lock_wq);
++	}
++	return ret;
++}
++
++/* Return the controller status byte, or a negative transport error. */
++int ese_cold_reset_ioctl(struct nfc_dev *nfc_dev, unsigned long arg)
++{
++	struct ese_ioctl_arg ioctl_arg;
++	struct ese_cold_reset_arg request;
++	u8 *cmd = nfc_dev->write_kbuf;
++	size_t cmd_len;
++	int ret;
++
++	if (!arg)
++		return -EINVAL;
++
++	if (copy_from_user(&ioctl_arg, (void __user *)arg,
++			   sizeof(ioctl_arg)))
+ 		return -EFAULT;
+-	ret = nfc_dev->nfc_write(nfc_dev, nfc_dev->cold_reset.cmd_buf,
+-						nfc_dev->cold_reset.cmd_len,
+-						MAX_RETRY_COUNT);
+-	if (ret <= 0)
+-		dev_err(nfc_dev->nfc_device,
+-				"%s: write failed after max retry, ret %d\n",
+-							__func__, ret);
+-
++	if (copy_from_user(&request, u64_to_user_ptr(ioctl_arg.buf),
++			   sizeof(request)))
++		return -EFAULT;
++
++	ret = mutex_lock_interruptible(&nfc_dev->write_mutex);
++	if (ret)
++		return ret;
++
++	cmd[0] = PROP_NCI_CMD_GID;
++	switch (request.sub_cmd) {
++	case ESE_COLD_RESET_DO:
++		cmd[1] = COLD_RESET_OID;
++		cmd[2] = COLD_RESET_CMD_PL_LEN;
++		cmd_len = COLD_RESET_CMD_LEN;
++		break;
++	case ESE_COLD_RESET_PROTECT_EN:
++	case ESE_COLD_RESET_PROTECT_DIS:
++		cmd[1] = COLD_RESET_PROT_OID;
++		cmd[2] = COLD_RESET_PROT_CMD_PL_LEN;
++		cmd[3] = request.sub_cmd == ESE_COLD_RESET_PROTECT_EN;
++		cmd_len = COLD_RESET_PROT_CMD_LEN;
++		break;
++	default:
++		ret = -ENOIOCTLCMD;
++		goto out;
++	}
++
++	ret = exchange_cold_reset(nfc_dev, &request, cmd_len);
++
++out:
++	mutex_unlock(&nfc_dev->write_mutex);
+ 	return ret;
+ }
+-
+-/**
+- * read_cold_reset_rsp() - Read response of the cold reset command.
+- * @nfc_dev: NFC device handle.
+- * @header:  Pointer to NCI header if it is already read.
+- *
+- * Return: 0 on pass and negative value on failure.
+- */
+-int read_cold_reset_rsp(struct nfc_dev *nfc_dev, char *header)
+-{
+-	int ret = -EPERM;
+-	struct cold_reset *cold_rst = &nfc_dev->cold_reset;
+-	char *rsp_buf = NULL;
+-
+-	if (cold_rst->rsp_len < COLD_RESET_RSP_LEN) {
+-		dev_err(nfc_dev->nfc_device,
+-			"%s: received cold reset rsp buffer length is invalid\n",
+-			__func__);
+-		return -EINVAL;
+-	}
+-
+-	rsp_buf = kzalloc(cold_rst->rsp_len, GFP_DMA | GFP_KERNEL);
+-	if (!rsp_buf)
+-		return -ENOMEM;
+-
+-	/*
+-	 * read header if NFC is disabled
+-	 * for enable case, header is read by nfc read thread(for i2c)
+-	 */
+-	if ((!cold_rst->is_nfc_enabled) &&
+-			(nfc_dev->interface == PLATFORM_IF_I2C)) {
+-		ret = i2c_master_recv(nfc_dev->i2c_dev.client, rsp_buf, NCI_HDR_LEN);
+-		if (ret <= 0) {
+-			dev_err(nfc_dev->nfc_device,
+-				"%s: failure to read cold reset rsp header\n",
+-				 __func__);
+-			ret = -EIO;
+-			goto error;
+-		}
+-		/*
+-		 * return failure, if packet is not a response packet or
+-		 * if response's OID doesn't match with the CMD's OID
+-		 */
+-		if (!(rsp_buf[0] & NCI_RSP_PKT_TYPE) ||
+-			(!cold_rst->cmd_buf) ||
+-			(rsp_buf[1] != cold_rst->cmd_buf[1])) {
+-
+-			dev_err(nfc_dev->nfc_device,
+-				"%s: - invalid cold reset response 0x%x 0x%x\n",
+-					__func__, rsp_buf[0], rsp_buf[1]);
+-			ret = -EINVAL;
+-			goto error;
+-		}
+-	} else if (header) {
+-		memcpy(rsp_buf, header, NCI_HDR_LEN);
+-	} else {
+-		dev_err(nfc_dev->nfc_device,
+-				"%s: - invalid or NULL header\n", __func__);
+-		ret = -EINVAL;
+-		goto error;
+-	}
+-
+-	if ((NCI_HDR_LEN + rsp_buf[NCI_PAYLOAD_LEN_IDX]) >
+-						cold_rst->rsp_len) {
+-		dev_err(nfc_dev->nfc_device,
+-			"%s: - no space for cold_reset resp\n", __func__);
+-		ret = -ENOMEM;
+-		goto error;
+-	}
+-
+-	if (nfc_dev->interface == PLATFORM_IF_I2C) {
+-		ret = nfc_dev->nfc_read(nfc_dev,
+-			     &rsp_buf[NCI_PAYLOAD_IDX],
+-			     rsp_buf[NCI_PAYLOAD_LEN_IDX],
+-			     NCI_CMD_RSP_TIMEOUT);
+-
+-		if (ret <= 0) {
+-			dev_err(nfc_dev->nfc_device,
+-				"%s: failure to read cold reset rsp payload\n",
+-				__func__);
+-			ret = -EIO;
+-			goto error;
+-		}
+-		ret = cold_rst->status = rsp_buf[NCI_PAYLOAD_IDX];
+-
+-		pr_debug("nfc ese rsp hdr 0x%x 0x%x 0x%x, payload byte0 0x%x\n",
+-				rsp_buf[0], rsp_buf[1], rsp_buf[2], rsp_buf[3]);
+-	}
+-
+-error:
+-	kfree(rsp_buf);
+-
+-	return ret;
+-}
+-
+-
+-/**
+- * ese_cold_reset_ioctl() - This function handles the eSE cold reset ioctls.
+- * @nfc_dev: NFC device handle.
+- * @arg: ioctl argument.
+- *
+- * Return: 0 on pass and negative value on failure.
+- */
+-
+-int ese_cold_reset_ioctl(struct nfc_dev *nfc_dev, unsigned long arg)
+-{
+-	int ret;
+-	struct ese_ioctl_arg ioctl_arg;
+-	struct ese_cold_reset_arg *cold_reset_arg = NULL;
+-
+-	if (!arg) {
+-		dev_err(nfc_dev->nfc_device, "arg is invalid\n");
+-		return -EINVAL;
+-	}
+-
+-	ret = copy_from_user((void *)&ioctl_arg, (const void *)arg,
+-						sizeof(ioctl_arg));
+-	if (ret) {
+-		dev_err(nfc_dev->nfc_device,
+-				"ese ioctl arg copy from user failed\n");
+-		return -EFAULT;
+-	}
+-
+-	cold_reset_arg = kzalloc(sizeof(struct ese_cold_reset_arg), GFP_KERNEL);
+-	if (!cold_reset_arg)
+-		return -ENOMEM;
+-
+-	mutex_lock(&nfc_dev->write_mutex);
+-	ret = copy_struct_from_user(cold_reset_arg,
+-				sizeof(struct ese_cold_reset_arg),
+-				u64_to_user_ptr(ioctl_arg.buf),
+-				sizeof(struct ese_cold_reset_arg));
+-	if (ret) {
+-		dev_err(nfc_dev->nfc_device,
+-			"ese ioctl arg buffer copy from user failed\n");
+-
+-		ret = -EFAULT;
+-		goto err;
+-	}
+-
+-	switch (cold_reset_arg->sub_cmd) {
+-
+-	case ESE_COLD_RESET_DO:
+-
+-		/*
+-		 * cold reset allowed during protection enable, only if the
+-		 * source is same as the one which enabled protection.
+-		 */
+-		if (nfc_dev->cold_reset.is_crp_en &&
+-			(cold_reset_arg->src !=
+-				nfc_dev->cold_reset.last_src_ese_prot)) {
+-			dev_err(nfc_dev->nfc_device,
+-				"cold reset from %d denied, protection is on\n",
+-				cold_reset_arg->src);
+-			ret = -EACCES;
+-			goto err;
+-		}
+-
+-		nfc_dev->cold_reset.cmd_buf = kzalloc(COLD_RESET_CMD_LEN,
+-							GFP_DMA | GFP_KERNEL);
+-		if (!nfc_dev->cold_reset.cmd_buf) {
+-			ret = -ENOMEM;
+-			goto err;
+-		}
+-
+-		nfc_dev->cold_reset.cmd_buf[0] = PROP_NCI_CMD_GID;
+-		nfc_dev->cold_reset.cmd_buf[1] = COLD_RESET_OID;
+-		nfc_dev->cold_reset.cmd_buf[2] = COLD_RESET_CMD_PL_LEN;
+-		nfc_dev->cold_reset.cmd_len = NCI_HDR_LEN +
+-						COLD_RESET_CMD_PL_LEN;
+-		nfc_dev->cold_reset.rsp_len = COLD_RESET_RSP_LEN;
+-		break;
+-
+-	case ESE_COLD_RESET_PROTECT_EN:
+-
+-		if (nfc_dev->cold_reset.is_crp_en) {
+-			if (cold_reset_arg->src !=
+-				nfc_dev->cold_reset.last_src_ese_prot) {
+-				dev_err(nfc_dev->nfc_device,
+-					"ese protection enable denied\n");
+-				ret = -EACCES;
+-				goto err;
+-			}
+-			pr_warn("ese protection already enabled\n");
+-
+-			ret = 0;
+-			/* free buffers and exit with pass */
+-			goto err;
+-		}
+-
+-	case ESE_COLD_RESET_PROTECT_DIS:
+-
+-		if (nfc_dev->cold_reset.is_crp_en &&
+-			cold_reset_arg->src !=
+-				nfc_dev->cold_reset.last_src_ese_prot) {
+-			pr_err("ese cold reset protection disable denied\n");
+-			ret = -EACCES;
+-			goto err;
+-		}
+-		nfc_dev->cold_reset.cmd_buf = kzalloc(COLD_RESET_PROT_CMD_LEN,
+-							GFP_DMA | GFP_KERNEL);
+-		if (!nfc_dev->cold_reset.cmd_buf) {
+-			ret = -ENOMEM;
+-			goto err;
+-		}
+-
+-		nfc_dev->cold_reset.cmd_buf[0] = PROP_NCI_CMD_GID;
+-		nfc_dev->cold_reset.cmd_buf[1] = COLD_RESET_PROT_OID;
+-		nfc_dev->cold_reset.cmd_buf[2] = COLD_RESET_PROT_CMD_PL_LEN;
+-		nfc_dev->cold_reset.cmd_len = NCI_HDR_LEN +
+-						COLD_RESET_PROT_CMD_PL_LEN;
+-		nfc_dev->cold_reset.rsp_len = COLD_RESET_PROT_RSP_LEN;
+-		if (cold_reset_arg->sub_cmd == ESE_COLD_RESET_PROTECT_EN)
+-			nfc_dev->cold_reset.cmd_buf[3] = 0x1;
+-		else
+-			nfc_dev->cold_reset.cmd_buf[3] = 0x0;
+-
+-		break;
+-
+-	default:
+-		pr_err("%s invalid ese ioctl sub cmd %d\n", __func__,
+-					cold_reset_arg->sub_cmd);
+-		ret = -ENOIOCTLCMD;
+-		goto err;
+-	}
+-
+-	pr_debug("nfc ese cmd hdr 0x%x 0x%x 0x%x\n",
+-				nfc_dev->cold_reset.cmd_buf[0],
+-				nfc_dev->cold_reset.cmd_buf[1],
+-				nfc_dev->cold_reset.cmd_buf[2]);
+-
+-	ret = send_ese_cmd(nfc_dev);
+-	if (ret <= 0) {
+-		pr_err("failed to send ese command\n");
+-		goto err;
+-	}
+-
+-	nfc_dev->cold_reset.rsp_pending = true;
+-
+-	/* check if NFC is enabled */
+-	if (nfc_dev->cold_reset.is_nfc_enabled) {
+-		/*
+-		 * nfc_read thread will initiate cold reset response
+-		 * and it will signal for data available
+-		 */
+-		wait_event_interruptible(nfc_dev->cold_reset.read_wq,
+-			!nfc_dev->cold_reset.rsp_pending);
+-	} else {
+-
+-		/*
+-		 * Read data as NFC read thread is not active
+-		 */
+-
+-		if (nfc_dev->interface == PLATFORM_IF_I2C) {
+-			ret =  is_nfc_data_available_for_read(nfc_dev);
+-			if (ret <= 0) {
+-				nfc_dev->nfc_disable_intr(nfc_dev);
+-				nfc_dev->cold_reset.rsp_pending = false;
+-				goto err;
+-			}
+-
+-			ret = read_cold_reset_rsp(nfc_dev, NULL);
+-			nfc_dev->cold_reset.rsp_pending = false;
+-			if (ret < 0) {
+-				pr_err("%s rsp read err\n", __func__);
+-				goto err;
+-			}
+-		} else {
+-			/*
+-			 * Enable intr as it is disabled when NFC is in disable
+-			 * state
+-			 */
+-			nfc_dev->nfc_enable_intr(nfc_dev);
+-
+-			wait_event_interruptible(
+-				nfc_dev->cold_reset.read_wq,
+-				!nfc_dev->cold_reset.rsp_pending);
+-		}
+-
+-		nfc_dev->nfc_disable_intr(nfc_dev);
+-	}
+-
+-	if (cold_reset_arg->sub_cmd == ESE_COLD_RESET_PROTECT_EN) {
+-		nfc_dev->cold_reset.is_crp_en = true;
+-		nfc_dev->cold_reset.last_src_ese_prot = cold_reset_arg->src;
+-	} else if (cold_reset_arg->sub_cmd == ESE_COLD_RESET_PROTECT_DIS) {
+-		nfc_dev->cold_reset.is_crp_en = false;
+-		nfc_dev->cold_reset.last_src_ese_prot =
+-						ESE_COLD_RESET_ORIGIN_NONE;
+-	} else
+-		pr_debug("ese cmd is %d\n", cold_reset_arg->sub_cmd);
+-
+-	ret = nfc_dev->cold_reset.status;
+-
+-err:
+-	if (nfc_dev->cold_reset.cmd_buf != NULL) {
+-		kfree(nfc_dev->cold_reset.cmd_buf);
+-		nfc_dev->cold_reset.cmd_buf = NULL;
+-	}
+-	if (cold_reset_arg != NULL) {
+-		kfree(cold_reset_arg);
+-		cold_reset_arg = NULL;
+-	}
+-
+-	mutex_unlock(&nfc_dev->write_mutex);
+-
+-	return ret;
+-}
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h
+@@ -7,6 +7,8 @@
+ #define __ESE_COLD_RESET_H
+ 
+ #include <linux/nfcinfo.h>
++#include <linux/spinlock.h>
++#include <linux/wait.h>
+ 
+ #define MAX_BUFF_SIZE 264
+ 
+@@ -57,24 +59,30 @@
+ 	__u8 type;
+ };
+ 
+-/* Features specific Parameters */
++struct nfc_dev;
++struct nfc_file_ctx;
++
+ struct cold_reset {
++	/* Protects reader registration and response ownership. */
++	spinlock_t state_lock;
+ 	wait_queue_head_t read_wq;
+-	char *cmd_buf;
+-	uint16_t cmd_len;
+-	uint16_t rsp_len;
+-	/* Source of last ese protection command */
+-	uint8_t last_src_ese_prot;
+-	uint8_t status;
+-	/* Is cold reset protection enabled */
++	struct nfc_file_ctx *reader;
++	bool is_nfc_enabled;
++	bool response_expected;
++	bool response_claimed;
++	bool waiting;
++	bool delegated;
++	u8 response_oid;
++	struct ese_cold_reset_arg request;
++	int result;
++	u8 last_src_ese_prot;
+ 	bool is_crp_en;
+-	bool rsp_pending;
+-	/* Is NFC enabled from UI */
+-	bool is_nfc_enabled;
+ };
+ 
+-struct nfc_dev;
+ int ese_cold_reset_ioctl(struct nfc_dev *nfc_dev, unsigned long arg);
+-int read_cold_reset_rsp(struct nfc_dev *nfc_dev, char *header);
++bool nfc_ese_consume_response(struct nfc_dev *nfc_dev, const char *buf,
++			     size_t count, u64 ven_epoch);
++void nfc_ese_reader_cancel_locked(struct cold_reset *reset);
++void nfc_ese_ven_reset(struct nfc_dev *nfc_dev);
+ 
+ #endif
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
+@@ -231,6 +231,7 @@
+ {
+ 	struct platform_gpio *nfc_gpio = &nfc_dev->configs.gpio;
+ 
++	mutex_lock(&nfc_dev->rx_bus_mutex);
+ 	if (gpio_get_value(nfc_gpio->ven) != value) {
+ 		pr_debug("%s: value %d\n", __func__, value);
+ 
+@@ -238,7 +239,13 @@
+ 		/* hardware dependent delay */
+ 		usleep_range(NFC_GPIO_SET_WAIT_TIME_USEC,
+ 			     NFC_GPIO_SET_WAIT_TIME_USEC + 100);
+-	}
++		if (!value && !gpio_get_value(nfc_gpio->ven)) {
++			atomic64_inc(&nfc_dev->ven_epoch);
++			nfc_ese_ven_reset(nfc_dev);
++			wake_up_all(&nfc_dev->read_wq);
++		}
++	}
++	mutex_unlock(&nfc_dev->rx_bus_mutex);
+ }
+ 
+ int configure_gpio(unsigned int gpio, int flag)
+@@ -353,13 +360,6 @@
+ 		nfc_misc_unregister(nfc_dev, count);
+ 		return -ENOMEM;
+ 	}
+-
+-	nfc_dev->cold_reset.rsp_pending = false;
+-	nfc_dev->cold_reset.is_nfc_enabled = false;
+-	nfc_dev->cold_reset.is_crp_en = false;
+-	nfc_dev->cold_reset.last_src_ese_prot = ESE_COLD_RESET_ORIGIN_NONE;
+-
+-	init_waitqueue_head(&nfc_dev->cold_reset.read_wq);
+ 
+ 	return 0;
+ }
+@@ -477,17 +477,7 @@
+ 		set_valid_gpio(nfc_gpio->dwl_req, 0);
+ 		nfc_dev->nfc_state = NFC_STATE_NCI;
+ 
+-	} else if (arg == NFC_ENABLE) {
+-		/*
+-		 * Setting flag true when NFC is enabled
+-		 */
+-		nfc_dev->cold_reset.is_nfc_enabled = true;
+-	} else if (arg == NFC_DISABLE) {
+-		/*
+-		 * Setting flag true when NFC is disabled
+-		 */
+-		nfc_dev->cold_reset.is_nfc_enabled = false;
+-	}  else {
++	} else {
+ 		pr_err("%s bad arg %lu\n", __func__, arg);
+ 		ret = -ENOIOCTLCMD;
+ 	}
+@@ -501,15 +491,55 @@
+  *
+  * Check the NFC Chipset and firmware version details
+  */
+-unsigned int nfc_ioctl_nfcc_info(struct file *filp, unsigned long arg)
+-{
+-	unsigned int r = 0;
+-	struct nfc_dev *nfc_dev = filp->private_data;
+-
+-	r = nfc_dev->nqx_info.i;
++static unsigned int nfc_ioctl_nfcc_info(struct nfc_dev *nfc_dev)
++{
++	unsigned int r = nfc_dev->nqx_info.i;
+ 	pr_debug("nfc : %s r = 0x%x\n", __func__, r);
+ 
+ 	return r;
++}
++
++static void nfc_set_legacy_reader(struct nfc_dev *nfc_dev, bool enabled)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	reset->is_nfc_enabled = enabled;
++	if (!enabled && !reset->reader)
++		nfc_ese_reader_cancel_locked(reset);
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++}
++
++static int nfc_set_read_pending(struct nfc_file_ctx *ctx, unsigned long arg)
++{
++	struct nfc_dev *nfc_dev = ctx->nfc_dev;
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++	int ret = 0;
++
++	if (arg > 1)
++		return -EINVAL;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (!arg) {
++		ctx->read_enabled = false;
++		ctx->read_epoch = ++nfc_dev->next_read_epoch;
++		if (reset->reader == ctx)
++			nfc_ese_reader_cancel_locked(reset);
++	} else if (reset->reader && reset->reader != ctx) {
++		ret = -EBUSY;
++	} else {
++		reset->reader = ctx;
++		ctx->read_enabled = true;
++	}
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++
++	if (!ret) {
++		wake_up_all(&nfc_dev->read_wq);
++		wake_up_all(&nfc_dev->read_lock_wq);
++	}
++	return ret;
+ }
+ 
+ /** @brief   IOCTL function  to be used to set or get data from upper layer.
+@@ -522,29 +552,46 @@
+  */
+ long nfc_dev_ioctl(struct file *pfile, unsigned int cmd, unsigned long arg)
+ {
++	struct nfc_file_ctx *ctx = pfile->private_data;
++	struct nfc_dev *nfc_dev;
+ 	int ret = 0;
+-	struct nfc_dev *nfc_dev = pfile->private_data;
+-
+-	if (!nfc_dev)
++
++	if (!ctx)
+ 		return -ENODEV;
++	nfc_dev = ctx->nfc_dev;
+ 
+ 	pr_debug("%s cmd = %x arg = %zx\n", __func__, cmd, arg);
+ 
+ 	switch (cmd) {
+ 	case NFC_SET_PWR:
++		if (arg == NFC_ENABLE || arg == NFC_DISABLE) {
++			nfc_set_legacy_reader(nfc_dev, arg == NFC_ENABLE);
++			break;
++		}
++		ret = mutex_lock_interruptible(&nfc_dev->write_mutex);
++		if (ret)
++			return ret;
+ 		ret = nfc_ioctl_power_states(nfc_dev, arg);
++		mutex_unlock(&nfc_dev->write_mutex);
+ 		break;
+ 	case ESE_SET_PWR:
++		ret = mutex_lock_interruptible(&nfc_dev->write_mutex);
++		if (ret)
++			return ret;
+ 		ret = nfc_ese_pwr(nfc_dev, arg);
++		mutex_unlock(&nfc_dev->write_mutex);
+ 		break;
+ 	case ESE_GET_PWR:
+ 		ret = nfc_ese_pwr(nfc_dev, ESE_POWER_STATE);
+ 		break;
+ 	case NFCC_GET_INFO:
+-		ret = nfc_ioctl_nfcc_info(pfile, arg);
++		ret = nfc_ioctl_nfcc_info(nfc_dev);
+ 		break;
+ 	case NFC_GET_PLATFORM_TYPE:
+ 		ret = nfc_dev->interface;
++		break;
++	case NFC_SET_RESET_READ_PENDING:
++		ret = nfc_set_read_pending(ctx, arg);
+ 		break;
+ 	case ESE_COLD_RESET:
+ 		pr_debug("nfc ese cold reset ioctl\n");
+@@ -565,9 +612,18 @@
+ {
+ 	struct nfc_dev *nfc_dev = container_of(inode->i_cdev,
+ 					struct nfc_dev, c_dev);
+-
+-	if (!nfc_dev)
+-		return -ENODEV;
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	struct nfc_file_ctx *ctx;
++	unsigned long flags;
++
++	ctx = kzalloc(sizeof(*ctx), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++	ctx->nfc_dev = nfc_dev;
++	ctx->read_enabled = true;
++	spin_lock_irqsave(&reset->state_lock, flags);
++	ctx->read_epoch = ++nfc_dev->next_read_epoch;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
+ 
+ 	pr_debug("%s: %d, %d\n", __func__, imajor(inode), iminor(inode));
+ 
+@@ -582,7 +638,7 @@
+ 
+ 	mutex_lock(&nfc_dev->dev_ref_mutex);
+ 
+-	filp->private_data = nfc_dev;
++	filp->private_data = ctx;
+ 
+ 	if (nfc_dev->dev_ref_count == 0) {
+ 		set_valid_gpio(nfc_dev->configs.gpio.dwl_req, 0);
+@@ -597,11 +653,22 @@
+ 
+ int nfc_dev_close(struct inode *inode, struct file *filp)
+ {
+-	struct nfc_dev *nfc_dev = container_of(inode->i_cdev,
+-					struct nfc_dev, c_dev);
+-
+-	if (!nfc_dev)
++	struct nfc_file_ctx *ctx = filp->private_data;
++	struct nfc_dev *nfc_dev;
++	struct cold_reset *reset;
++	unsigned long flags;
++
++	if (!ctx)
+ 		return -ENODEV;
++	nfc_dev = ctx->nfc_dev;
++	reset = &nfc_dev->cold_reset;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (reset->reader == ctx) {
++		reset->reader = NULL;
++		nfc_ese_reader_cancel_locked(reset);
++	}
++	spin_unlock_irqrestore(&reset->state_lock, flags);
+ 
+ 	pr_debug("%s: %d, %d\n", __func__, imajor(inode), iminor(inode));
+ 
+@@ -624,20 +691,9 @@
+ 	filp->private_data = NULL;
+ 
+ 	mutex_unlock(&nfc_dev->dev_ref_mutex);
++	kfree(ctx);
+ 
+ 	return 0;
+-}
+-
+-int is_nfc_data_available_for_read(struct nfc_dev *nfc_dev)
+-{
+-	int ret;
+-
+-	nfc_dev->nfc_enable_intr(nfc_dev);
+-
+-	ret = wait_event_interruptible_timeout(nfc_dev->read_wq,
+-			!nfc_dev->i2c_dev.irq_enabled,
+-			msecs_to_jiffies(MAX_IRQ_WAIT_TIME));
+-	return ret;
+ }
+ 
+ /**
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h
+@@ -42,6 +42,7 @@
+ #include <linux/regulator/consumer.h>
+ #include <linux/ipc_logging.h>
+ #include "nfc_i2c_drv.h"
++#include <linux/atomic.h>
+ #include "ese_cold_reset.h"
+ 
+ // Max device count for this driver
+@@ -152,6 +153,8 @@
+ #define ESE_SET_PWR		_IOW(NFC_MAGIC, 0x02, unsigned int)
+ #define ESE_GET_PWR		_IOR(NFC_MAGIC, 0x03, unsigned int)
+ #define NFC_GET_PLATFORM_TYPE	_IO(NFC_MAGIC, 0x04)
++/* The NXP HAL passes 0 or 1 by value. */
++#define NFC_SET_RESET_READ_PENDING _IOW(NFC_MAGIC, 0x04, unsigned int)
+ 
+ /* NFC HAL can call this ioctl to get the current IRQ state */
+ #define NFC_GET_IRQ_STATE      _IO(NFC_MAGIC, 0x06)
+@@ -280,10 +283,27 @@
+ 	CHIP_UNKNOWN = 0xFF,
+ };
+ 
++/* Read state is protected by cold_reset.state_lock. */
++struct nfc_file_ctx {
++	struct nfc_dev *nfc_dev;
++	u64 read_epoch;
++	bool read_enabled;
++};
++
+ /* Device specific structure */
+ struct nfc_dev {
+ 	wait_queue_head_t read_wq;
++	wait_queue_head_t read_lock_wq;
+ 	struct mutex read_mutex;
++	/* Serialize each I2C receive with hardware power transitions. */
++	struct mutex rx_bus_mutex;
++	atomic64_t ven_epoch;
++	u64 next_read_epoch;
++	/* Frame state is protected by read_mutex. */
++	u64 frame_ven_epoch;
++	u64 frame_read_epoch;
++	unsigned int frame_remaining;
++	bool frame_invalid;
+ 	struct mutex write_mutex;
+ 	uint8_t *read_kbuf;
+ 	uint8_t *write_kbuf;
+@@ -338,7 +358,11 @@
+ int nfc_ldo_config(struct device *dev, struct nfc_dev *nfc_dev);
+ int nfc_ldo_vote(struct nfc_dev *nfc_dev);
+ int nfc_ldo_unvote(struct nfc_dev *nfc_dev);
+-int is_nfc_data_available_for_read(struct nfc_dev *nfc_dev);
++u64 nfc_i2c_ven_epoch(struct nfc_dev *nfc_dev);
++bool nfc_i2c_read_at_frame_boundary(struct nfc_dev *nfc_dev);
++void nfc_i2c_invalidate_frame(struct nfc_dev *nfc_dev);
++int nfc_i2c_read_epoch(struct nfc_dev *nfc_dev, char *buf, size_t count,
++		       int timeout, u64 ven_epoch);
+ int validate_nfc_state_nci(struct nfc_dev *nfc_dev);
+ void set_nfcc_state_from_rsp(struct nfc_dev *dev, const char *buf,
+ 				const int count);
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
+@@ -96,94 +96,139 @@
+ 	return IRQ_HANDLED;
+ }
+ 
++u64 nfc_i2c_ven_epoch(struct nfc_dev *nfc_dev)
++{
++	return atomic64_read(&nfc_dev->ven_epoch);
++}
++
++static int nfc_check_read(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
++			  u64 epoch)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++	int ret = 0;
++
++	if (!ctx)
++		return 0;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (!ctx->read_enabled || ctx->read_epoch != epoch)
++		ret = -ECANCELED;
++	else if (reset->reader && reset->reader != ctx &&
++		 reset->reader->read_enabled)
++		ret = -EBUSY;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++	return ret;
++}
++
++static bool nfc_read_ready(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
++			   u64 epoch, u64 ven_epoch)
++{
++	return !READ_ONCE(nfc_dev->i2c_dev.irq_enabled) ||
++	       gpio_get_value(nfc_dev->configs.gpio.irq) ||
++	       nfc_i2c_ven_epoch(nfc_dev) != ven_epoch ||
++	       nfc_check_read(nfc_dev, ctx, epoch);
++}
++
++static int nfc_i2c_recv(struct nfc_dev *nfc_dev, char *buf, size_t count,
++			int timeout, struct nfc_file_ctx *ctx, u64 epoch,
++			u64 ven_epoch, bool nonblock)
++{
++	struct platform_gpio *gpio = &nfc_dev->configs.gpio;
++	unsigned long deadline = jiffies + msecs_to_jiffies(timeout);
++	unsigned long now;
++	long waited;
++	int ret;
++	unsigned int i;
++
++	count = min_t(size_t, count, MAX_BUFFER_SIZE);
++	if (!count)
++		return 0;
++
++	while (!nonblock && !gpio_get_value(gpio->irq)) {
++		ret = nfc_check_read(nfc_dev, ctx, epoch);
++		if (ret)
++			return ret;
++		if (nfc_i2c_ven_epoch(nfc_dev) != ven_epoch ||
++		    !gpio_get_value(gpio->ven))
++			return -EIO;
++
++		i2c_enable_irq(nfc_dev);
++		if (timeout) {
++			now = jiffies;
++			waited = time_before(now, deadline) ?
++				wait_event_interruptible_timeout(nfc_dev->read_wq,
++					nfc_read_ready(nfc_dev, ctx, epoch, ven_epoch),
++					deadline - now) : 0;
++		} else {
++			waited = wait_event_interruptible(nfc_dev->read_wq,
++					nfc_read_ready(nfc_dev, ctx, epoch, ven_epoch));
++		}
++		i2c_disable_irq(nfc_dev);
++		if (waited < 0 || (timeout && !waited))
++			return waited;
++	}
++
++	mutex_lock(&nfc_dev->rx_bus_mutex);
++	ret = nfc_check_read(nfc_dev, ctx, epoch);
++	if (!ret) {
++		if (nfc_i2c_ven_epoch(nfc_dev) != ven_epoch ||
++		    (!nonblock && !gpio_get_value(gpio->ven))) {
++			ret = -EIO;
++		} else {
++			memset(buf, 0, count);
++			ret = i2c_master_recv(nfc_dev->i2c_dev.client, buf, count);
++		}
++	}
++	mutex_unlock(&nfc_dev->rx_bus_mutex);
++
++	NFCLOG_IPC(nfc_dev, false, "%s of %zu bytes, ret %d", __func__, count, ret);
++	for (i = 0; ret > 0 && i < GET_IPCLOG_MAX_PKT_LEN(ret); i++)
++		NFCLOG_IPC(nfc_dev, false, " %02x", buf[i]);
++	return ret;
++}
++
++int nfc_i2c_read_epoch(struct nfc_dev *nfc_dev, char *buf, size_t count,
++		       int timeout, u64 ven_epoch)
++{
++	return nfc_i2c_recv(nfc_dev, buf, count,
++			    min(timeout, NCI_CMD_RSP_TIMEOUT),
++			    NULL, 0, ven_epoch, false);
++}
++
+ int i2c_read(struct nfc_dev *nfc_dev, char *buf, size_t count, int timeout)
+ {
+-	int ret = 0;
+-	struct i2c_dev *i2c_dev = &nfc_dev->i2c_dev;
+-	struct platform_gpio *nfc_gpio = &nfc_dev->configs.gpio;
+-	uint16_t i = 0;
+-	uint16_t disp_len = GET_IPCLOG_MAX_PKT_LEN(count);
+-
+-	pr_debug("%s : reading %zu bytes.\n", __func__, count);
+-
+-	if (timeout > NCI_CMD_RSP_TIMEOUT)
+-		timeout = NCI_CMD_RSP_TIMEOUT;
+-
+-	if (count > MAX_BUFFER_SIZE)
+-		count = MAX_BUFFER_SIZE;
+-
+-	if (!gpio_get_value(nfc_gpio->irq)) {
+-		while (1) {
+-			ret = 0;
+-			if (!i2c_dev->irq_enabled) {
+-				i2c_dev->irq_enabled = true;
+-				enable_irq(i2c_dev->client->irq);
+-			}
+-			if (!gpio_get_value(nfc_gpio->irq)) {
+-				if (timeout) {
+-					ret = wait_event_interruptible_timeout(nfc_dev->read_wq,
+-						 !i2c_dev->irq_enabled, msecs_to_jiffies(timeout));
+-
+-					if (ret <= 0) {
+-						pr_err("%s timeout/error in read\n", __func__);
+-						goto err;
+-					}
+-				} else {
+-					ret = wait_event_interruptible(nfc_dev->read_wq,
+-						!i2c_dev->irq_enabled);
+-					if (ret) {
+-						pr_err("%s error wakeup of read wq\n", __func__);
+-						ret = -EINTR;
+-						goto err;
+-					}
+-				}
+-			}
+-			i2c_disable_irq(nfc_dev);
+-
+-			if (gpio_get_value(nfc_gpio->irq))
+-				break;
+-			if (!gpio_get_value(nfc_gpio->ven)) {
+-				pr_info("%s: releasing read\n", __func__);
+-				ret = -EIO;
+-				goto err;
+-			}
+-			pr_warn("%s: spurious interrupt detected\n", __func__);
+-		}
+-	}
+-
+-	memset(buf, 0x00, count);
+-	/* Read data */
+-	ret = i2c_master_recv(nfc_dev->i2c_dev.client, buf, count);
+-	NFCLOG_IPC(nfc_dev, false, "%s of %d bytes, ret %d", __func__, count,
+-								ret);
+-	if (ret <= 0) {
+-		pr_err("%s: returned %d\n", __func__, ret);
+-		goto err;
+-	}
+-
+-	for (i = 0; i < disp_len; i++)
+-		NFCLOG_IPC(nfc_dev, false, " %02x", buf[i]);
+-
+-	/* check if it's response of cold reset command
+-	 * NFC HAL process shouldn't receive this data as
+-	 * command was esepowermanager
+-	 */
+-	if (nfc_dev->cold_reset.rsp_pending && nfc_dev->cold_reset.cmd_buf
+-		&& (buf[0] == PROP_NCI_RSP_GID)
+-		&& (buf[1] == nfc_dev->cold_reset.cmd_buf[1])) {
+-		read_cold_reset_rsp(nfc_dev, buf);
+-		nfc_dev->cold_reset.rsp_pending = false;
+-		wake_up_interruptible(&nfc_dev->cold_reset.read_wq);
+-		/*
+-		 * NFC process doesn't know about cold reset command
+-		 * being sent as it was initiated by eSE process
+-		 * we shouldn't return any data to NFC process
+-		 */
+-		return 0;
+-	}
+-
+-err:
+-	return ret;
++	return nfc_i2c_read_epoch(nfc_dev, buf, count, timeout,
++				  nfc_i2c_ven_epoch(nfc_dev));
++}
++
++bool nfc_i2c_read_at_frame_boundary(struct nfc_dev *nfc_dev)
++{
++	u64 epoch = nfc_i2c_ven_epoch(nfc_dev);
++
++	lockdep_assert_held(&nfc_dev->read_mutex);
++	if (nfc_dev->frame_ven_epoch != epoch) {
++		nfc_dev->frame_ven_epoch = epoch;
++		nfc_dev->frame_invalid = false;
++		nfc_dev->frame_remaining = 0;
++	}
++	return !nfc_dev->frame_invalid && !nfc_dev->frame_remaining;
++}
++
++void nfc_i2c_invalidate_frame(struct nfc_dev *nfc_dev)
++{
++	lockdep_assert_held(&nfc_dev->read_mutex);
++	nfc_dev->frame_invalid = true;
++}
++
++static bool nfc_try_read_lock(struct nfc_dev *nfc_dev,
++			      struct nfc_file_ctx *ctx, u64 epoch,
++			      bool *locked)
++{
++	if (nfc_check_read(nfc_dev, ctx, epoch))
++		return true;
++	*locked = mutex_trylock(&nfc_dev->read_mutex);
++	return *locked;
+ }
+ 
+ int i2c_write(struct nfc_dev *nfc_dev, const char *buf, size_t count,
+@@ -222,26 +267,114 @@
+ 	return ret;
+ }
+ 
++static int nfc_i2c_read_frame(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
++			      u64 epoch, size_t count, bool nonblock)
++{
++	u64 ven_epoch = nfc_i2c_ven_epoch(nfc_dev);
++	char *buf = nfc_dev->read_kbuf;
++	bool at_boundary = nfc_i2c_read_at_frame_boundary(nfc_dev);
++	bool nci = READ_ONCE(nfc_dev->nfc_state) == NFC_STATE_NCI;
++	unsigned int remaining;
++	int ret;
++	int tail;
++	bool raw_flush = nonblock && count > NCI_HDR_LEN &&
++			 !READ_ONCE(nfc_dev->cold_reset.reader);
++
++	/* An unregistered bulk reader must not consume a pending eSE reply. */
++	if (raw_flush && (READ_ONCE(nfc_dev->cold_reset.response_expected) ||
++			  READ_ONCE(nfc_dev->cold_reset.is_nfc_enabled)))
++		return -EBUSY;
++
++	if (nci && !at_boundary &&
++	    (nfc_dev->frame_invalid || nfc_dev->frame_read_epoch != epoch ||
++	     count > nfc_dev->frame_remaining))
++		return -EIO;
++
++	ret = nfc_i2c_recv(nfc_dev, buf, count, 0, ctx, epoch, ven_epoch, nonblock);
++	if (ret <= 0 || !nci)
++		return ret;
++
++	/* An accepted I2C read owns its bytes even if RESET races its return. */
++	if (!at_boundary) {
++		if (ret > nfc_dev->frame_remaining) {
++			nfc_i2c_invalidate_frame(nfc_dev);
++			return -EPROTO;
++		}
++		nfc_dev->frame_remaining -= ret;
++		return ret;
++	}
++
++	/* The legacy nonblocking flush consumes raw bytes before SET. */
++	if (raw_flush)
++		return ret;
++
++	if (ret < NCI_HDR_LEN && count >= NCI_HDR_LEN && !nonblock) {
++		tail = nfc_i2c_read_epoch(nfc_dev, buf + ret, NCI_HDR_LEN - ret,
++					  NCI_CMD_RSP_TIMEOUT, ven_epoch);
++		if (tail == NCI_HDR_LEN - ret)
++			ret += tail;
++	}
++	if (ret < NCI_HDR_LEN) {
++		nfc_i2c_invalidate_frame(nfc_dev);
++		return -EPROTO;
++	}
++
++	if (nfc_ese_consume_response(nfc_dev, buf, ret, ven_epoch))
++		return 0;
++
++	remaining = (u8)buf[NCI_PAYLOAD_LEN_IDX];
++	if (ret - NCI_HDR_LEN > remaining) {
++		nfc_i2c_invalidate_frame(nfc_dev);
++		return -EPROTO;
++	}
++	nfc_dev->frame_remaining = remaining - (ret - NCI_HDR_LEN);
++	nfc_dev->frame_read_epoch = epoch;
++	return ret;
++}
++
+ ssize_t nfc_i2c_dev_read(struct file *filp, char __user *buf,
+ 			 size_t count, loff_t *offset)
+ {
+-	int ret = 0;
+-	struct nfc_dev *nfc_dev = (struct nfc_dev *)filp->private_data;
+-
+-	mutex_lock(&nfc_dev->read_mutex);
+-	if (filp->f_flags & O_NONBLOCK) {
+-		ret = i2c_master_recv(nfc_dev->i2c_dev.client, nfc_dev->read_kbuf, count);
+-		pr_debug("%s: NONBLOCK read ret = %d\n", __func__, ret);
++	struct nfc_file_ctx *ctx = filp->private_data;
++	struct nfc_dev *nfc_dev = ctx->nfc_dev;
++	unsigned long flags;
++	bool locked = false;
++	bool nonblock = filp->f_flags & O_NONBLOCK;
++	u64 epoch;
++	int ret;
++
++	count = min_t(size_t, count, MAX_BUFFER_SIZE);
++	if (!count)
++		return 0;
++
++	spin_lock_irqsave(&nfc_dev->cold_reset.state_lock, flags);
++	epoch = ctx->read_epoch;
++	spin_unlock_irqrestore(&nfc_dev->cold_reset.state_lock, flags);
++
++	if (nonblock) {
++		ret = nfc_check_read(nfc_dev, ctx, epoch);
++		if (ret)
++			return ret;
++		if (!mutex_trylock(&nfc_dev->read_mutex))
++			return -EAGAIN;
+ 	} else {
+-		ret = i2c_read(nfc_dev, nfc_dev->read_kbuf, count, 0);
+-	}
+-	if (ret > 0) {
+-		if (copy_to_user(buf, nfc_dev->read_kbuf, ret)) {
+-			pr_warn("%s : failed to copy to user space\n", __func__);
+-			ret = -EFAULT;
+-		}
+-	}
++		ret = wait_event_interruptible(nfc_dev->read_lock_wq,
++				nfc_try_read_lock(nfc_dev, ctx, epoch, &locked));
++		if (ret)
++			return ret;
++		if (!locked)
++			return nfc_check_read(nfc_dev, ctx, epoch) ?: -ECANCELED;
++	}
++
++	ret = nfc_i2c_read_frame(nfc_dev, ctx, epoch, count, nonblock);
++	if (ret > 0 && copy_to_user(buf, nfc_dev->read_kbuf, ret)) {
++		if (nfc_dev->frame_remaining)
++			nfc_i2c_invalidate_frame(nfc_dev);
++		ret = -EFAULT;
++	}
++
+ 	mutex_unlock(&nfc_dev->read_mutex);
++	wake_up_all(&nfc_dev->read_lock_wq);
+ 	return ret;
+ }
+ 
+@@ -249,7 +382,11 @@
+ 			  size_t count, loff_t *offset)
+ {
+ 	int ret;
+-	struct nfc_dev *nfc_dev = (struct nfc_dev *)filp->private_data;
++	struct nfc_file_ctx *ctx = filp->private_data;
++	struct nfc_dev *nfc_dev = ctx->nfc_dev;
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++	bool reserved;
+ 
+ 	if (count > MAX_DL_BUFFER_SIZE)
+ 		count = MAX_DL_BUFFER_SIZE;
+@@ -263,7 +400,19 @@
+ 		mutex_unlock(&nfc_dev->write_mutex);
+ 		return -EFAULT;
+ 	}
+-	ret = i2c_write(nfc_dev, nfc_dev->write_kbuf, count, NO_RETRY);
++	/*
++	 * A delayed eSE reply has the same OID as a new HAL command.
++	 * Keep the OID reserved until the old response has been drained.
++	 */
++	spin_lock_irqsave(&reset->state_lock, flags);
++	reserved = count >= NCI_HDR_LEN &&
++		   nfc_dev->write_kbuf[0] == PROP_NCI_CMD_GID &&
++		   reset->response_expected &&
++		   nfc_dev->write_kbuf[1] == reset->response_oid;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++
++	ret = reserved ? -EBUSY :
++		i2c_write(nfc_dev, nfc_dev->write_kbuf, count, NO_RETRY);
+ 	mutex_unlock(&nfc_dev->write_mutex);
+ 	return ret;
+ }
+@@ -357,7 +506,13 @@
+ 
+ 	/* init mutex and queues */
+ 	init_waitqueue_head(&nfc_dev->read_wq);
++	init_waitqueue_head(&nfc_dev->read_lock_wq);
++	init_waitqueue_head(&nfc_dev->cold_reset.read_wq);
++	spin_lock_init(&nfc_dev->cold_reset.state_lock);
++	nfc_dev->cold_reset.last_src_ese_prot = ESE_COLD_RESET_ORIGIN_NONE;
++	atomic64_set(&nfc_dev->ven_epoch, 0);
+ 	mutex_init(&nfc_dev->read_mutex);
++	mutex_init(&nfc_dev->rx_bus_mutex);
+ 	mutex_init(&nfc_dev->write_mutex);
+ 	mutex_init(&nfc_dev->dev_ref_mutex);
+ 	spin_lock_init(&i2c_dev->irq_enabled_lock);
+@@ -410,6 +565,7 @@
+ err_mutex_destroy:
+ 	mutex_destroy(&nfc_dev->dev_ref_mutex);
+ 	mutex_destroy(&nfc_dev->read_mutex);
++	mutex_destroy(&nfc_dev->rx_bus_mutex);
+ 	mutex_destroy(&nfc_dev->write_mutex);
+ 	gpio_free(nfc_gpio->clkreq);
+ err_free_dwl_req:
+@@ -460,6 +616,7 @@
+ 	nfc_misc_unregister(nfc_dev, DEV_COUNT);
+ 	mutex_destroy(&nfc_dev->dev_ref_mutex);
+ 	mutex_destroy(&nfc_dev->read_mutex);
++	mutex_destroy(&nfc_dev->rx_bus_mutex);
+ 	mutex_destroy(&nfc_dev->write_mutex);
+ 
+ 	if (gpio_is_valid(nfc_dev->configs.gpio.clkreq))
