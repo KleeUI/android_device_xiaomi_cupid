@@ -1,0 +1,10 @@
+cc_binary {
+    name: "klee-qcril-socket-perms",
+    vendor: true,
+    srcs: ["socket_permission_watcher.cpp"],
+    init_rc: ["klee-qcril-socket-perms.rc"],
+    shared_libs: ["liblog"],
+    cpp_std: "c++17",
+    stl: "libc++_static",
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

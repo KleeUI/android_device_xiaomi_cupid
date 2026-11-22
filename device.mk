@@ -270,6 +270,7 @@ PRODUCT_PACKAGES += \
     gnss@2.0-xtra-daemon.policy \
     gnss@2.0-xtwifi-client.policy \
     gps.conf \
+    klee-qcril-socket-perms \
     libgnss \
     libgps.utils \
     libloc_core \

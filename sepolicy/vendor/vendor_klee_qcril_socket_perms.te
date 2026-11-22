@@ -1,0 +1,27 @@
+# A radio-owned helper for the two private qcrild pathname sockets.
+type vendor_klee_qcril_socket_perms, domain;
+type vendor_klee_qcril_socket_perms_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(vendor_klee_qcril_socket_perms)
+
+# Traverse /dev/socket only. Do not list/watch or change its entries generally.
+allow vendor_klee_qcril_socket_perms socket_device:dir search;
+
+# The existing qcrild directory/type is retained. No directory mutations.
+allow vendor_klee_qcril_socket_perms vendor_rild_socket:dir { getattr search open read watch };
+allow vendor_klee_qcril_socket_perms vendor_rild_socket:sock_file { getattr setattr };
+
+# Own O_PATH descriptors are used to pin the exact inode during chmod. These
+# self-only /proc links do not grant access to other processes' descriptors.
+allow vendor_klee_qcril_socket_perms proc:dir search;
+allow vendor_klee_qcril_socket_perms self:dir { getattr search };
+allow vendor_klee_qcril_socket_perms self:lnk_file { getattr read };
+
+# Normal diagnostic output, not permission to read/filter producer/client logs.
+unix_socket_send(vendor_klee_qcril_socket_perms, logdw, logd)
+
+# Explicit invariant; no DAC override, owner override, or UID changes.
+neverallow vendor_klee_qcril_socket_perms self:capability { chown dac_override dac_read_search fowner fsetid setuid setgid };
+
+# inotify anonymous-inode/runtime library accesses may already be covered by
+# platform domain rules. Verify the compiled policy and actual AVCs; do not
+# add blanket file, proc, domain, capability or socket permissions to hide gaps.

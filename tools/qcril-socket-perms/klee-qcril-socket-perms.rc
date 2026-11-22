@@ -1,0 +1,9 @@
+# Does not reorder or restart GNSS/qcrild.
+service vendor.klee-qcril-socket-perms /vendor/bin/klee-qcril-socket-perms
+    class main
+    user radio
+    group radio
+    restart_period 5
+
+# No root, capabilities, permissive domain, oneshot chmod, or global umask.
+# Missing qcrild directory is handled by the daemon's bounded periodic checks.
