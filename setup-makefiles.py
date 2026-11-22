@@ -5,12 +5,13 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Normalize already-generated Cupid vendor metadata for Klee/AOSP 17."""
+"""Prepare the Cupid build from merged or legacy vendor inputs."""
 
 import argparse
 from pathlib import Path
 
-from tools.klee_vendor import apply_vendor_patches, find_android_root, print_results
+from tools.klee_vendor import find_android_root, print_results
+from tools.klee_vendor_merge import prepare_vendor_tree
 
 
 def main() -> None:
@@ -23,7 +24,7 @@ def main() -> None:
 
     device_dir = Path(__file__).resolve().parent
     top = args.top.resolve() if args.top else find_android_root(device_dir)
-    print_results(apply_vendor_patches(top, device_dir, check_only=args.check))
+    print_results(prepare_vendor_tree(top, device_dir, check_only=args.check))
 
 
 if __name__ == "__main__":

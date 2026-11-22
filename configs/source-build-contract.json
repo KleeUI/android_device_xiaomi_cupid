@@ -298,8 +298,7 @@
     }
   ],
   "vendor_metadata": [
-    "vendor/xiaomi/cupid/Android.bp",
-    "vendor/xiaomi/sm8450-common/Android.bp"
+    "vendor/xiaomi/cupid/Android.bp"
   ],
   "required_proprietary_inputs": [
     {

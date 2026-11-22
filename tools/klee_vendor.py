@@ -44,10 +44,12 @@ PATCH_NAMES = (
 # Independent source fixes may already be applied to an existing full checkout.
 NFC_BASELINE_PATCH = "0016-waipio-nfc-align-driver-baseline.patch"
 NFC_FIX_PATCH = "0017-waipio-nfc-cancel-reads-and-serialize-ese-responses.patch"
+NFC_TRANSITION_PATCH = "0019-waipio-nfc-preserve-fw-transition-reads.patch"
 SOURCE_PATCH_NAMES = (
     "0015-libvmmem-use-size-t-format.patch",
     NFC_FIX_PATCH,
 )
+MERGED_VENDOR_SOURCE_PATCH_NAMES = ("0018-location-cupid-vendor-namespace.patch",)
 
 REQUIRED_VENDOR_FILES = (
     "vendor/xiaomi/cupid/Android.bp",
@@ -255,24 +257,29 @@ def _apply_patch(
     return _run(command, top)
 
 
-def _source_patch_files() -> tuple[str, ...]:
-    if NFC_FIX_PATCH in SOURCE_PATCH_NAMES:
-        return (*SOURCE_PATCH_NAMES, NFC_BASELINE_PATCH)
-    return SOURCE_PATCH_NAMES
+def _source_patch_files(patch_names: tuple[str, ...] | None = None) -> tuple[str, ...]:
+    names = SOURCE_PATCH_NAMES if patch_names is None else patch_names
+    if NFC_FIX_PATCH in names:
+        return (*names, NFC_BASELINE_PATCH, NFC_TRANSITION_PATCH)
+    return names
 
 
 def _nfc_source_patches(top: Path, device_dir: Path) -> tuple[str, ...]:
-    fix = (NFC_FIX_PATCH,)
-    stack = (NFC_BASELINE_PATCH, NFC_FIX_PATCH)
+    fixes = (NFC_FIX_PATCH, NFC_TRANSITION_PATCH)
+    stack = (NFC_BASELINE_PATCH, *fixes)
     matching = [
         pending
-        for patches, reverse, pending in ((stack, False, stack), (fix, False, fix), (fix, True, ()))
+        for patches, reverse, pending in ((stack, False, stack), (fixes, False, fixes), (fixes, True, ()))
         if _probe_patch_stack(top, device_dir, reverse=reverse, patch_names=patches)
     ]
+    if _probe_patch_stack(top, device_dir, reverse=True, patch_names=(NFC_FIX_PATCH,)) and _probe_patch_stack(
+        top, device_dir, reverse=False, patch_names=(NFC_TRANSITION_PATCH,)
+    ):
+        matching.append((NFC_TRANSITION_PATCH,))
     if len(matching) == 1:
         return matching[0]
     raise VendorPreparationError(
-        f"source compatibility patch is ambiguous or has drift: {NFC_FIX_PATCH}"
+        f"NFC source patches are ambiguous or have drift: {NFC_FIX_PATCH}, {NFC_TRANSITION_PATCH}"
     )
 
 
@@ -416,6 +423,55 @@ def _normalize_audio_filegroup(top: Path, *, check_only: bool) -> tuple[str, str
     return ("cupid_audioadsprpcd_blob", "removed")
 
 
+def _source_patch_states(
+    top: Path, device_dir: Path, patch_names: tuple[str, ...]
+) -> list[tuple[str, tuple[str, ...]]]:
+    states = []
+    for patch in _source_patch_files(patch_names):
+        if not (device_dir / "patches" / patch).is_file():
+            raise VendorPreparationError(f"missing source patch: {patch}")
+    for name in patch_names:
+        if name == NFC_FIX_PATCH:
+            states.append((name, _nfc_source_patches(top, device_dir)))
+            continue
+        pending = _probe_patch_stack(top, device_dir, reverse=False, patch_names=(name,))
+        applied = _probe_patch_stack(top, device_dir, reverse=True, patch_names=(name,))
+        if pending == applied:
+            raise VendorPreparationError(
+                f"source compatibility patch has drift or missing input: {name}"
+            )
+        states.append((name, (name,) if pending else ()))
+    return states
+
+
+def _apply_source_patch_states(
+    top: Path, device_dir: Path, states: list[tuple[str, tuple[str, ...]]], *, check_only: bool
+) -> list[tuple[str, str]]:
+    results = []
+    for name, pending in states:
+        if not pending:
+            results.append((name, "already-applied"))
+        elif check_only:
+            results.append((name, "pending"))
+        else:
+            for patch_file in pending:
+                result = _apply_patch(top, device_dir / "patches" / patch_file, reverse=False)
+                if result.returncode:
+                    raise VendorPreparationError(
+                        f"failed to apply {patch_file}:\n{result.stdout.rstrip()}"
+                    )
+            results.append((name, "applied"))
+    return results
+
+
+def apply_source_patches(
+    top: Path, device_dir: Path, *, check_only: bool = False
+) -> list[tuple[str, str]]:
+    names = (*SOURCE_PATCH_NAMES, *MERGED_VENDOR_SOURCE_PATCH_NAMES)
+    states = _source_patch_states(top, device_dir, names)
+    return _apply_source_patch_states(top, device_dir, states, check_only=check_only)
+
+
 def apply_vendor_patches(
     top: Path, device_dir: Path, *, check_only: bool = False
 ) -> list[tuple[str, str]]:
@@ -470,20 +526,7 @@ def apply_vendor_patches(
             "regenerate vendor metadata or review the tree manually"
         )
 
-    source_states: list[tuple[str, tuple[str, ...]]] = []
-    for name in SOURCE_PATCH_NAMES:
-        if name == NFC_FIX_PATCH:
-            source_states.append((name, _nfc_source_patches(top, device_dir)))
-            continue
-        pending = _probe_patch_stack(top, device_dir, reverse=False, patch_names=(name,))
-        applied = _probe_patch_stack(
-            top, device_dir, reverse=True, patch_names=(name,)
-        )
-        if pending == applied:
-            raise VendorPreparationError(
-                f"source compatibility patch has drift or missing input: {name}"
-            )
-        source_states.append((name, (name,) if pending else ()))
+    source_states = _source_patch_states(top, device_dir, SOURCE_PATCH_NAMES)
 
     # Preflight the independent filegroup before any persistent writes as well.
     _normalize_audio_filegroup(top, check_only=True)
@@ -503,19 +546,7 @@ def apply_vendor_patches(
                 f"failed to apply {name}:\n{result.stdout.rstrip()}"
             )
         results.append((name, "applied"))
-    for name, pending in source_states:
-        if not pending:
-            results.append((name, "already-applied"))
-        elif check_only:
-            results.append((name, "pending"))
-        else:
-            for patch_file in pending:
-                result = _apply_patch(top, device_dir / "patches" / patch_file, reverse=False)
-                if result.returncode:
-                    raise VendorPreparationError(
-                        f"failed to apply {patch_file}:\n{result.stdout.rstrip()}"
-                    )
-            results.append((name, "applied"))
+    results.extend(_apply_source_patch_states(top, device_dir, source_states, check_only=check_only))
     results.append(_normalize_audio_filegroup(top, check_only=check_only))
     return results
 

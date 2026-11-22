@@ -40,23 +40,32 @@ also requires their complete, independently audited stock inventories.
 
 ## Proprietary input workflow
 
-First populate `vendor/xiaomi/cupid` and `vendor/xiaomi/sm8450-common` from an
-authorized source. To copy Klee's Cupid delta from mounted stock partitions and
-normalize the generated metadata in one command, run:
+Keep both prepared Xiaomi vendor inputs under a separate Android-shaped
+directory. Each input includes its proprietary files and Klee-normalized
+build metadata. Use Cupid's extractor to assemble `vendor/xiaomi/cupid` in the
+build checkout:
 
 ```bash
 python3 device/xiaomi/cupid/extract-files.py \
-    --source /path/to/mounted-stock
+    --prepared-vendor /path/to/prepared-inputs
 ```
 
-The source directory must contain partition-relative paths such as
-`vendor/etc/acdbdata/...`. A rooted, matching Cupid can be used instead:
+When upgrading an existing build tree, move its `vendor/xiaomi/cupid` and
+`vendor/xiaomi/sm8450-common` directories to the prepared input root. Also move
+the legacy `device/xiaomi/sm8450-common` directory out of the build checkout
+if it contains the standalone `WfdCommon` definition. Cupid now owns that
+definition and reads the JAR from its merged proprietary inputs.
+
+The existing `--source` and `--adb` modes extract the Cupid-specific delta.
+Use the prepared input root as `--top` and skip setup for a normalized input
+tree, then run `--prepared-vendor` again:
 
 ```bash
-python3 device/xiaomi/cupid/extract-files.py --adb
+python3 device/xiaomi/cupid/extract-files.py \
+    --top /path/to/prepared-inputs --source /path/to/mounted-stock --no-setup
 ```
 
-Metadata normalization can be run independently and is idempotent:
+Run setup separately to check the merged metadata and apply the source patches:
 
 ```bash
 python3 device/xiaomi/cupid/setup-makefiles.py
@@ -82,11 +91,9 @@ repo init -u https://github.com/KleeUI/android.git \
 repo sync -c --no-clone-bundle --no-tags -j4
 ```
 
-The manifest supplies the kernel, device trees, and external module sources,
-but it does **not** supply the complete `vendor/xiaomi/cupid` and
-`vendor/xiaomi/sm8450-common` proprietary inputs. Prepare those inputs and the
-device delta as described above and in the [full guide](docs/BUILDING.zh-CN.md).
-Normalize the supported metadata baseline before selecting the product:
+The manifest supplies the kernel, device trees, and external module sources.
+Prepare and merge the Xiaomi proprietary inputs as described above and in the
+[full guide](docs/BUILDING.zh-CN.md). Check setup before selecting the product:
 
 ```bash
 python3 device/xiaomi/cupid/setup-makefiles.py

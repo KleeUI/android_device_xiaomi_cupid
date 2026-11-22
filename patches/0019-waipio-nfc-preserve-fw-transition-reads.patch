@@ -1,0 +1,185 @@
+diff --git a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
+index 7e2afc4..afcd075 100644
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.c
+@@ -35,6 +35,7 @@ void nfc_ese_ven_reset(struct nfc_dev *nfc_dev)
+ 	complete_response_locked(reset, -ECANCELED);
+ 	/* VEN low discarded any response still queued by the controller. */
+ 	reset->response_expected = false;
++	reset->short_frame = false;
+ 	spin_unlock_irqrestore(&reset->state_lock, flags);
+ }
+ 
+@@ -127,7 +128,7 @@ static int prepare_response(struct cold_reset *reset,
+ 	int ret = 0;
+ 
+ 	spin_lock_irqsave(&reset->state_lock, flags);
+-	if (reset->response_expected || reset->response_claimed) {
++	if (reset->response_expected || reset->response_claimed || reset->short_frame) {
+ 		ret = -EBUSY;
+ 	} else if (reset->reader && !reset->reader->read_enabled) {
+ 		ret = -ECANCELED;
+diff --git a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h
+index a87af5d..a4b8887 100644
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/ese_cold_reset.h
+@@ -70,6 +70,7 @@ struct cold_reset {
+ 	bool is_nfc_enabled;
+ 	bool response_expected;
+ 	bool response_claimed;
++	bool short_frame;
+ 	bool waiting;
+ 	bool delegated;
+ 	u8 response_oid;
+diff --git a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
+index e2d1b4a..9df9f1c 100644
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.c
+@@ -622,7 +622,8 @@ int nfc_dev_open(struct inode *inode, struct file *filp)
+ 	ctx->nfc_dev = nfc_dev;
+ 	ctx->read_enabled = true;
+ 	spin_lock_irqsave(&reset->state_lock, flags);
+-	ctx->read_epoch = ++nfc_dev->next_read_epoch;
++	ctx->open_epoch = ++nfc_dev->next_read_epoch;
++	ctx->read_epoch = ctx->open_epoch;
+ 	spin_unlock_irqrestore(&reset->state_lock, flags);
+ 
+ 	pr_debug("%s: %d, %d\n", __func__, imajor(inode), iminor(inode));
+diff --git a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h
+index 61a0b57..008c8e7 100644
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_common.h
+@@ -286,6 +286,7 @@ enum chip_types {
+ /* Read state is protected by cold_reset.state_lock. */
+ struct nfc_file_ctx {
+ 	struct nfc_dev *nfc_dev;
++	u64 open_epoch;
+ 	u64 read_epoch;
+ 	bool read_enabled;
+ };
+@@ -302,8 +303,10 @@ struct nfc_dev {
+ 	/* Frame state is protected by read_mutex. */
+ 	u64 frame_ven_epoch;
+ 	u64 frame_read_epoch;
++	u64 frame_open_epoch;
+ 	unsigned int frame_remaining;
+ 	bool frame_invalid;
++	bool frame_needs_length;
+ 	struct mutex write_mutex;
+ 	uint8_t *read_kbuf;
+ 	uint8_t *write_kbuf;
+diff --git a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
+index 512eda1..0285af2 100644
+--- a/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
++++ b/kernel_platform/msm-kernel/drivers/nfc/qti/nfc_i2c_drv.c
+@@ -211,6 +211,8 @@ bool nfc_i2c_read_at_frame_boundary(struct nfc_dev *nfc_dev)
+ 		nfc_dev->frame_ven_epoch = epoch;
+ 		nfc_dev->frame_invalid = false;
+ 		nfc_dev->frame_remaining = 0;
++		nfc_dev->frame_needs_length = false;
++		nfc_dev->frame_open_epoch = 0;
+ 	}
+ 	return !nfc_dev->frame_invalid && !nfc_dev->frame_remaining;
+ }
+@@ -267,6 +269,34 @@ int i2c_write(struct nfc_dev *nfc_dev, const char *buf, size_t count,
+ 	return ret;
+ }
+ 
++static int nfc_begin_short_frame(struct nfc_dev *nfc_dev, u64 ven_epoch)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++	int ret = 0;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (nfc_i2c_ven_epoch(nfc_dev) != ven_epoch)
++		ret = -EIO;
++	else if (reset->response_expected || reset->response_claimed)
++		ret = -EBUSY;
++	else
++		reset->short_frame = true;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++	return ret;
++}
++
++static void nfc_end_short_frame(struct nfc_dev *nfc_dev, u64 ven_epoch)
++{
++	struct cold_reset *reset = &nfc_dev->cold_reset;
++	unsigned long flags;
++
++	spin_lock_irqsave(&reset->state_lock, flags);
++	if (nfc_i2c_ven_epoch(nfc_dev) == ven_epoch)
++		reset->short_frame = false;
++	spin_unlock_irqrestore(&reset->state_lock, flags);
++}
++
+ static int nfc_i2c_read_frame(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
+ 			      u64 epoch, size_t count, bool nonblock)
+ {
+@@ -274,6 +304,10 @@ static int nfc_i2c_read_frame(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
+ 	char *buf = nfc_dev->read_kbuf;
+ 	bool at_boundary = nfc_i2c_read_at_frame_boundary(nfc_dev);
+ 	bool nci = READ_ONCE(nfc_dev->nfc_state) == NFC_STATE_NCI;
++	bool short_header = nci && at_boundary && !nonblock && count == FW_HDR_LEN;
++	bool short_continuation = nci && nfc_dev->frame_open_epoch;
++	bool same_reader = short_continuation ? nfc_dev->frame_open_epoch == ctx->open_epoch :
++					       nfc_dev->frame_read_epoch == epoch;
+ 	unsigned int remaining;
+ 	int ret;
+ 	int tail;
+@@ -286,13 +320,23 @@ static int nfc_i2c_read_frame(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
+ 		return -EBUSY;
+ 
+ 	if (nci && !at_boundary &&
+-	    (nfc_dev->frame_invalid || nfc_dev->frame_read_epoch != epoch ||
++	    (nfc_dev->frame_invalid || !same_reader ||
+ 	     count > nfc_dev->frame_remaining))
+ 		return -EIO;
+ 
++	/* The HAL can send a download reset after lowering the download GPIO. */
++	if (short_header) {
++		ret = nfc_begin_short_frame(nfc_dev, ven_epoch);
++		if (ret)
++			return ret;
++	}
+ 	ret = nfc_i2c_recv(nfc_dev, buf, count, 0, ctx, epoch, ven_epoch, nonblock);
++	if (short_header && ret <= 0)
++		nfc_end_short_frame(nfc_dev, ven_epoch);
+ 	if (ret <= 0 || !nci)
+ 		return ret;
++	if ((short_header || short_continuation) && nfc_i2c_ven_epoch(nfc_dev) != ven_epoch)
++		return -EIO;
+ 
+ 	/* An accepted I2C read owns its bytes even if RESET races its return. */
+ 	if (!at_boundary) {
+@@ -300,7 +344,29 @@ static int nfc_i2c_read_frame(struct nfc_dev *nfc_dev, struct nfc_file_ctx *ctx,
+ 			nfc_i2c_invalidate_frame(nfc_dev);
+ 			return -EPROTO;
+ 		}
+-		nfc_dev->frame_remaining -= ret;
++		if (nfc_dev->frame_needs_length) {
++			nfc_dev->frame_remaining = (u8)buf[0];
++			nfc_dev->frame_needs_length = false;
++		} else {
++			nfc_dev->frame_remaining -= ret;
++		}
++		if (!nfc_dev->frame_remaining && short_continuation) {
++			nfc_dev->frame_open_epoch = 0;
++			nfc_end_short_frame(nfc_dev, ven_epoch);
++		}
++		return ret;
++	}
++
++	if (short_header && ret == FW_HDR_LEN) {
++		/*
++		 * In download mode a nonzero first byte tells the HAL that
++		 * it has received the start of a normal NCI header instead.
++		 * Keep the continuation with that file across READ_PENDING reset.
++		 */
++		nfc_dev->frame_needs_length = (u8)buf[0] != 0;
++		nfc_dev->frame_remaining = nfc_dev->frame_needs_length ?
++			NCI_HDR_LEN - FW_HDR_LEN : (u8)buf[1] + FW_CRC_LEN;
++		nfc_dev->frame_open_epoch = ctx->open_epoch;
+ 		return ret;
+ 	}
+ 

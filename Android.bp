@@ -4,6 +4,12 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 
+// Register the WFD runtime JAR as a global framework module.
+dex_import {
+    name: "WfdCommon",
+    jars: ["//vendor/xiaomi/cupid:cupid_wfd_common_jar"],
+}
+
 // Cupid launched with Android S FCM level 6 and its stock 5.10.81 kernel.
 // Android 17 no longer installs the legacy level-6 framework matrix globally,
 // so keep the device-specific compatibility fragment here.  The module adds

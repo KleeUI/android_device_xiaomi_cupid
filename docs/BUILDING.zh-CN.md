@@ -16,7 +16,7 @@
 | `device/xiaomi/cupid/` | 本设备的产品、分区、DTS、模块加载和 SELinux 配置 |
 | `kernel_platform/` | 清单指定的 Waipio GKI 内核源码及工具 |
 | `vendor/qcom/opensource/` | Qualcomm HAL 与外部内核模块源码 |
-| `vendor/xiaomi/cupid/`、`vendor/xiaomi/sm8450-common/` | 需另行准备的完整专有输入 |
+| `vendor/xiaomi/cupid/` | Cupid 抓取脚本合并后生成的专有输入 |
 
 **公开清单加本仓库的提取脚本，目前不足以从零重建两份完整专有输入。**
 `proprietary-files.txt` 仅记录 Cupid 设备差量；没有完整 vendor 输入时，应先补齐，
@@ -102,7 +102,8 @@ source-policy 校验只检查清单来源与固定版本策略，不会验证每
 
 ## 4. 准备完整专有输入和设备差量
 
-先从你有权使用、且与当前设备集成匹配的来源准备以下目录及其全部依赖文件：
+在构建源码树之外准备一个独立目录，存放与当前设备集成匹配的 Klee vendor 输入、
+规范化后的元数据及其全部依赖文件：
 
 ```text
 vendor/xiaomi/cupid/Android.bp
@@ -113,28 +114,38 @@ vendor/xiaomi/sm8450-common/sm8450-common-vendor.mk
 vendor/xiaomi/sm8450-common/proprietary/...
 ```
 
-这两份完整 vendor tree 不在当前 Waipio 清单中；清单中的
-`vendor/xiaomi/sm8450-qcril` 也不能代替它们。当前仓库没有可据此编写的完整公开
-生成命令，因此这里不提供未经核实的 blob 仓库地址。请保留输入来源、版本、文件摘要
-和许可证记录；只有上述几个元数据文件存在，也不等于所有专有文件都已齐全。
+这两份完整输入需自行准备。保留各文件的固件来源、版本、摘要和许可证记录。
+公共文件涉及多套固件和已修补的文件，当前可验证的起点是此前正常构建的完整
+Klee vendor 目录。升级旧源码树时，把旧的两个 vendor 目录移到独立输入目录下的
+对应路径。如果构建树仍有提供 `WfdCommon` 的旧 `device/xiaomi/sm8450-common` 目录，
+也将它移出构建树。Cupid 的设备配置现在从合并后的 vendor 输入读取该 JAR。
 
-完整输入准备好后，再提取设备差量。以下两种方式任选一种。
-
-### 从解包或挂载后的固件目录提取
-
-将下面示例路径替换为实际目录。其下应有 `vendor/etc/...`、`vendor/bin/...` 等
-分区相对路径，而不是直接传入 OTA ZIP 或原始 `.img`：
+从 Android 源码根目录运行统一入口：
 
 ```bash
 python3 device/xiaomi/cupid/extract-files.py \
-  --source /path/to/mounted-stock
+  --prepared-vendor /path/to/prepared-inputs
+```
+
+脚本在构建树中生成 `vendor/xiaomi/cupid`，同时保留原始输入目录。独立的
+`vendor/xiaomi/sm8450-qcril` 继续由清单提供。
+
+### 从解包或挂载后的固件目录提取
+
+如果需要刷新 Cupid 设备差量，可以在合并前从挂载目录提取。该目录应包含
+`vendor/etc/...`、`vendor/bin/...` 等分区相对路径：
+
+```bash
+python3 device/xiaomi/cupid/extract-files.py \
+  --top /path/to/prepared-inputs --source /path/to/mounted-stock --no-setup
 ```
 
 ### 从能访问对应文件的匹配设备提取
 
 ```bash
 adb devices
-python3 device/xiaomi/cupid/extract-files.py --adb
+python3 device/xiaomi/cupid/extract-files.py \
+  --top /path/to/prepared-inputs --adb --no-setup
 ```
 
 多台设备连接时，给提取命令增加 `--serial` 并指定实际 ADB 序列号。
@@ -145,17 +156,17 @@ python3 device/xiaomi/cupid/extract-files.py --adb
 `OS3.0.4.0.VLCMIXM`。另一个 `OS3.0.3.0.VLCCNXM` DTB 摘要文件仅作外部对照，
 两者用途不同，不应当作可随意混搭固件的依据。
 
-### 规范化元数据
+### 检查合并产物和源码补丁
 
-提取器默认会调用同一套规范化逻辑；已有差量文件时也可单独执行：
+更新差量后重新运行 `--prepared-vendor`。合并脚本默认准备配套源码，也可单独执行：
 
 ```bash
 python3 device/xiaomi/cupid/setup-makefiles.py
 python3 device/xiaomi/cupid/setup-makefiles.py --check
 ```
 
-补丁规范化两份 vendor 元数据；配套源码模块由清单中的 Klee 仓库提供，因此必须在
-完整源码同步后运行。准备脚本也会修复 libvmmem 的格式参数，并在
+准备脚本检查合并后的 vendor 元数据，并将 GNSS 适配器的 QMI 依赖指向 Cupid。
+完整源码同步后运行该脚本。脚本也会修复 libvmmem 的格式参数，并在
 `kernel_platform/msm-kernel` 中应用 Cupid 的 NFC 读取消和 eSE 响应处理补丁。
 全新同步的 Waipio 内核会先补齐已在 Cupid 构建中使用的驱动改动，再应用修复。
 NFC 补丁以代码上下文匹配，兼容的本地改动可以保留。

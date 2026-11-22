@@ -5,23 +5,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Extract Klee's small Cupid delta inventory from stock firmware or ADB."""
+"""Prepare merged Cupid vendor inputs or extract the stock Cupid delta."""
 
 import argparse
 from pathlib import Path
 
 from tools.klee_vendor import (
+    apply_source_patches,
     apply_vendor_patches,
     extract_inventory,
     find_android_root,
     print_results,
 )
+from tools.klee_vendor_merge import MERGE_RECEIPT, merge_vendor_inputs
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--top", type=Path, help="Android source root")
-    source = parser.add_mutually_exclusive_group()
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument(
+        "--prepared-vendor",
+        type=Path,
+        help="separate Android root containing both prepared Xiaomi vendor trees",
+    )
     source.add_argument(
         "--source",
         type=Path,
@@ -35,14 +42,22 @@ def main() -> None:
     parser.add_argument(
         "--no-setup",
         action="store_true",
-        help="do not normalize generated vendor metadata after extraction",
+        help="skip source patches and legacy vendor normalization",
     )
     args = parser.parse_args()
-    if not args.source and not args.adb:
-        parser.error("one of --source or --adb is required")
 
     device_dir = Path(__file__).resolve().parent
     top = args.top.resolve() if args.top else find_android_root(device_dir)
+    if args.prepared_vendor:
+        if not args.no_setup:
+            apply_source_patches(top, device_dir, check_only=True)
+        print_results(merge_vendor_inputs(top, args.prepared_vendor.resolve(), device_dir))
+        if not args.no_setup:
+            print_results(apply_source_patches(top, device_dir))
+        return
+
+    if (top / "vendor/xiaomi/cupid" / MERGE_RECEIPT).exists():
+        parser.error("update the delta in the prepared inputs, then rerun --prepared-vendor")
     print_results(
         extract_inventory(
             top,
