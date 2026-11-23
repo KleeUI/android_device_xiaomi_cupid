@@ -161,6 +161,22 @@ install_symlink {
     symlink_target: "/mnt/vendor/persist/qca6490/wlan_mac.bin",
 }
 
+// The qca_cld3 driver requests its chip-specific firmware namespace. Keep the
+// legacy qca_cld/qca6490 aliases above for consumers that use that contract.
+install_symlink {
+    name: "cupid_qca6490_wifi_config_cld3",
+    vendor: true,
+    installed_location: "firmware/wlan/qca_cld/qca_cld3_qca6490/WCNSS_qcom_cfg.ini",
+    symlink_target: "/vendor/etc/wifi/qca6490/WCNSS_qcom_cfg.ini",
+}
+
+install_symlink {
+    name: "cupid_qca6490_wlan_mac_cld3",
+    vendor: true,
+    installed_location: "firmware/wlan/qca_cld/qca_cld3_qca6490/wlan_mac.bin",
+    symlink_target: "/mnt/vendor/persist/qca6490/wlan_mac.bin",
+}
+
 // Build the maintained loader while keeping the ABI-matched Xiaomi listener.
 cc_binary {
     name: "cupid_audioadsprpcd",

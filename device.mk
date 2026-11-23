@@ -28,6 +28,12 @@ PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/configs/audio/usecaseKvManager.xml:vendor/etc/usecaseKvManager.xml \
     $(DEVICE_PATH)/configs/audio/sku_taro/resourcemanager_waipio_mtp.xml:vendor/etc/audio/sku_taro/resourcemanager_waipio_mtp.xml
 
+# Use Cupid-specific init and WLAN input before inherited Qualcomm copies.
+# IPA firmware is loaded by the driver after SMMU probe; do not create /dev/ipa.
+PRODUCT_COPY_FILES += \
+    $(DEVICE_PATH)/rootdir/etc/init/ipa_fws.rc:$(TARGET_COPY_OUT_VENDOR)/etc/init/ipa_fws.rc \
+    $(DEVICE_PATH)/configs/wifi/WCNSS_qcom_cfg_qca6490.ini:$(TARGET_COPY_OUT_VENDOR)/etc/wifi/qca6490/WCNSS_qcom_cfg.ini
+
 BOARD_AVB_ENABLE := true
 
 # Cupid's proprietary CamX and Adreno userspace consume Qualcomm's gralloc4
@@ -137,6 +143,8 @@ _cupid_qcom_kernel_product_defs :=
 
 include device/qcom/wlan/taro/wlan.mk
 
+$(call inherit-product, $(DEVICE_PATH)/configs/nfc/cupid-nfc.mk)
+
 # Build a complete Klee product.
 PRODUCT_BUILD_SYSTEM_IMAGE := true
 PRODUCT_BUILD_SYSTEM_EXT_IMAGE := true
@@ -151,6 +159,13 @@ PRODUCT_BUILD_VBMETA_IMAGE := true
 PRODUCT_BUILD_SUPER_PARTITION := true
 TARGET_SKIP_OTA_PACKAGE := false
 
+# Select the fail-closed Cupid fastboot policy in both system/build.prop and
+# Recovery's concatenated prop.default. This does not authorize fastbootd
+# flashing without readable boot-control snapshot state. The reviewed root
+# Recovery writer is the deployment route while the Recovery boot HAL is absent.
+PRODUCT_SYSTEM_PROPERTIES += \
+    ro.klee.fastboot.preserve_state=true
+
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
 PRODUCT_ENFORCE_RRO_TARGETS := *
 PRODUCT_SHIPPING_API_LEVEL := 32
@@ -159,7 +174,7 @@ BOARD_SHIPPING_API_LEVEL := 31
 PRODUCT_COPY_FILES += \
     $(DEVICE_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR_RAMDISK)/first_stage_ramdisk/fstab.qcom \
     $(DEVICE_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_VENDOR)/etc/fstab.qcom \
-    $(DEVICE_PATH)/rootdir/etc/fstab.qcom:$(TARGET_COPY_OUT_RECOVERY)/root/first_stage_ramdisk/fstab.qcom \
+    $(DEVICE_PATH)/recovery.first_stage.fstab.qcom:$(TARGET_COPY_OUT_RECOVERY)/root/first_stage_ramdisk/fstab.qcom \
     $(DEVICE_PATH)/recovery.posix.fstab:$(TARGET_COPY_OUT_RECOVERY)/root/system/etc/fstab \
     vendor/xiaomi/cupid/proprietary/vendor/firmware/st_fts_l3.ftb:$(TARGET_COPY_OUT_RECOVERY)/root/lib/firmware/st_fts_l3.ftb \
     vendor/xiaomi/cupid/proprietary/vendor/firmware/stm_fts_production_limits.csv:$(TARGET_COPY_OUT_RECOVERY)/root/lib/firmware/stm_fts_production_limits.csv \
@@ -254,6 +269,10 @@ PRODUCT_PACKAGES += \
     cupid_rfs_apq_gnss_readwrite \
     cupid_rfs_apq_gnss_shared
 
+# Cupid deploys AIDL4 with the frozen backend; legacy HIDL modules
+# are not compatible with this product backend or declared in VINTF.
+QCOM_GNSS_AIDL_ONLY := true
+
 # Build the public IGnss binder service and its platform glue from Qualcomm's
 # open location tree. The service intentionally loads the stock
 # vendor.qti.gnss-service.so plugin for Cupid's private QTI extension, so that
@@ -296,6 +315,8 @@ PRODUCT_COPY_FILES += \
 # AOSP 17 clients load the stable Mapper5 entry point. Package Klee's Mapper5
 # compatibility bridge explicitly; Qualcomm's generic display fragment omits
 # it whenever TARGET_QTI_GRALLOC4_COMPAT is enabled.
+# Keep the normal Android boot-control HAL. Its Recovery variant initializes
+# misc directly and must remain absent from this state-preserving Recovery.
 PRODUCT_PACKAGES += \
     CupidFrameworksResOverlay \
     cupid_audioadsprpcd \
@@ -303,7 +324,6 @@ PRODUCT_PACKAGES += \
     android.hardware.audio.parameter_parser.example_service \
     android.hardware.bluetooth.audio-impl \
     android.hardware.boot-service.qti \
-    android.hardware.boot-service.qti.recovery \
     android.hardware.sensors-service.multihal \
     android.hardware.security.rkp-V3-ndk.vendor \
     android.hardware.thermal-service.qti \
@@ -321,7 +341,9 @@ PRODUCT_PACKAGES += \
     cupid_qca6490_m3_firmware \
     cupid_qca6490_regdb_firmware \
     cupid_qca6490_wifi_config \
+    cupid_qca6490_wifi_config_cld3 \
     cupid_qca6490_wlan_mac \
+    cupid_qca6490_wlan_mac_cld3 \
     cupid_vm_system_mountpoint \
     fastbootd \
     hostapd \
@@ -418,3 +440,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES := $(filter-out %.ko,$(PRODUCT_PACKAGES))
 PRODUCT_PACKAGES_DEBUG := $(filter-out %.ko,$(PRODUCT_PACKAGES_DEBUG))
 PRODUCT_PACKAGES_ENG := $(filter-out %.ko,$(PRODUCT_PACKAGES_ENG))
+
+# Read-only graph gate; init retains the original camera HAL execution.
+PRODUCT_PACKAGES += klee-camera-provider-ready

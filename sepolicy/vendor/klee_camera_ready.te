@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0
+# Review draft r2: init launches the unchanged HAL; this helper never execs it.
+type klee_camera_ready, domain;
+type klee_camera_ready_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(klee_camera_ready)
+
+# The implementation generates fixed /dev/mediaN paths; it does not readdir /dev.
+allow klee_camera_ready device:dir { getattr search };
+allow klee_camera_ready video_device:chr_file { getattr open read ioctl };
+allowxperm klee_camera_ready video_device:chr_file ioctl { 0x7c00 0x7c01 };
+
+# This is the only property the helper implementation may set.
+set_prop(klee_camera_ready, vendor_klee_camera_ready_prop)
+
+# Guard the helper itself; retain the platform's existing HAL neverallows.
+# Existing generic vendor-file policy grants execute; without execute_no_trans
+# or a permitted process transition it does not provide an effective exec path.
+neverallow klee_camera_ready hal_camera_default_exec:file { execute_no_trans entrypoint };
+neverallow klee_camera_ready hal_camera_default:process { transition dyntransition };
+neverallow klee_camera_ready video_device:chr_file { write append create setattr relabelto relabelfrom unlink rename link };
+neverallow klee_camera_ready camera_device:chr_file { open read write ioctl };
+neverallowxperm klee_camera_ready video_device:chr_file ioctl ~{ 0x7c00 0x7c01 };
+neverallow klee_camera_ready { property_type -vendor_klee_camera_ready_prop }:property_service set;
+neverallow klee_camera_ready hwservice_manager_type:hwservice_manager add;
+neverallow klee_camera_ready service_manager_type:service_manager add;
+
+# Existing trusted init/vendor_init generic setters remain. The existing debug
+# su domain is not newly granted anything; its prior permissive status is kept.
+neverallow {
+    domain
+    -init
+    -vendor_init
+    -klee_camera_ready
+    userdebug_or_eng(`-su')
+} vendor_klee_camera_ready_prop:property_service set;
+neverallow {
+    domain
+    -init
+    -vendor_init
+    userdebug_or_eng(`-su')
+} vendor_klee_camera_control_prop:property_service set;

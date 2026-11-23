@@ -82,15 +82,26 @@ TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 # Partition geometry measured from a retail Xiaomi 12.
 BOARD_BOOTIMAGE_PARTITION_SIZE := 201326592
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
+# Batteryfix02: bind system_ext image geometry to the fresh A-slot capacity.
+BOARD_SYSTEM_EXTIMAGE_PARTITION_SIZE := 224325632
+# Preserve the raw ext4 inode budget measured from audited batteryfix01.
+BOARD_SYSTEM_EXTIMAGE_EXTFS_INODE_COUNT := 480
+# Match the current A-slot logical capacities. system_b has one extra 4096-byte
+# block; the smaller geometry lets the generated images fit either slot.
+# Reserve filesystem, AVB hashtree and FEC space inside these sizes before signing.
+BOARD_SYSTEMIMAGE_PARTITION_SIZE := 1081323520
+BOARD_ODMIMAGE_PARTITION_SIZE := 1769472
+# Fixed partition sizes bypass build_image's dynamic inode tuning. Keep the
+# audited original inode budgets for the complete current system and ODM trees.
+BOARD_SYSTEMIMAGE_EXTFS_INODE_COUNT := 3584
+BOARD_ODMIMAGE_EXTFS_INODE_COUNT := 32
 # cupid's vendor_a slot is 469307 4096-byte blocks. Declare the exact capacity
 # before mkfs/AVB generation so build_image computes a fitting tree and FEC
 # layout instead of producing an image that must be resized after the fact.
 BOARD_VENDORIMAGE_PARTITION_SIZE := 1922281472
-# Match the existing logical slot without dropping source-built modules.
-# The read-only module tree uses about 407 inodes; retain headroom without
-# allocating ext4's default thousands of unused inodes in this small image.
+# Keep the measured logical slot size. Compress the read-only source-built
+# module tree with the same LZ4 profile as vendor; no LP resize is needed.
 BOARD_VENDOR_DLKMIMAGE_PARTITION_SIZE := 95768576
-BOARD_VENDOR_DLKMIMAGE_EXTFS_INODE_COUNT := 512
 BOARD_DTBOIMG_PARTITION_SIZE := 25165824
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 104857600
 BOARD_FLASH_BLOCK_SIZE := 131072
@@ -115,7 +126,8 @@ BOARD_PRODUCTIMAGE_FILE_SYSTEM_TYPE := ext4
 BOARD_VENDORIMAGE_FILE_SYSTEM_TYPE := erofs
 BOARD_VENDORIMAGE_EROFS_COMPRESSOR := lz4hc,9
 BOARD_ODMIMAGE_FILE_SYSTEM_TYPE := ext4
-BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := ext4
+BOARD_VENDOR_DLKMIMAGE_FILE_SYSTEM_TYPE := erofs
+BOARD_VENDOR_DLKMIMAGE_EROFS_COMPRESSOR := lz4hc,9
 BOARD_USERDATAIMAGE_FILE_SYSTEM_TYPE := f2fs
 TARGET_USERIMAGES_USE_EXT4 := true
 TARGET_USERIMAGES_USE_F2FS := true
@@ -139,7 +151,7 @@ BOARD_ROOT_EXTRA_SYMLINKS += \
 BOARD_AVB_ENABLE := true
 BOARD_AVB_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
-BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 0
 BOARD_AVB_RECOVERY_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
 BOARD_AVB_RECOVERY_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_RECOVERY_ROLLBACK_INDEX := 1
@@ -620,7 +632,7 @@ BOARD_VENDOR_RAMDISK_KERNEL_MODULES_BLOCKLIST_FILE := \
 # vendor_dlkm and vendor_boot. Give those fragments a stable Klee output root;
 # leaving it empty turns every module into an invalid absolute path.
 KERNEL_MODULES_INSTALL := dlkm
-KERNEL_MODULES_OUT := out/target/product/$(PRODUCT_NAME)/$(KERNEL_MODULES_INSTALL)/lib/modules
+KERNEL_MODULES_OUT := $(PRODUCT_OUT)/$(KERNEL_MODULES_INSTALL)/lib/modules
 
 -include $(sort $(wildcard vendor/qcom/defs/board-defs/system/*.mk))
 -include $(sort $(wildcard vendor/qcom/defs/board-defs/vendor/*.mk))

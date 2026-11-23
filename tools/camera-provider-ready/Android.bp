@@ -1,0 +1,10 @@
+cc_binary {
+    name: "klee-camera-provider-ready",
+    vendor: true,
+    relative_install_path: "hw",
+    srcs: ["camera_provider_ready.cpp"],
+    cpp_std: "c++17",
+    stl: "libc++_static",
+    shared_libs: ["liblog"],
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+}

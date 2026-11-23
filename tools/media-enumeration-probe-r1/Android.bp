@@ -1,0 +1,9 @@
+cc_binary {
+    name: "klee-cupid-media-enumeration-probe",
+    vendor: true,
+    compile_multilib: "64",
+    srcs: ["media-enumeration-probe.c"],
+    stl: "none",
+    cflags: ["-Wall", "-Wextra", "-Werror"],
+    installable: false,
+}

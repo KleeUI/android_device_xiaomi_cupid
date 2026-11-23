@@ -1,0 +1,6 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# Reuse the existing VPP client/server attributes for the legacy HIDL API.
+hal_attribute_hwservice(vendor_hal_vpp, vendor_hal_vpp_hwservice)
+hwbinder_use(vendor_vppservice)

@@ -1,0 +1,5 @@
+# Copyright (C) 2026 The KleeUI Project
+# SPDX-License-Identifier: Apache-2.0
+
+# Traverse the platform-labelled UDC class directory.
+allow vendor_hal_usb_qti sysfs_udc:dir search;

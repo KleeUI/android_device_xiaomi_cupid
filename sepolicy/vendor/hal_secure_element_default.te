@@ -5,3 +5,6 @@
 # process domain. Restrict registration and lookup to their dedicated HIDL
 # interface instead of exposing the default hwservice type.
 add_hwservice(hal_secure_element_default, vendor_hal_esepowermanager_hwservice)
+
+# Stock eSE client and PowerManager service exchange Binder objects in this domain.
+allow hal_secure_element_default hal_secure_element_default:binder { call transfer };

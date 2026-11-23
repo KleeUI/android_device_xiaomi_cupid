@@ -19,4 +19,10 @@
 /sys/class/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0
 /sys/devices/virtual/thermal/thermal_message/flash_state u:object_r:sys_thermal_flash_state:s0
 /sys/devices/virtual/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0
+
+/vendor/bin/diag-router    u:object_r:vendor_diag-router_exec:s0
+
+# The source-built NXP AIDL service uses the existing NFC HAL domain.
+/vendor/bin/hw/android\.hardware\.nfc-service\.nxp    u:object_r:hal_nfc_default_exec:s0
+/vendor/bin/hw/klee-camera-provider-ready u:object_r:klee_camera_ready_exec:s0
 /vendor/bin/klee-qcril-socket-perms    u:object_r:vendor_klee_qcril_socket_perms_exec:s0

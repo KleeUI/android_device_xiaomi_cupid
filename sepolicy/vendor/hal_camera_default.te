@@ -13,3 +13,9 @@ add_hwservice(hal_camera_default, vendor_hal_xiaomi_camera_extension_hwservice)
 # Xiaomi's camera provider publishes physical sensor identifiers for its
 # post-processing clients after the individual camera modules are detected.
 set_prop(hal_camera_default, vendor_camera_prop)
+
+# CamX reads persisted OIS gyro calibration through the vendor mount.
+# Permit traversal and calibration reads only; keep calibration data intact.
+allow hal_camera_default mnt_vendor_file:dir search;
+allow hal_camera_default vendor_persist_sensors_file:dir search;
+allow hal_camera_default vendor_persist_sensors_file:file { getattr open read };

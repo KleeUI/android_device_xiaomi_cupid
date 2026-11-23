@@ -45,6 +45,7 @@
 };
 
 &battery_charger {
+	qcom,typec-usb-role-switch = <&usb0>;
 	qcom,shutdown-voltage = <3350>;
 };
 

@@ -1,7 +1,5 @@
 # Copyright (C) 2026 The KleeUI Project
 # SPDX-License-Identifier: Apache-2.0
 
-# Static recovery mount table for toybox mount(1). Keep this in POSIX fstab
-# format; recovery.fstab remains the Android fs_mgr mount table.
-/dev/block/by-name/metadata              /metadata  ext4  defaults  0  0
-/dev/block/bootdevice/by-name/misc       /misc      emmc  defaults  0  0
+# Static recovery mount table for toybox mount(1). Persistent state and BCB
+# are accessed only through explicitly guarded block-device code, not mounts.

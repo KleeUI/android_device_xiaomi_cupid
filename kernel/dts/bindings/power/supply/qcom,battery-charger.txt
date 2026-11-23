@@ -57,6 +57,19 @@ information on "qcom,pmic_glink" device which is used in the example below.
 		    wireless power supply will be skipped. It should be defined
 		    for boards where wireless charging is not supported.
 
+- qcom,typec-usb-role-switch:
+	Usage: optional
+	Value type: <phandle>
+	Definition: Reference to the USB controller node that registers the
+		    role switch for a board with a Type-C connector managed by UCSI.
+		    The target must have the "usb-role-switch" property. When set,
+		    USB power-supply SCOPE is read from this role provider and the
+		    legacy charger-firmware SCOPE/CONNECTOR_TYPE properties are not
+		    used for connector handling. Device role maps to DEVICE, host
+		    role maps to SYSTEM, and no role maps to UNKNOWN. A missing,
+		    unbound, or busy provider returns an error, never a stale value.
+		    Omit on boards whose connector is handled by charger extcon.
+
 = EXAMPLE
 
 &soc {

@@ -10,3 +10,15 @@ genfscon proc /sys/kernel/firmware_config u:object_r:proc_firmware_config:s0
 # Xiaomi thermal message controls exposed by the source-built kernel.
 genfscon sysfs /devices/virtual/thermal/thermal_message/flash_state u:object_r:sys_thermal_flash_state:s0
 genfscon sysfs /devices/virtual/thermal/thermal_message/wifi_limit u:object_r:sys_thermal_wifi_limit:s0
+
+# Resolved Cupid wakeup sources; omit the dynamically assigned wakeup number.
+genfscon sysfs /devices/platform/soc/soc:qcom,pmic_glink/soc:qcom,pmic_glink:qcom,ucsi/power_supply/ucsi-source-psy-soc:qcom,pmic_glink:qcom,ucsi1/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/soc/990000.spi/spi_master/spi0/spi0.0/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/virtual/fastrpc/adsprpc-smd/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/virtual/fastrpc/adsprpc-smd-secure/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/soc/3000000.remoteproc-adsp/remoteproc/remoteproc0/3000000.remoteproc-adsp:glink-edge/3000000.remoteproc-adsp:glink-edge.adsp_apps.-1.-1/wakeup u:object_r:sysfs_wakeup:s0
+
+# Label the resolved physical extcon interfaces behind /sys/class/extcon links.
+genfscon sysfs /devices/platform/soc/88e0000.qcom,msm-eud/extcon u:object_r:sysfs_extcon:s0
+genfscon sysfs /devices/platform/soc/soc:qcom,msm-ext-disp/extcon u:object_r:sysfs_extcon:s0
+genfscon sysfs /devices/platform/soc/soc:spf_core_platform/soc:spf_core_platform:lpass-cdc/wcd938x-codec/extcon u:object_r:sysfs_extcon:s0

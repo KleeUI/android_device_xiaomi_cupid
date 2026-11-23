@@ -15,3 +15,10 @@ type vendor_hal_dspservice_hwservice,
 
 type vendor_hal_esepowermanager_hwservice,
     hwservice_manager_type, protected_hwservice;
+
+type vendor_hal_diaghal_hwservice, hwservice_manager_type, protected_hwservice;
+
+# Legacy HIDL VPP service shipped by this device.
+type vendor_hal_vpp_hwservice, hwservice_manager_type, protected_hwservice;
+
+type vendor_hal_imsrtp_hwservice, hwservice_manager_type, protected_hwservice;

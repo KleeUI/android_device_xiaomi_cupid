@@ -4,3 +4,8 @@
 # The stock IMS daemon publishes the call-info extension declared by the
 # Taro device manifest.
 add_hwservice(vendor_ims_service, vendor_hal_ims_callinfo_hwservice)
+
+# Register the HIDL RTP service declared by the Taro device manifest.
+hwbinder_use(vendor_hal_imsrtp)
+get_prop(vendor_hal_imsrtp, hwservicemanager_prop)
+add_hwservice(vendor_hal_imsrtp, vendor_hal_imsrtp_hwservice)

@@ -5,3 +5,5 @@
 # share hal_audio_default. Permit the client half of that process to call the
 # AGM service half over hwbinder.
 binder_call(hal_audio_default, hal_audio_default)
+
+get_prop(hal_audio_default, boot_status_prop)
