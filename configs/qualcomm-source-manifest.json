@@ -4,14 +4,16 @@
     {
       "path": "vendor/qcom/opensource/cvp-kernel",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/cvp-kernel.git",
-      "revision": "baf682181686e1d8d6cae7768b56ec36523dd982",
-      "module": "msm-cvp.ko"
+      "revision": "dcf120f6617fbf3335ffdcb1894b8ffc62e8bd6b",
+      "module": "msm-cvp.ko",
+      "prepared_tree": "9724a9f1af7919616723356f1e1b83fd46fe8f0b"
     },
     {
       "path": "vendor/qcom/opensource/eva-kernel",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/opensource/eva-kernel.git",
-      "revision": "6c125a4912c4785b6eb1d3e5feb05210f42ea81b",
-      "module": "msm-eva.ko"
+      "revision": "8fee9b929fabf46ef975a03d55aa9262e059725e",
+      "module": "msm-eva.ko",
+      "prepared_tree": "aa88a06240ef421ad160e380100d15f2a904a969"
     },
     {
       "path": "vendor/qcom/opensource/datarmnet-ext",
@@ -53,17 +55,18 @@
     {
       "path": "vendor/qcom/opensource/display-drivers",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_display-drivers.git",
-      "revision": "7af5959e66206e570566d278ecab4d2eab56d111"
+      "revision": "d9017930fc9947ecbe2af0c7b1ca2cfced2868a8"
     },
     {
       "path": "vendor/qcom/opensource/video-driver",
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_video-driver.git",
-      "revision": "49757a68312e6864d6abcab15bfde5ea6c3b60b6"
+      "revision": "f0ec8aea1527145ded3ec78e359cf81f2746cc1c"
     },
     {
       "path": "vendor/qcom/opensource/wlan/qcacld-3.0",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qcacld-3.0.git",
-      "revision": "3bdf0eea54ccdd17c6c2499bf982d057e0202bea"
+      "revision": "bc8da784983444aad28f7548c45880ef5d8df185",
+      "prepared_tree": "30c667a945fc1acbecb96c2b670f5d7866a09047"
     },
     {
       "path": "vendor/qcom/opensource/wlan/platform",
@@ -78,7 +81,8 @@
     {
       "path": "vendor/qcom/opensource/wlan/qca-wifi-host-cmn",
       "remote": "https://git.codelinaro.org/clo/la/platform/vendor/qcom-opensource/wlan/qca-wifi-host-cmn.git",
-      "revision": "b68c5337eabf8a886eb395a7d5ca2bbac914e344"
+      "revision": "8b8b699f39fc0942b8ba636fe1a9149d92c5bfad",
+      "prepared_tree": "b462717591012e8c1324b4723ea87b640b31f86f"
     },
     {
       "path": "vendor/qcom/opensource/wlan/wlan-devicetree",
@@ -90,39 +94,5 @@
       "remote": "https://github.com/KleeUI/android_vendor_qcom_opensource_touch-drivers.git",
       "revision": "5fcfdb2af42e944506c54d910958d4adedae0e44"
     }
-  ],
-  "integration_provenance": {
-    "version": "hardware-repair-20261029-r1",
-    "original_manifest_sha256": "640a03070ae48a6beb42c06532483f58e7db23832a18dcfb0c40e1d65da5da32",
-    "commits": {
-      "vendor/qcom/opensource/wlan/qcacld-3.0": {
-        "original_head": "e4130c5e32b02dfe0deedf7c424ccf7d99ef7b64",
-        "parent": "e4130c5e32b02dfe0deedf7c424ccf7d99ef7b64",
-        "commit": "3bdf0eea54ccdd17c6c2499bf982d057e0202bea",
-        "tree": "30c667a945fc1acbecb96c2b670f5d7866a09047",
-        "parent_commit_sha256": "a39aa32524550d62f899cbe7b406ed5e6402ad72ffab73469b2372eb193c3017",
-        "commit_sha256": "ec4a82c64597286b5386740e5720a9f598bc64f9f60d714ab8a050857ad612b3",
-        "patch_sha256": "b7db26ca80b50f595242834540399507736b264d8c610c656b1b56454a0b2e87",
-        "paths": [
-          "core/hdd/src/wlan_hdd_main.c"
-        ],
-        "published": false
-      },
-      "vendor/qcom/opensource/wlan/qca-wifi-host-cmn": {
-        "original_head": "8b8b699f39fc0942b8ba636fe1a9149d92c5bfad",
-        "parent": "8b8b699f39fc0942b8ba636fe1a9149d92c5bfad",
-        "commit": "b68c5337eabf8a886eb395a7d5ca2bbac914e344",
-        "tree": "b462717591012e8c1324b4723ea87b640b31f86f",
-        "parent_commit_sha256": "a30643f830fd634ed5646a5be8d14ffd66e3918d13cafeeafb96272a2f976840",
-        "commit_sha256": "f35b745027083a9ef4e2f9d4c06f041c0aee93e0906d347fd0b2f728e93ab1d7",
-        "patch_sha256": "e88ded17fdeccbe3757c0c73c145ae03f42ae7c89755191486115b6ab65db356",
-        "paths": [
-          "qdf/linux/src/qdf_trace.c"
-        ],
-        "published": false
-      }
-    },
-    "created_utc": "2026-10-31T22:58:49.561816+00:00",
-    "original_source_protection": "must be verified by the preparation stage final report"
-  }
+  ]
 }

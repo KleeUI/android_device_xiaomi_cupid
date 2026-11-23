@@ -1,0 +1,12 @@
+diff --git a/kernel_build_tools/waipio/Android.bp b/kernel_build_tools/waipio/Android.bp
+index ed41fcc2de68101a5bc4e968545ff74a281ecd20..d725fe2e3325e62c1e0c0d3cd72bdab6e8b10b9f 100644
+--- a/kernel_build_tools/waipio/Android.bp
++++ b/kernel_build_tools/waipio/Android.bp
+@@ -1,6 +1,7 @@
+ cc_binary_host {
+     name: "unifdef",
+     srcs: ["scripts/unifdef.c"],
++    c_std: "gnu11",
+     sanitize: {
+         never: true,
+     },

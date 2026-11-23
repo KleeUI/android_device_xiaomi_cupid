@@ -1,0 +1,344 @@
+diff --git a/vendor/qcom/opensource/thermal-hal/thermalCommon.cpp b/vendor/qcom/opensource/thermal-hal/thermalCommon.cpp
+index 7744cc3f35731e59d49a89ab2cbe010e823bcb4d..4c68dfdc0f2c8904c7a5e6f759f2bcdd73a1b72b 100644
+--- a/vendor/qcom/opensource/thermal-hal/thermalCommon.cpp
++++ b/vendor/qcom/opensource/thermal-hal/thermalCommon.cpp
+@@ -272,6 +272,8 @@ int ThermalCommon::initialize_sensor(struct target_therm_cfg& cfg, int sens_idx)
+ 	sensor.sensor_name = cfg.sensor_list[sens_idx];
+ 	sensor.positiveThresh = cfg.positive_thresh_ramp;
+ 	sensor.no_trip_set = cfg.no_trip_set;
++	sensor.polling_interval_ms = cfg.polling_interval_ms;
++	sensor.t.value = UNKNOWN_TEMPERATURE;
+ 	sensor.lastThrottleStatus = sensor.t.throttlingStatus =
+ 		ThrottlingSeverity::NONE;
+ 	sensor.thresh.type = sensor.t.type = cfg.type;
+@@ -493,6 +495,7 @@ int ThermalCommon::read_temperature(struct therm_sensor& sensor)
+ 			sensor.tzn);
+ 		ret = readLineFromFile(std::string(file_name), buf);
+ 		if (ret <= 0) {
++			sensor.t.value = UNKNOWN_TEMPERATURE;
+ 			LOG(ERROR) << "Temperature read error:"<< ret <<
+ 				" for sensor " << sensor.t.name;
+ 			return -1;
+@@ -511,6 +514,11 @@ int ThermalCommon::read_temperature(struct therm_sensor& sensor)
+ 		}
+ 		ct++;
+ 	} while (!read_ok && ct < RETRY_CT);
++	if (!read_ok) {
++		sensor.t.value = UNKNOWN_TEMPERATURE;
++		LOG(ERROR) << "No valid temperature sample for sensor: " << sensor.t.name;
++		return -1;
++	}
+ 	LOG(DEBUG) << "Sensor Name:" << sensor.t.name << ". Temperature:" <<
+ 		(float)sensor.t.value << std::endl;
+ 
+diff --git a/vendor/qcom/opensource/thermal-hal/thermalConfig.cpp b/vendor/qcom/opensource/thermal-hal/thermalConfig.cpp
+index fa04eed324a18984463822479051e901cc53290c..610b79a4a32f0e6e28697e3ad0bde8da648f3d27 100644
+--- a/vendor/qcom/opensource/thermal-hal/thermalConfig.cpp
++++ b/vendor/qcom/opensource/thermal-hal/thermalConfig.cpp
+@@ -34,6 +34,7 @@
+ 
+ #include <unordered_map>
+ #include <android-base/logging.h>
++#include <android-base/properties.h>
+ #include <aidl/android/hardware/thermal/BnThermal.h>
+ 
+ #include "thermalData.h"
+@@ -2750,6 +2751,21 @@ namespace thermal {
+ 		}
+ 		thermalConfig = add_target_config(soc_id, hwPlatform, limitp, it->second);
+ 
++		// Cupid exposes the Waipio XO thermistor (PMR735A GPIO3) as
++		// wifi_therm. Leave its sole ADC trip to device thermal control; use
++		// actual samples to report the existing Waipio skin severities.
++		if (soc_id == 457 &&
++		    ::android::base::GetProperty("ro.product.vendor.device", "") == "cupid") {
++			for (auto& sensor : thermalConfig) {
++				if (sensor.type == TemperatureType::SKIN &&
++				    sensor.sensor_list == std::vector<std::string>{"xo-therm"}) {
++					sensor.sensor_list = {"wifi_therm"};
++					sensor.no_trip_set = true;
++					sensor.polling_interval_ms = 1000;
++				}
++			}
++		}
++
+ 		for (it_vec = thermalConfig.begin();
+ 				it_vec != thermalConfig.end(); it_vec++) {
+ 			if (it_vec->type == TemperatureType::BCL_PERCENTAGE)
+diff --git a/vendor/qcom/opensource/thermal-hal/thermalData.h b/vendor/qcom/opensource/thermal-hal/thermalData.h
+index 7bfba6f9bf3c261f2a0d9bb9bf55f9783726d115..2e98ae38e80233818e6550c063f2dcc71d8148ae 100644
+--- a/vendor/qcom/opensource/thermal-hal/thermalData.h
++++ b/vendor/qcom/opensource/thermal-hal/thermalData.h
+@@ -80,6 +80,7 @@ using ::aidl::android::hardware::thermal::ThrottlingSeverity;
+ 		Temperature t;
+ 		TemperatureThreshold thresh;
+ 		bool no_trip_set;
++		int polling_interval_ms = 0;
+ 	};
+ 
+ 	struct target_therm_cfg {
+@@ -89,6 +90,7 @@ using ::aidl::android::hardware::thermal::ThrottlingSeverity;
+ 		int thresh[SHUTDOWN + 1];
+ 		bool positive_thresh_ramp;
+ 		bool no_trip_set = false;
++		int polling_interval_ms = 0;
+ 	};
+ 
+ 	struct therm_cdev {
+diff --git a/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.cpp b/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.cpp
+index af0c06c6423c3825e789543cbb1675eab0d8541b..eb86d9548a5dbc4019ed006a64b7738f4aa4801e 100644
+--- a/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.cpp
++++ b/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.cpp
+@@ -76,11 +76,14 @@ ThermalUtils::ThermalUtils(const ueventCB &inp_cb, const notifyCB &inp_cdev_cb):
+ 		sensorList = cmnInst.fetch_sensor_list();
+ 		std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 		for (struct therm_sensor sens: sensorList) {
++			if (cmnInst.read_temperature(sens) <= 0) {
++				LOG(ERROR) << "Initial sensor read failed: " << sens.sensor_name;
++			} else {
++				cmnInst.estimateSeverity(sens);
++				if (!sens.no_trip_set)
++					cmnInst.initThreshold(sens);
++			}
+ 			thermalConfig[sens.tzn] = sens;
+-			cmnInst.read_temperature(sens);
+-			cmnInst.estimateSeverity(sens);
+-			if (!sens.no_trip_set)
+-				cmnInst.initThreshold(sens);
+ 		}
+ 	}
+ 	monitor.start();
+@@ -93,6 +96,38 @@ ThermalUtils::ThermalUtils(const ueventCB &inp_cb, const notifyCB &inp_cdev_cb):
+ 			cdev[cdevs.cdevn] = cdevs;
+ 		}
+ 	}
++	int polling_ms = 0;
++	for (const auto& config : therm_cfg) {
++		if (config.polling_interval_ms > 0 &&
++		    (polling_ms == 0 || config.polling_interval_ms < polling_ms))
++			polling_ms = config.polling_interval_ms;
++	}
++	if (polling_ms > 0)
++		poller.start(std::chrono::milliseconds(polling_ms),
++		             [this] { pollSensors(); });
++}
++
++ThermalUtils::~ThermalUtils()
++{
++	poller.stop();
++}
++
++void ThermalUtils::pollSensors()
++{
++	const auto now = std::chrono::steady_clock::now();
++	std::lock_guard<std::mutex> lock(sens_cb_mutex);
++	for (auto& entry : thermalConfig) {
++		auto& sensor = entry.second;
++		if (sensor.polling_interval_ms <= 0 || now < next_poll[entry.first])
++			continue;
++		next_poll[entry.first] = now +
++			std::chrono::milliseconds(sensor.polling_interval_ms);
++		if (cmnInst.read_temperature(sensor) < 0) {
++			LOG(ERROR) << "Polling sensor read failed: " << sensor.sensor_name;
++			continue;
++		}
++		Notify(sensor);
++	}
+ }
+ 
+ bool ThermalUtils::isSensorInitialized()
+@@ -181,24 +216,24 @@ void ThermalUtils::eventParse(int tzn, int trip)
+ {
+ 	if (trip != 1)
+ 		return;
++	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	if (thermalConfig.find(tzn) == thermalConfig.end()) {
+ 		LOG(DEBUG) << "sensor is not monitored:" << tzn
+ 			<< std::endl;
+ 		return;
+ 	}
+-	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	struct therm_sensor& sens = thermalConfig[tzn];
+ 	return Notify(sens);
+ }
+ 
+ void ThermalUtils::sampleParse(int tzn, int temp)
+ {
++	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	if (thermalConfig.find(tzn) == thermalConfig.end()) {
+ 		LOG(DEBUG) << "sensor is not monitored:" << tzn
+ 			<< std::endl;
+ 		return;
+ 	}
+-	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	struct therm_sensor& sens = thermalConfig[tzn];
+ 	sens.t.value = (float)temp / (float)sens.mulFactor;
+ 	return Notify(sens);
+@@ -211,6 +246,7 @@ void ThermalUtils::eventCreateParse(int tzn, const char *name)
+ 	std::vector<struct target_therm_cfg> therm_cfg = cfg.fetchConfig();
+ 	std::vector<struct target_therm_cfg>::iterator it_vec;
+ 	std::vector<std::string>::iterator it;
++	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 
+ 	if (thermalConfig.find(tzn) != thermalConfig.end())
+ 		return;
+@@ -233,15 +269,17 @@ void ThermalUtils::eventCreateParse(int tzn, const char *name)
+ 	ret = cmnInst.initNewThermalZone(*it_vec);
+ 	if (ret > 0) {
+ 		sensorList = cmnInst.fetch_sensor_list();
+-		std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+-		for (struct therm_sensor sens: sensorList) {
++			for (struct therm_sensor sens: sensorList) {
+ 			if (sens.sensor_name != name)
+ 				continue;
++			if (cmnInst.read_temperature(sens) <= 0) {
++				LOG(ERROR) << "Initial sensor read failed: " << sens.sensor_name;
++			} else {
++				cmnInst.estimateSeverity(sens);
++				if (!sens.no_trip_set)
++					cmnInst.initThreshold(sens);
++			}
+ 			thermalConfig[sens.tzn] = sens;
+-			cmnInst.read_temperature(sens);
+-			cmnInst.estimateSeverity(sens);
+-			if (!sens.no_trip_set)
+-				cmnInst.initThreshold(sens);
+ 			break;
+ 		}
+ 	}
+@@ -258,8 +296,11 @@ int ThermalUtils::readTemperatures(std::vector<Temperature>& temp)
+ 		struct therm_sensor& sens = it->second;
+ 
+ 		ret = cmnInst.read_temperature(sens);
+-		if (ret < 0)
+-			return ret;
++		if (ret < 0) {
++			LOG(ERROR) << "Getter sensor read failed: " << sens.sensor_name;
++			_temp.push_back(sens.t);
++			continue;
++		}
+ 		Notify(sens);
+ 		_temp.push_back(sens.t);
+ 	}
+@@ -282,8 +323,11 @@ int ThermalUtils::readTemperatures(TemperatureType type,
+ 		if (sens.t.type != type)
+ 			continue;
+ 		ret = cmnInst.read_temperature(sens);
+-		if (ret < 0)
+-			return ret;
++		if (ret < 0) {
++			LOG(ERROR) << "Getter sensor read failed: " << sens.sensor_name;
++			_temp.push_back(sens.t);
++			continue;
++		}
+ 		Notify(sens);
+ 		_temp.push_back(sens.t);
+ 	}
+@@ -294,6 +338,7 @@ int ThermalUtils::readTemperatures(TemperatureType type,
+ 
+ int ThermalUtils::readTemperatureThreshold(std::vector<TemperatureThreshold>& thresh)
+ {
++	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	std::unordered_map<int, struct therm_sensor>::iterator it;
+ 	std::vector<TemperatureThreshold> _thresh;
+ 
+@@ -310,6 +355,7 @@ int ThermalUtils::readTemperatureThreshold(std::vector<TemperatureThreshold>& th
+ int ThermalUtils::readTemperatureThreshold(TemperatureType type,
+                                             std::vector<TemperatureThreshold>& thresh)
+ {
++	std::lock_guard<std::mutex> _lock(sens_cb_mutex);
+ 	std::unordered_map<int, struct therm_sensor>::iterator it;
+ 	std::vector<TemperatureThreshold> _thresh;
+ 
+diff --git a/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.h b/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.h
+index 4d0cc3180c8f76f4528c22b4eea9de6d3a1e8523..26488e2233920f3c1af0cfab4d804a150afe095b 100644
+--- a/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.h
++++ b/vendor/qcom/opensource/thermal-hal/thermalUtilsNetlink.h
+@@ -44,6 +44,7 @@ SPDX-License-Identifier: BSD-3-Clause-Clear */
+ #include "thermalMonitorNetlink.h"
+ #include "thermalCommon.h"
+ #include "thermalData.h"
++#include "sensorPoller.h"
+ 
+ namespace aidl {
+ namespace android {
+@@ -56,7 +57,7 @@ using notifyCB = std::function<void(CoolingDevice &c)>;
+ class ThermalUtils {
+ 	public:
+ 		ThermalUtils(const ueventCB &inp_cb, const notifyCB &inp_cdev_cb);
+-		~ThermalUtils() = default;
++		~ThermalUtils();
+ 		bool isCdevInitialized();
+ 		bool isCdevInitialized(CoolingType type);
+ 		bool isSensorInitialized();
+@@ -83,6 +84,10 @@ class ThermalUtils {
+ 		std::mutex cdev_cb_mutex;
+ 		ueventCB cb;
+ 		notifyCB notify;
++		SensorPoller poller;
++		std::unordered_map<int, std::chrono::steady_clock::time_point> next_poll;
++
++		void pollSensors();
+ 
+ 		void eventParse(int tzn, int trip);
+ 		void sampleParse(int tzn, int temp);
+diff --git a/vendor/qcom/opensource/thermal-hal/sensorPoller.h b/vendor/qcom/opensource/thermal-hal/sensorPoller.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..9cdba1ccb5a109d6b7a90f9743fcfda278ef9cc3
+--- /dev/null
++++ b/vendor/qcom/opensource/thermal-hal/sensorPoller.h
+@@ -0,0 +1,54 @@
++// SPDX-License-Identifier: BSD-3-Clause-Clear
++#ifndef QTI_THERMAL_SENSOR_POLLER_H
++#define QTI_THERMAL_SENSOR_POLLER_H
++
++#include <chrono>
++#include <condition_variable>
++#include <functional>
++#include <mutex>
++#include <stdexcept>
++#include <thread>
++
++namespace aidl::android::hardware::thermal {
++
++// The owner must stop this worker before destroying the callback's state.
++class SensorPoller {
++public:
++    ~SensorPoller() { stop(); }
++
++    void start(std::chrono::milliseconds period, std::function<void()> tick) {
++        if (period.count() <= 0 || !tick)
++            throw std::invalid_argument("Invalid thermal polling configuration");
++        std::lock_guard<std::mutex> lock(mutex_);
++        if (worker_.joinable())
++            throw std::logic_error("Thermal poller already started");
++        stopping_ = false;
++        worker_ = std::thread([this, period, tick = std::move(tick)] {
++            std::unique_lock<std::mutex> lock(mutex_);
++            while (!condition_.wait_for(lock, period, [this] { return stopping_; })) {
++                lock.unlock();
++                tick();
++                lock.lock();
++            }
++        });
++    }
++
++    void stop() {
++        {
++            std::lock_guard<std::mutex> lock(mutex_);
++            stopping_ = true;
++        }
++        condition_.notify_all();
++        if (worker_.joinable())
++            worker_.join();
++    }
++
++private:
++    std::mutex mutex_;
++    std::condition_variable condition_;
++    bool stopping_ = false;
++    std::thread worker_;
++};
++
++}  // namespace aidl::android::hardware::thermal
++#endif

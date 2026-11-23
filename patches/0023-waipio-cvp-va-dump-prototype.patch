@@ -1,0 +1,13 @@
+diff --git a/vendor/qcom/opensource/cvp-kernel/msm/eva/cvp_dump.c b/vendor/qcom/opensource/cvp-kernel/msm/eva/cvp_dump.c
+index bf6943e1d427d953e780cb5037e9b8f4d3ac5979..c3f029edb0c447f2e9d938a7e643638747c1e668 100644
+--- a/vendor/qcom/opensource/cvp-kernel/msm/eva/cvp_dump.c
++++ b/vendor/qcom/opensource/cvp-kernel/msm/eva/cvp_dump.c
+@@ -150,7 +150,7 @@ void cvp_va_md_register(char* name, void* notf_blk_ptr)
+ 	}
+ }
+ 
+-void cvp_register_va_md_region()
++void cvp_register_va_md_region(void)
+ {
+ 	if (qcom_va_md_enabled()) {
+ 		cvp_va_md_register("eva_queues", &eva_hfiq_list_notif_blk);

@@ -48,6 +48,13 @@ NFC_TRANSITION_PATCH = "0019-waipio-nfc-preserve-fw-transition-reads.patch"
 SOURCE_PATCH_NAMES = (
     "0015-libvmmem-use-size-t-format.patch",
     NFC_FIX_PATCH,
+    "0020-waipio-actual017-kernel-integration.patch",
+    "0021-waipio-unifdef-copyfile-gnu11.patch",
+    "0022-waipio-thermal-hal-polling.patch",
+    "0023-waipio-cvp-va-dump-prototype.patch",
+    "0024-waipio-eva-va-dump-prototype.patch",
+    "0025-waipio-qcacld-build-and-runtime.patch",
+    "0026-waipio-wlan-host-common-trace.patch",
 )
 MERGED_VENDOR_SOURCE_PATCH_NAMES = ("0018-location-cupid-vendor-namespace.patch",)
 

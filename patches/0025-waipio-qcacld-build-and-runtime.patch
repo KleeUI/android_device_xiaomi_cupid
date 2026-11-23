@@ -1,0 +1,100 @@
+diff --git a/vendor/qcom/opensource/wlan/qcacld-3.0/Kbuild b/vendor/qcom/opensource/wlan/qcacld-3.0/Kbuild
+index 80113760c2c4b6ad2e15f94633ba961b8d229ece..3f7bf7475bd0ec1783bac0858e1d5010650d4a55 100644
+--- a/vendor/qcom/opensource/wlan/qcacld-3.0/Kbuild
++++ b/vendor/qcom/opensource/wlan/qcacld-3.0/Kbuild
+@@ -27,12 +27,14 @@ WLAN_PLATFORM_INC ?= $(WLAN_ROOT)/../platform/inc
+ 
+ ifeq ($(KERNEL_BUILD), n)
+ ifneq ($(ANDROID_BUILD_TOP),)
++ifeq ($(filter /%,$(WLAN_ROOT)),)
+       ANDROID_BUILD_TOP_REL := $(shell python -c "import os.path; print(os.path.relpath('$(ANDROID_BUILD_TOP)'))")
+       override WLAN_ROOT := $(ANDROID_BUILD_TOP_REL)/$(WLAN_ROOT)
+       override WLAN_COMMON_INC := $(ANDROID_BUILD_TOP_REL)/$(WLAN_COMMON_INC)
+       override WLAN_FW_API := $(ANDROID_BUILD_TOP_REL)/$(WLAN_FW_API)
+ endif
+ endif
++endif
+ 
+ cppflags-y += -include $(WLAN_ROOT)/configs/default_config.h
+ 
+diff --git a/vendor/qcom/opensource/wlan/qcacld-3.0/core/hdd/src/wlan_hdd_main.c b/vendor/qcom/opensource/wlan/qcacld-3.0/core/hdd/src/wlan_hdd_main.c
+index 611091680a06b3ba6f7a7130aac306ef40b169a2..a2208eeb8ea4e4889037162fc60743fe83c4af2d 100644
+--- a/vendor/qcom/opensource/wlan/qcacld-3.0/core/hdd/src/wlan_hdd_main.c
++++ b/vendor/qcom/opensource/wlan/qcacld-3.0/core/hdd/src/wlan_hdd_main.c
+@@ -17843,46 +17843,57 @@ static ssize_t wlan_hdd_state_ctrl_param_write(struct file *filp,
+ 						size_t count,
+ 						loff_t *f_pos)
+ {
+-	char buf[3];
+ 	static const char wlan_off_str[] = "OFF";
+ 	static const char wlan_on_str[] = "ON";
+ 	static const char wlan_wait_for_ready_str[] = "WAIT_FOR_READY";
++	char buf[sizeof(wlan_wait_for_ready_str) + 1] = {0};
++	size_t len;
+ 	int ret;
+ 	unsigned long rc;
+ 	struct hdd_context *hdd_ctx;
+ 	bool is_wait_for_ready = false;
+ 	bool turning_on = false;
+ 
+-	if (copy_from_user(buf, user_buf, 3)) {
+-		pr_err("Failed to read buffer\n");
++	if (!count || count > sizeof(buf))
+ 		return -EINVAL;
++
++	if (copy_from_user(buf, user_buf, count)) {
++		pr_err("Failed to read buffer\n");
++		return -EFAULT;
+ 	}
+ 
+-	if (strncmp(buf, wlan_off_str, strlen(wlan_off_str)) == 0) {
++	if (buf[sizeof(buf) - 1] != '\0')
++		return -EINVAL;
++
++	len = strlen(buf);
++	if (len && buf[len - 1] == '\n')
++		buf[len - 1] = '\0';
++
++	if (strcmp(buf, wlan_off_str) == 0) {
+ 		hdd_info("Wifi turning off from UI\n");
+ 		hdd_inform_wifi_off();
+ 		goto exit;
+ 	}
+ 
+-	if (strncmp(buf, wlan_on_str, strlen(wlan_on_str)) == 0) {
++	if (strcmp(buf, wlan_on_str) == 0) {
+ 		hdd_info("Wifi Turning On from UI\n");
+ 		turning_on = true;
+ 	}
+ 
+-	if (strncmp(buf, wlan_wait_for_ready_str,
+-		    strlen(wlan_wait_for_ready_str)) == 0) {
++	if (strcmp(buf, wlan_wait_for_ready_str) == 0) {
+ 		is_wait_for_ready = true;
+ 		pr_info("Wifi wait for ready from UI\n");
+-	} else if (strncmp(buf, wlan_on_str, strlen(wlan_on_str)) != 0) {
++	} else if (strcmp(buf, wlan_on_str) != 0) {
+ 		pr_err("Invalid value received from framework");
+-		goto exit;
++		return -EINVAL;
+ 	}
+ 
+ 	if (!cds_is_driver_loaded() || cds_is_driver_recovering()) {
+ 		rc = wait_for_completion_timeout(&wlan_start_comp,
+ 				msecs_to_jiffies(HDD_WLAN_START_WAIT_TIME));
+ 		if (!rc) {
+-			pr_err("Timed-out!!");
++			pr_err("wlan: driver readiness wait timed out loaded=%d recovering=%d\n",
++			       cds_is_driver_loaded(), cds_is_driver_recovering());
+ 			ret = -EINVAL;
+ 			return ret;
+ 		}
+@@ -18387,6 +18398,8 @@ static QDF_STATUS hdd_qdf_print_init(void)
+ 	}
+ 
+ 	qdf_set_pidx(qdf_print_idx);
++	pr_info("%s: QDF print control ready idx=%d\n",
++		WLAN_MODULE_NAME, qdf_print_idx);
+ 
+ 	return QDF_STATUS_SUCCESS;
+ }
