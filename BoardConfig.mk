@@ -82,9 +82,9 @@ TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
 # Partition geometry measured from a retail Xiaomi 12.
 BOARD_BOOTIMAGE_PARTITION_SIZE := 201326592
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 100663296
-# Batteryfix02: bind system_ext image geometry to the fresh A-slot capacity.
-BOARD_SYSTEM_EXTIMAGE_PARTITION_SIZE := 224325632
-# Preserve the raw ext4 inode budget measured from audited batteryfix01.
+# Allow the dynamic system_ext partition to fit ThemePicker, ext4 and AVB metadata.
+BOARD_SYSTEM_EXTIMAGE_PARTITION_SIZE := 301989888
+# Preserve the audited ext4 inode budget for this partition.
 BOARD_SYSTEM_EXTIMAGE_EXTFS_INODE_COUNT := 480
 # Match the current A-slot logical capacities. system_b has one extra 4096-byte
 # block; the smaller geometry lets the generated images fit either slot.
