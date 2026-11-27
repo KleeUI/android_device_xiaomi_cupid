@@ -9,8 +9,6 @@ $(call inherit-product, vendor/klee/build/product/common.mk)
 $(call inherit-product, vendor/klee/build/product/camera.mk)
 $(call inherit-product, vendor/klee/build/product/wallpaper.mk)
 
-PRODUCT_PACKAGES += KleeGallery
-
 # Use the Qualcomm Taro VINTF fragments required by the SM8450 vendor HALs.
 # Keeping these declarations in the device product makes the Cupid target
 # self-contained instead of inheriting the unrelated generic Taro product.
